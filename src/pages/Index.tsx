@@ -1,9 +1,11 @@
 
 import { useState } from 'react';
-import { Plus, Gift, Leaf, Users } from 'lucide-react';
+import { Plus, Gift, Leaf, Users, LogOut, Settings, Grape } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 import SeedlingStock from '@/components/SeedlingStock';
 import SendGift from '@/components/SendGift';
 import GiftHistory from '@/components/GiftHistory';
@@ -11,6 +13,7 @@ import AddSeedling from '@/components/AddSeedling';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
+  const { user, profile, signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
@@ -18,15 +21,37 @@ const Index = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Leaf className="h-8 w-8 text-green-600" />
-              <h1 className="text-2xl font-bold text-green-800">চারা গিফট সেন্টার</h1>
+            <div className="flex items-center space-x-3">
+              <div className="bg-green-600 p-2 rounded-full">
+                <Grape className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-green-800">গ্রেপ চারা বিনিময়</h1>
+                <p className="text-sm text-gray-600">আঙ্গুরের চারা আদান-প্রদান</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Users className="h-4 w-4" />
-                <span>সদস্য: জন ডো</span>
+              <div className="text-right">
+                <p className="font-medium text-gray-900">{profile?.full_name}</p>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={profile?.role === 'admin' ? 'default' : 'secondary'}>
+                    {profile?.role === 'admin' ? 'অ্যাডমিন' : 'মেম্বার'}
+                  </Badge>
+                  <Badge variant={profile?.status === 'active' ? 'default' : 'destructive'}>
+                    {profile?.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                  </Badge>
+                </div>
               </div>
+              {profile?.role === 'admin' && (
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  অ্যাডমিন প্যানেল
+                </Button>
+              )}
+              <Button onClick={signOut} variant="outline" size="sm">
+                <LogOut className="h-4 w-4 mr-2" />
+                লগআউট
+              </Button>
             </div>
           </div>
         </div>
@@ -35,7 +60,9 @@ const Index = () => {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-green-700 mb-2">আপনার চারা ড্যাশবোর্ড</h2>
+          <h2 className="text-3xl font-bold text-green-700 mb-2">
+            স্বাগতম, {profile?.full_name}!
+          </h2>
           <p className="text-gray-600">আপনার চারার স্টক দেখুন, নতুন চারা যোগ করুন এবং বন্ধুদের কাছে উপহার পাঠান</p>
         </div>
 
