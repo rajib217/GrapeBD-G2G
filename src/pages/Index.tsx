@@ -43,7 +43,7 @@ const Index = () => {
                 </div>
               </div>
               {profile?.role === 'admin' && (
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => window.location.href = '/admin'}>
                   <Settings className="h-4 w-4 mr-2" />
                   অ্যাডমিন প্যানেল
                 </Button>
