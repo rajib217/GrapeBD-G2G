@@ -1,109 +1,191 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
-import { Gift, Send, User, Leaf } from 'lucide-react';
+import { Gift, Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string | null;
+}
+
+interface Stock {
+  id: string;
+  quantity: number;
+  variety: {
+    id: string;
+    name: string;
+  };
+}
+
+interface GiftRound {
+  id: string;
+  title: string;
+  description: string | null;
+}
 
 const SendGift = () => {
-  const [selectedMember, setSelectedMember] = useState('');
-  const [selectedSeedling, setSelectedSeedling] = useState('');
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [stocks, setStocks] = useState<Stock[]>([]);
+  const [giftRounds, setGiftRounds] = useState<GiftRound[]>([]);
+  const [selectedReceiver, setSelectedReceiver] = useState('');
+  const [selectedStock, setSelectedStock] = useState('');
+  const [selectedGiftRound, setSelectedGiftRound] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { profile } = useAuth();
+  const { toast } = useToast();
 
-  // ডামি ডেটা - আসলে API থেকে আসবে
-  const members = [
-    { id: '1', name: 'রহিম উদ্দিন', location: 'ঢাকা' },
-    { id: '2', name: 'করিম আহমেদ', location: 'চট্টগ্রাম' },
-    { id: '3', name: 'ফাতেমা খাতুন', location: 'সিলেট' },
-    { id: '4', name: 'আব্দুল কাদের', location: 'রাজশাহী' },
-  ];
+  const fetchData = async () => {
+    if (!profile?.id) return;
 
-  const mySeedlings = [
-    { id: '1', name: 'আমের চারা', available: 5 },
-    { id: '2', name: 'জামের চারা', available: 3 },
-    { id: '3', name: 'নিমের চারা', available: 8 },
-    { id: '4', name: 'তুলসী গাছ', available: 4 },
-    { id: '5', name: 'গোলাপের চারা', available: 6 },
-  ];
+    try {
+      // Fetch active profiles (excluding current user)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('status', 'active')
+        .neq('id', profile.id)
+        .order('full_name');
 
-  const handleSendGift = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedMember || !selectedSeedling || !quantity) {
+      if (profilesError) throw profilesError;
+      setProfiles(profilesData || []);
+
+      // Fetch user's stocks
+      const { data: stocksData, error: stocksError } = await supabase
+        .from('user_stocks')
+        .select(`
+          id,
+          quantity,
+          variety:varieties(id, name)
+        `)
+        .eq('user_id', profile.id)
+        .gt('quantity', 0);
+
+      if (stocksError) throw stocksError;
+      setStocks(stocksData || []);
+
+      // Fetch active gift rounds
+      const { data: roundsData, error: roundsError } = await supabase
+        .from('gift_rounds')
+        .select('id, title, description')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (roundsError) throw roundsError;
+      setGiftRounds(roundsData || []);
+    } catch (error) {
       toast({
-        title: "ত্রুটি",
-        description: "সকল প্রয়োজনীয় ক্ষেত্র পূরণ করুন",
-        variant: "destructive",
+        title: 'ত্রুটি',
+        description: 'তথ্য লোড করতে সমস্যা হয়েছে',
+        variant: 'destructive',
       });
-      return;
     }
-
-    const selectedSeedlingData = mySeedlings.find(s => s.id === selectedSeedling);
-    const selectedMemberData = members.find(m => m.id === selectedMember);
-    
-    if (selectedSeedlingData && parseInt(quantity) > selectedSeedlingData.available) {
-      toast({
-        title: "ত্রুটি",
-        description: "আপনার কাছে পর্যাপ্ত চারা নেই",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // এখানে API কল করে গিফট পাঠানো হবে
-    console.log('Sending gift:', {
-      member: selectedMemberData,
-      seedling: selectedSeedlingData,
-      quantity,
-      message
-    });
-
-    toast({
-      title: "উপহার পাঠানো হয়েছে!",
-      description: `${selectedMemberData?.name} এর কাছে ${quantity}টি ${selectedSeedlingData?.name} পাঠানো হয়েছে`,
-    });
-
-    // ফর্ম রিসেট
-    setSelectedMember('');
-    setSelectedSeedling('');
-    setQuantity('');
-    setMessage('');
   };
 
+  useEffect(() => {
+    fetchData();
+  }, [profile?.id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile?.id || !selectedReceiver || !selectedStock || !selectedGiftRound || !quantity) return;
+
+    const selectedStockItem = stocks.find(s => s.id === selectedStock);
+    if (!selectedStockItem || parseInt(quantity) > selectedStockItem.quantity) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'পর্যাপ্ত চারা নেই',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create gift record
+      const { error: giftError } = await supabase
+        .from('gifts')
+        .insert({
+          sender_id: profile.id,
+          receiver_id: selectedReceiver,
+          variety_id: selectedStockItem.variety.id,
+          quantity: parseInt(quantity),
+          gift_round_id: selectedGiftRound,
+          status: 'pending',
+        });
+
+      if (giftError) throw giftError;
+
+      // Update sender's stock
+      const { error: stockError } = await supabase
+        .from('user_stocks')
+        .update({
+          quantity: selectedStockItem.quantity - parseInt(quantity),
+        })
+        .eq('id', selectedStock);
+
+      if (stockError) throw stockError;
+
+      toast({
+        title: 'সফল',
+        description: 'উপহার সফলভাবে পাঠানো হয়েছে! অ্যাডমিনের অনুমোদনের অপেক্ষায় রয়েছে।',
+      });
+
+      // Reset form
+      setSelectedReceiver('');
+      setSelectedStock('');
+      setSelectedGiftRound('');
+      setQuantity('');
+      fetchData(); // Refresh data
+    } catch (error) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'উপহার পাঠাতে সমস্যা হয়েছে',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedStockItem = stocks.find(s => s.id === selectedStock);
+  const maxQuantity = selectedStockItem?.quantity || 0;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Gift className="h-6 w-6 text-pink-600" />
-            <CardTitle className="text-2xl text-pink-700">চারা উপহার পাঠান</CardTitle>
-          </div>
+          <CardTitle className="flex items-center space-x-2">
+            <Gift className="h-5 w-5" />
+            <span>উপহার পাঠান</span>
+          </CardTitle>
           <CardDescription>
-            আপনার বন্ধুদের কাছে চারা উপহার পাঠিয়ে পরিবেশ রক্ষায় অংশগ্রহণ করুন
+            অন্য সদস্যদের কাছে চারা উপহার পাঠান
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSendGift} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="member">প্রাপক নির্বাচন করুন *</Label>
-              <Select onValueChange={setSelectedMember}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="giftRound">গিফট রাউন্ড নির্বাচন করুন *</Label>
+              <Select value={selectedGiftRound} onValueChange={setSelectedGiftRound}>
                 <SelectTrigger>
-                  <SelectValue placeholder="কার কাছে পাঠাবেন?" />
+                  <SelectValue placeholder="একটি গিফট রাউন্ড নির্বাচন করুন" />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">{member.name}</div>
-                          <div className="text-xs text-gray-500">{member.location}</div>
-                        </div>
+                  {giftRounds.map((round) => (
+                    <SelectItem key={round.id} value={round.id}>
+                      <div>
+                        <div className="font-medium">{round.title}</div>
+                        {round.description && (
+                          <div className="text-sm text-gray-500">{round.description}</div>
+                        )}
                       </div>
                     </SelectItem>
                   ))}
@@ -111,22 +193,40 @@ const SendGift = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="seedling">চারা নির্বাচন করুন *</Label>
-              <Select onValueChange={setSelectedSeedling}>
+            <div>
+              <Label htmlFor="receiver">গ্রহীতা নির্বাচন করুন *</Label>
+              <Select value={selectedReceiver} onValueChange={setSelectedReceiver}>
                 <SelectTrigger>
-                  <SelectValue placeholder="কোন চারা পাঠাবেন?" />
+                  <SelectValue placeholder="একজন সদস্য নির্বাচন করুন" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mySeedlings.map((seedling) => (
-                    <SelectItem key={seedling.id} value={seedling.id}>
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center space-x-2">
-                          <Leaf className="h-4 w-4 text-green-600" />
-                          <span>{seedling.name}</span>
-                        </div>
+                  {profiles.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      <div>
+                        <div className="font-medium">{user.full_name}</div>
+                        {user.email && (
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="stock">চারার জাত নির্বাচন করুন *</Label>
+              <Select value={selectedStock} onValueChange={setSelectedStock}>
+                <SelectTrigger>
+                  <SelectValue placeholder="চারার জাত নির্বাচন করুন" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stocks.map((stock) => (
+                    <SelectItem key={stock.id} value={stock.id}>
+                      <div className="flex justify-between items-center w-full">
+                        <span>{stock.variety.name}</span>
                         <span className="text-sm text-gray-500">
-                          ({seedling.available} টি আছে)
+                          ({stock.quantity} টি আছে)
                         </span>
                       </div>
                     </SelectItem>
@@ -135,68 +235,57 @@ const SendGift = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="quantity">পরিমাণ *</Label>
               <Input
                 id="quantity"
                 type="number"
                 min="1"
+                max={maxQuantity}
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="কতটি চারা পাঠাবেন?"
+                placeholder={`সর্বোচ্চ ${maxQuantity} টি`}
                 required
+                disabled={!selectedStock}
               />
-              {selectedSeedling && (
-                <p className="text-sm text-gray-500">
-                  সর্বোচ্চ: {mySeedlings.find(s => s.id === selectedSeedling)?.available} টি
+              {selectedStockItem && (
+                <p className="text-sm text-gray-500 mt-1">
+                  আপনার কাছে {selectedStockItem.quantity} টি {selectedStockItem.variety.name} আছে
                 </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="message">বার্তা (ঐচ্ছিক)</Label>
-              <Textarea
-                id="message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="উপহারের সাথে একটি বার্তা লিখুন..."
-                rows={3}
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-pink-600 hover:bg-pink-700">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || !selectedReceiver || !selectedStock || !selectedGiftRound || !quantity}
+            >
               <Send className="h-4 w-4 mr-2" />
-              উপহার পাঠান
+              {loading ? 'পাঠানো হচ্ছে...' : 'উপহার পাঠান'}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* Recent Recipients */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">সাম্প্রতিক প্রাপকগণ</CardTitle>
-          <CardDescription>দ্রুত পাঠাতে ক্লিক করুন</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {members.slice(0, 4).map((member) => (
-              <Button
-                key={member.id}
-                variant="outline"
-                className="h-auto p-3 text-left justify-start"
-                onClick={() => setSelectedMember(member.id)}
-              >
-                <User className="h-4 w-4 mr-2" />
-                <div>
-                  <div className="font-medium">{member.name}</div>
-                  <div className="text-xs text-gray-500">{member.location}</div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {giftRounds.length === 0 && (
+        <Card className="mt-6">
+          <CardContent className="text-center py-8">
+            <p className="text-gray-600">
+              কোন সক্রিয় গিফট রাউন্ড নেই। উপহার পাঠানোর জন্য অপেক্ষা করুন।
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {stocks.length === 0 && (
+        <Card className="mt-6">
+          <CardContent className="text-center py-8">
+            <p className="text-gray-600">
+              আপনার কোন চারা নেই। প্রথমে চারা যোগ করুন।
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
