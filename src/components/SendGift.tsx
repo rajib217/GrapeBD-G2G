@@ -245,42 +245,12 @@ const SendGift = () => {
 
       if (senderUpdateError) throw senderUpdateError;
 
-      // Check if receiver already has this variety
-      const { data: receiverStock, error: receiverStockError } = await supabase
-        .from('user_stocks')
-        .select('id, quantity')
-        .eq('user_id', assignedGift.receiver_id)
-        .eq('variety_id', assignedGift.variety_id)
-        .maybeSingle();
-
-      if (receiverStockError) throw receiverStockError;
-
-      if (receiverStock) {
-        // Update existing stock
-        const { error: receiverUpdateError } = await supabase
-          .from('user_stocks')
-          .update({
-            quantity: receiverStock.quantity + assignedGift.quantity
-          })
-          .eq('id', receiverStock.id);
-
-        if (receiverUpdateError) throw receiverUpdateError;
-      } else {
-        // Create new stock entry
-        const { error: receiverCreateError } = await supabase
-          .from('user_stocks')
-          .insert({
-            user_id: assignedGift.receiver_id,
-            variety_id: assignedGift.variety_id,
-            quantity: assignedGift.quantity
-          });
-
-        if (receiverCreateError) throw receiverCreateError;
-      }
+      // Note: Receiver stock will be updated when they mark as received
+      // No automatic stock update here
 
       toast({
         title: 'সফল',
-        description: 'গিফট সফলভাবে পাঠানো হয়েছে এবং স্টক আপডেট করা হয়েছে!',
+        description: 'গিফট সফলভাবে পাঠানো হয়েছে! প্রাপক প্রাপ্ত হিসেবে চিহ্নিত করলে তার স্টক আপডেট হবে।',
       });
 
       // Refresh data to remove sent gift from assigned gifts list
