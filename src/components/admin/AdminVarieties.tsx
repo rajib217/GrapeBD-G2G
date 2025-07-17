@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, EyeOff, Upload, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, EyeOff, Upload, X, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ interface Variety {
   name: string;
   description?: string;
   thumbnail_image?: string;
+  details_url?: string;
   is_active: boolean;
   created_at: string;
   created_by?: string;
@@ -32,6 +33,7 @@ const AdminVarieties = () => {
     name: '',
     description: '',
     thumbnail_image: '',
+    details_url: '',
     is_active: true
   });
   const [uploading, setUploading] = useState(false);
@@ -128,7 +130,7 @@ const AdminVarieties = () => {
 
       setIsDialogOpen(false);
       setEditingVariety(null);
-      setFormData({ name: '', description: '', thumbnail_image: '', is_active: true });
+      setFormData({ name: '', description: '', thumbnail_image: '', details_url: '', is_active: true });
       removeSelectedImage();
       fetchVarieties();
     } catch (error) {
@@ -147,6 +149,7 @@ const AdminVarieties = () => {
       name: variety.name,
       description: variety.description || '',
       thumbnail_image: variety.thumbnail_image || '',
+      details_url: variety.details_url || '',
       is_active: variety.is_active
     });
     setIsDialogOpen(true);
@@ -303,7 +306,7 @@ const AdminVarieties = () => {
               size="lg"
               onClick={() => {
                 setEditingVariety(null);
-                setFormData({ name: '', description: '', thumbnail_image: '', is_active: true });
+                setFormData({ name: '', description: '', thumbnail_image: '', details_url: '', is_active: true });
                 removeSelectedImage();
               }}
             >
@@ -403,6 +406,18 @@ const AdminVarieties = () => {
               </div>
 
               <div>
+                <Label htmlFor="details_url" className="text-sm font-medium">বিস্তারিত লিংক</Label>
+                <Input
+                  id="details_url"
+                  value={formData.details_url}
+                  onChange={(e) => setFormData({ ...formData, details_url: e.target.value })}
+                  placeholder="https://example.com/variety-details"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">জাত সম্পর্কে বিস্তারিত জানার জন্য ওয়েবসাইট লিংক</p>
+              </div>
+
+              <div>
                 <Label htmlFor="description" className="text-sm font-medium">বিবরণ</Label>
                 <Textarea
                   id="description"
@@ -484,6 +499,20 @@ const AdminVarieties = () => {
                 <div className="text-sm font-medium text-muted-foreground">
                   মোট পরিমাণ: <span className="font-bold text-foreground">{variety.total_quantity || 0} টি</span>
                 </div>
+
+                {variety.details_url && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => window.open(variety.details_url, '_blank', 'noopener,noreferrer')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      বিস্তারিত দেখুন
+                    </Button>
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-between items-center">
