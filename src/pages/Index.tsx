@@ -39,8 +39,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Mobile Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="px-4 py-4">
+      <div className="bg-white/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-40">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Mobile Menu */}
             <div className="md:hidden">
@@ -52,8 +52,8 @@ const Index = () => {
             </div>
             
             {/* Logo and Title */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-green-600 p-2 rounded-full">
+            <div className="flex items-center space-x-3 flex-1 justify-center md:justify-start">
+              <div className="bg-gradient-to-br from-green-600 to-green-700 p-2 rounded-full shadow-md">
                 <Sprout className="h-6 w-6 text-white" />
               </div>
               <div className="hidden sm:block">

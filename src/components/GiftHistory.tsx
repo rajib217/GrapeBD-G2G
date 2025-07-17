@@ -215,16 +215,16 @@ const GiftHistory = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Tabs defaultValue="sent" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="sent" className="flex items-center space-x-2">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="sent" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 text-xs sm:text-sm">
             <Send className="h-4 w-4" />
-            <span>পাঠানো উপহার ({sentGifts.length})</span>
+            <span className="text-center">পাঠানো উপহার<br className="sm:hidden" />({sentGifts.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="received" className="flex items-center space-x-2">
+          <TabsTrigger value="received" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 text-xs sm:text-sm">
             <Inbox className="h-4 w-4" />
-            <span>প্রাপ্ত উপহার ({receivedGifts.length})</span>
+            <span className="text-center">প্রাপ্ত উপহার<br className="sm:hidden" />({receivedGifts.length})</span>
           </TabsTrigger>
         </TabsList>
 
@@ -241,26 +241,34 @@ const GiftHistory = () => {
             sentGifts.map((gift) => (
               <Card key={gift.id}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center space-x-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
                       {gift.variety.thumbnail_image && (
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={gift.variety.thumbnail_image} />
-                          <AvatarFallback>{gift.variety.name.charAt(0)}</AvatarFallback>
+                        <Avatar className="h-10 w-10 sm:h-8 sm:w-8 ring-2 ring-green-100 shrink-0">
+                          <AvatarImage 
+                            src={gift.variety.thumbnail_image} 
+                            alt={gift.variety.name}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-green-100 text-green-700 text-sm">
+                            {gift.variety.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                       )}
-                      {getStatusIcon(gift.status)}
-                      <span>{gift.variety.name}</span>
-                    </CardTitle>
-                    <Badge variant={getStatusVariant(gift.status)}>
+                      <div className="flex items-center space-x-2 min-w-0">
+                        {getStatusIcon(gift.status)}
+                        <CardTitle className="text-base sm:text-lg truncate">{gift.variety.name}</CardTitle>
+                      </div>
+                    </div>
+                    <Badge variant={getStatusVariant(gift.status)} className="self-start sm:self-center shrink-0">
                       {getStatusText(gift.status)}
                     </Badge>
                   </div>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     {gift.receiver ? (
                       <button 
                         onClick={() => handleUserClick(gift.receiver!.id)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
                       >
                         {gift.receiver.full_name}
                       </button>
@@ -269,13 +277,13 @@ const GiftHistory = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">পরিমাণ:</span>
-                      <span>{gift.quantity} টি</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">পরিমাণ:</span>
+                      <span className="font-semibold text-green-700">{gift.quantity} টি</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">তারিখ:</span>
-                      <span>{formatDate(gift.created_at)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">তারিখ:</span>
+                      <span className="text-right">{formatDate(gift.created_at)}</span>
                     </div>
                     {gift.sent_at && (
                       <div className="flex justify-between">
@@ -315,26 +323,34 @@ const GiftHistory = () => {
             receivedGifts.map((gift) => (
               <Card key={gift.id}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center space-x-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
                       {gift.variety.thumbnail_image && (
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={gift.variety.thumbnail_image} />
-                          <AvatarFallback>{gift.variety.name.charAt(0)}</AvatarFallback>
+                        <Avatar className="h-10 w-10 sm:h-8 sm:w-8 ring-2 ring-green-100 shrink-0">
+                          <AvatarImage 
+                            src={gift.variety.thumbnail_image} 
+                            alt={gift.variety.name}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-green-100 text-green-700 text-sm">
+                            {gift.variety.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                       )}
-                      {getStatusIcon(gift.status)}
-                      <span>{gift.variety.name}</span>
-                    </CardTitle>
-                    <Badge variant={getStatusVariant(gift.status)}>
+                      <div className="flex items-center space-x-2 min-w-0">
+                        {getStatusIcon(gift.status)}
+                        <CardTitle className="text-base sm:text-lg truncate">{gift.variety.name}</CardTitle>
+                      </div>
+                    </div>
+                    <Badge variant={getStatusVariant(gift.status)} className="self-start sm:self-center shrink-0">
                       {getStatusText(gift.status)}
                     </Badge>
                   </div>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     {gift.sender ? (
                       <button 
                         onClick={() => handleUserClick(gift.sender!.id)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
                       >
                         {gift.sender.full_name}
                       </button>
@@ -343,13 +359,13 @@ const GiftHistory = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">পরিমাণ:</span>
-                      <span>{gift.quantity} টি</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">পরিমাণ:</span>
+                      <span className="font-semibold text-green-700">{gift.quantity} টি</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">তারিখ:</span>
-                      <span>{formatDate(gift.created_at)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">তারিখ:</span>
+                      <span className="text-right">{formatDate(gift.created_at)}</span>
                     </div>
                     {gift.sent_at && (
                       <div className="flex justify-between">

@@ -21,8 +21,8 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-      <div className="grid grid-cols-5">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 md:hidden z-50 shadow-lg">
+      <div className="grid grid-cols-5 safe-area-bottom">
         {quickMenuItems.map((item) => {
           const isActive = activeTab === item.id;
           const IconComponent = item.icon;
@@ -31,14 +31,23 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className={`flex flex-col items-center justify-center py-3 px-2 text-xs transition-colors duration-200 ${
+              className={`flex flex-col items-center justify-center py-2 px-1 text-xs transition-all duration-200 touch-target relative ${
                 isActive
                   ? 'text-green-600 bg-green-50'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : 'text-gray-500 hover:text-gray-700 active:bg-gray-50'
               }`}
             >
-              <IconComponent className={`h-6 w-6 mb-1 ${isActive ? 'text-green-600' : ''}`} />
-              <span className="font-medium">{item.label}</span>
+              {isActive && (
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-green-600 rounded-full"></div>
+              )}
+              <IconComponent className={`h-5 w-5 mb-1 transition-transform ${
+                isActive ? 'text-green-600 scale-110' : ''
+              }`} />
+              <span className={`font-medium leading-tight text-center ${
+                isActive ? 'text-green-700' : ''
+              }`}>
+                {item.label}
+              </span>
             </button>
           );
         })}
