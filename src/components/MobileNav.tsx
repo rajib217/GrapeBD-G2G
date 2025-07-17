@@ -1,0 +1,179 @@
+import { useState } from 'react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  Menu, 
+  Sprout, 
+  Plus, 
+  Gift, 
+  History, 
+  MessageCircle, 
+  Bell, 
+  UserCheck, 
+  User, 
+  LogOut, 
+  Settings,
+  Home
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+interface MobileNavProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  showAdminButton?: boolean;
+}
+
+const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNavProps) => {
+  const [open, setOpen] = useState(false);
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setOpen(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  const handleAdminClick = () => {
+    if (profile?.role === 'admin') {
+      navigate('/admin');
+      setOpen(false);
+    }
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
+    setOpen(false);
+  };
+
+  const handleTabClick = (tab: string) => {
+    onTabChange(tab);
+    setOpen(false);
+  };
+
+  const menuItems = [
+    { id: 'stock', label: 'স্টক', icon: Sprout },
+    { id: 'add', label: 'যোগ করুন', icon: Plus },
+    { id: 'send', label: 'গিফট পাঠান', icon: Gift },
+    { id: 'my-gifts', label: 'আমার গিফট', icon: Gift },
+    { id: 'gift-history', label: 'গিফট হিস্টোরি', icon: History },
+    { id: 'messages', label: 'মেসেজ', icon: MessageCircle },
+    { id: 'notices', label: 'নোটিশ', icon: Bell },
+    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
+    { id: 'profile', label: 'প্রোফাইল', icon: User },
+  ];
+
+  const adminMenuItems = [
+    { id: 'users', label: 'ইউজার', icon: UserCheck },
+    { id: 'gifts', label: 'গিফট', icon: Gift },
+    { id: 'varieties', label: 'জাত', icon: Sprout },
+    { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: History },
+    { id: 'notices', label: 'নোটিশ', icon: Bell },
+    { id: 'messages', label: 'মেসেজ', icon: MessageCircle },
+    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
+  ];
+
+  const currentMenuItems = showAdminButton ? adminMenuItems : menuItems;
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-6 w-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-80 p-0">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="p-6 border-b bg-gradient-to-r from-green-600 to-blue-600">
+            <div className="flex items-center space-x-3 mb-4">
+              <Avatar className="h-16 w-16 ring-2 ring-white">
+                <AvatarImage src={profile?.profile_image || ''} />
+                <AvatarFallback className="bg-white text-green-600 text-xl font-bold">
+                  {profile?.full_name?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-white">
+                <p className="font-bold text-lg">{profile?.full_name}</p>
+                <p className="text-green-100 text-sm">{profile?.email}</p>
+                {profile?.role === 'admin' && (
+                  <Badge variant="secondary" className="mt-1">অ্যাডমিন</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Menu */}
+          <div className="flex-1 py-4">
+            <nav className="space-y-2 px-4">
+              {currentMenuItems.map((item) => {
+                const isActive = activeTab === item.id;
+                const IconComponent = item.icon;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleTabClick(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                      isActive
+                        ? 'bg-green-100 text-green-700 border-l-4 border-green-600'
+                        : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <IconComponent className={`h-5 w-5 ${isActive ? 'text-green-600' : ''}`} />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="border-t p-4 space-y-2">
+            {showAdminButton ? (
+              <Button
+                onClick={handleHomeClick}
+                variant="outline"
+                className="w-full justify-start"
+                size="lg"
+              >
+                <Home className="h-5 w-5 mr-3" />
+                হোম পেজ
+              </Button>
+            ) : (
+              profile?.role === 'admin' && (
+                <Button
+                  onClick={handleAdminClick}
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="lg"
+                >
+                  <Settings className="h-5 w-5 mr-3" />
+                  অ্যাডমিন প্যানেল
+                </Button>
+              )
+            )}
+            
+            <Button
+              onClick={handleSignOut}
+              variant="destructive"
+              className="w-full justify-start"
+              size="lg"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              লগআউট
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default MobileNav;

@@ -89,6 +89,50 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+/* মোবাইল-ফ্রেন্ডলি স্টাইল */
+@media (max-width: 768px) {
+  /* টাচ-ফ্রেন্ডলি মিনিমাম সাইজ */
+  button, 
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* স্ক্রোল এলিমেন্ট */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* ইনপুট ফিল্ড */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px; /* জুম এড়ানোর জন্য */
+    padding: 12px;
+  }
+  
+  /* কার্ড স্পেসিং */
+  .card-mobile {
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+  
+  /* ট্যাব স্পেসিং */
+  .tabs-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* হাই-ডিপিআই ডিসপ্লে */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .sharp-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
