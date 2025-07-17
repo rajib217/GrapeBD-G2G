@@ -19,6 +19,7 @@ interface Variety {
   is_active: boolean;
   created_at: string;
   created_by?: string;
+  total_quantity?: number;
 }
 
 const AdminVarieties = () => {
@@ -41,13 +42,33 @@ const AdminVarieties = () => {
 
   const fetchVarieties = async () => {
     try {
-      const { data, error } = await supabase
+      // First get varieties
+      const { data: varietiesData, error: varietiesError } = await supabase
         .from('varieties')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setVarieties(data || []);
+      if (varietiesError) throw varietiesError;
+
+      // Then get total quantities for each variety
+      const varietiesWithQuantities = await Promise.all(
+        (varietiesData || []).map(async (variety) => {
+          const { data: stockData, error: stockError } = await supabase
+            .from('user_stocks')
+            .select('quantity')
+            .eq('variety_id', variety.id);
+
+          if (stockError) {
+            console.error('Error fetching stock for variety:', variety.name, stockError);
+            return { ...variety, total_quantity: 0 };
+          }
+
+          const totalQuantity = stockData?.reduce((sum, stock) => sum + stock.quantity, 0) || 0;
+          return { ...variety, total_quantity: totalQuantity };
+        })
+      );
+
+      setVarieties(varietiesWithQuantities);
     } catch (error) {
       console.error('Error fetching varieties:', error);
       toast({
@@ -278,13 +299,21 @@ const AdminVarieties = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {variety.thumbnail_image && (
-                <img
-                  src={variety.thumbnail_image}
-                  alt={variety.name}
-                  className="w-full h-32 object-cover rounded-md mb-3"
-                />
-              )}
+              <div className="flex items-start gap-3 mb-3">
+                {variety.thumbnail_image && (
+                  <img
+                    src={variety.thumbnail_image}
+                    alt={variety.name}
+                    className="w-6 h-6 object-cover rounded-sm flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    মোট পরিমাণ: <span className="font-bold text-foreground">{variety.total_quantity || 0} টি</span>
+                  </div>
+                </div>
+              </div>
+              
               {variety.description && (
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                   {variety.description}
