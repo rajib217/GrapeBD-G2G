@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Gift, Send, Inbox, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface SentGift {
   id: string;
@@ -18,8 +20,10 @@ interface SentGift {
   admin_notes: string | null;
   variety: {
     name: string;
+    thumbnail_image: string | null;
   };
   receiver: {
+    id: string;
     full_name: string;
   } | null;
   gift_round: {
@@ -37,8 +41,10 @@ interface ReceivedGift {
   admin_notes: string | null;
   variety: {
     name: string;
+    thumbnail_image: string | null;
   };
   sender: {
+    id: string;
     full_name: string;
   } | null;
   gift_round: {
@@ -52,6 +58,7 @@ const GiftHistory = () => {
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchGifts = async () => {
     if (!profile?.id) return;
@@ -68,8 +75,8 @@ const GiftHistory = () => {
           sent_at,
           received_at,
           admin_notes,
-          variety:varieties(name),
-          receiver:profiles!gifts_receiver_id_fkey(full_name),
+          variety:varieties(name, thumbnail_image),
+          receiver:profiles!gifts_receiver_id_fkey(id, full_name),
           gift_round:gift_rounds(title)
         `)
         .eq('sender_id', profile.id)
@@ -88,8 +95,8 @@ const GiftHistory = () => {
           sent_at,
           received_at,
           admin_notes,
-          variety:varieties(name),
-          sender:profiles!gifts_sender_id_fkey(full_name),
+          variety:varieties(name, thumbnail_image),
+          sender:profiles!gifts_sender_id_fkey(id, full_name),
           gift_round:gift_rounds(title)
         `)
         .eq('receiver_id', profile.id)
@@ -199,6 +206,10 @@ const GiftHistory = () => {
     });
   };
 
+  const handleUserClick = (userId: string) => {
+    navigate(`/user/${userId}`);
+  };
+
   if (loading) {
     return <div className="text-center py-8">লোড হচ্ছে...</div>;
   }
@@ -231,7 +242,13 @@ const GiftHistory = () => {
               <Card key={gift.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center space-x-2">
+                    <CardTitle className="text-lg flex items-center space-x-3">
+                      {gift.variety.thumbnail_image && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={gift.variety.thumbnail_image} />
+                          <AvatarFallback>{gift.variety.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      )}
                       {getStatusIcon(gift.status)}
                       <span>{gift.variety.name}</span>
                     </CardTitle>
@@ -240,7 +257,14 @@ const GiftHistory = () => {
                     </Badge>
                   </div>
                   <CardDescription>
-                    {gift.receiver?.full_name} এর কাছে পাঠানো • {gift.gift_round.title}
+                    {gift.receiver ? (
+                      <button 
+                        onClick={() => handleUserClick(gift.receiver!.id)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      >
+                        {gift.receiver.full_name}
+                      </button>
+                    ) : 'অজানা প্রাপক'} এর কাছে পাঠানো • {gift.gift_round.title}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -292,7 +316,13 @@ const GiftHistory = () => {
               <Card key={gift.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center space-x-2">
+                    <CardTitle className="text-lg flex items-center space-x-3">
+                      {gift.variety.thumbnail_image && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={gift.variety.thumbnail_image} />
+                          <AvatarFallback>{gift.variety.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      )}
                       {getStatusIcon(gift.status)}
                       <span>{gift.variety.name}</span>
                     </CardTitle>
@@ -301,7 +331,14 @@ const GiftHistory = () => {
                     </Badge>
                   </div>
                   <CardDescription>
-                    {gift.sender?.full_name} এর কাছ থেকে • {gift.gift_round.title}
+                    {gift.sender ? (
+                      <button 
+                        onClick={() => handleUserClick(gift.sender!.id)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      >
+                        {gift.sender.full_name}
+                      </button>
+                    ) : 'অজানা প্রেরক'} এর কাছ থেকে • {gift.gift_round.title}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
