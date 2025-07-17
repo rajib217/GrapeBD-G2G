@@ -1,57 +1,41 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Gift, Leaf, Users, LogOut, Settings, Grape, Bell, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus } from 'lucide-react';
 import SeedlingStock from '@/components/SeedlingStock';
+import AddSeedling from '@/components/AddSeedling';
 import SendGift from '@/components/SendGift';
 import GiftHistory from '@/components/GiftHistory';
-import AddSeedling from '@/components/AddSeedling';
-import UserNotices from '@/components/UserNotices';
 import Messages from '@/components/Messages';
+import UserNotices from '@/components/UserNotices';
+import MyGifts from '@/components/MyGifts';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
-  const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-green-600 p-2 rounded-full">
-                <Grape className="h-6 w-6 text-white" />
+                <Sprout className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-green-800">গ্রেপ চারা বিনিময়</h1>
-                <p className="text-sm text-gray-600">আঙ্গুরের চারা আদান-প্রদান</p>
+                <h1 className="text-xl font-bold text-green-800">চারা ব্যবস্থাপনা</h1>
+                <p className="text-sm text-gray-600">আপনার চারা সংগ্রহ এবং গিফট ব্যবস্থাপনা</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="font-medium text-gray-900">{profile?.full_name}</p>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={profile?.role === 'admin' ? 'default' : 'secondary'}>
-                    {profile?.role === 'admin' ? 'অ্যাডমিন' : 'মেম্বার'}
-                  </Badge>
-                  <Badge variant={profile?.status === 'active' ? 'default' : 'destructive'}>
-                    {profile?.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                  </Badge>
-                </div>
+                <p className="text-sm text-gray-500">{profile?.email}</p>
               </div>
-              {profile?.role === 'admin' && (
-                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  অ্যাডমিন প্যানেল
-                </Button>
-              )}
               <Button onClick={signOut} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 লগআউট
@@ -62,73 +46,40 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-green-700 mb-2">
             স্বাগতম, {profile?.full_name}!
           </h2>
-          <p className="text-gray-600">আপনার চারার স্টক দেখুন, নতুন চারা যোগ করুন এবং বন্ধুদের কাছে উপহার পাঠান</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">মোট চারা</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">২৪</div>
-              <p className="text-green-100 text-sm">বিভিন্ন জাতের</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">পাঠানো উপহার</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">৮</div>
-              <p className="text-blue-100 text-sm">এই মাসে</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-purple-500 to-pink-600 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">পাওয়া উপহার</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">৫</div>
-              <p className="text-purple-100 text-sm">এই মাসে</p>
-            </CardContent>
-          </Card>
+          <p className="text-gray-600">আপনার চারা সংগ্রহ পরিচালনা করুন এবং অন্যদের সাথে গিফট শেয়ার করুন</p>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="stock" className="flex items-center space-x-2">
-              <Leaf className="h-4 w-4" />
-              <span>আমার স্টক</span>
+              <Sprout className="h-4 w-4" />
+              <span>স্টক</span>
             </TabsTrigger>
             <TabsTrigger value="add" className="flex items-center space-x-2">
               <Plus className="h-4 w-4" />
-              <span>চারা যোগ করুন</span>
+              <span>যোগ করুন</span>
             </TabsTrigger>
-            <TabsTrigger value="gift" className="flex items-center space-x-2">
+            <TabsTrigger value="send" className="flex items-center space-x-2">
               <Gift className="h-4 w-4" />
-              <span>উপহার পাঠান</span>
+              <span>গিফট পাঠান</span>
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>ইতিহাস</span>
-            </TabsTrigger>
-            <TabsTrigger value="notices" className="flex items-center space-x-2">
-              <Bell className="h-4 w-4" />
-              <span>নোটিশ</span>
+            <TabsTrigger value="my-gifts" className="flex items-center space-x-2">
+              <Gift className="h-4 w-4" />
+              <span>আমার গিফট</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center space-x-2">
               <MessageCircle className="h-4 w-4" />
               <span>মেসেজ</span>
+            </TabsTrigger>
+            <TabsTrigger value="notices" className="flex items-center space-x-2">
+              <Bell className="h-4 w-4" />
+              <span>নোটিশ</span>
             </TabsTrigger>
           </TabsList>
 
@@ -140,20 +91,20 @@ const Index = () => {
             <AddSeedling />
           </TabsContent>
 
-          <TabsContent value="gift">
+          <TabsContent value="send">
             <SendGift />
           </TabsContent>
 
-          <TabsContent value="history">
-            <GiftHistory />
-          </TabsContent>
-
-          <TabsContent value="notices">
-            <UserNotices />
+          <TabsContent value="my-gifts">
+            <MyGifts />
           </TabsContent>
 
           <TabsContent value="messages">
             <Messages />
+          </TabsContent>
+
+          <TabsContent value="notices">
+            <UserNotices />
           </TabsContent>
         </Tabs>
       </div>

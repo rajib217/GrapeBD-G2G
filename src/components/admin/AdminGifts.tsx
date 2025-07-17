@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Check, X, Eye, MessageSquare } from 'lucide-react';
+import { Search, Check, X, Eye, MessageSquare, Plus, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,18 +31,60 @@ interface Gift {
   round_title?: string;
 }
 
+interface Profile {
+  id: string;
+  full_name: string;
+  user_id: string;
+}
+
+interface Variety {
+  id: string;
+  name: string;
+}
+
+interface GiftRound {
+  id: string;
+  title: string;
+  is_active: boolean;
+}
+
+interface UserStock {
+  user_id: string;
+  variety_id: string;
+  quantity: number;
+  variety: {
+    name: string;
+  };
+}
+
 const AdminGifts = () => {
   const [gifts, setGifts] = useState<Gift[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [varieties, setVarieties] = useState<Variety[]>([]);
+  const [giftRounds, setGiftRounds] = useState<GiftRound[]>([]);
+  const [userStocks, setUserStocks] = useState<UserStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
+  const [createForm, setCreateForm] = useState({
+    receiverId: '',
+    senderId: '',
+    varietyId: '',
+    giftRoundId: '',
+    quantity: 1,
+    adminNotes: ''
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGifts();
+    fetchUsers();
+    fetchVarieties();
+    fetchGiftRounds();
   }, []);
 
   const fetchGifts = async () => {
@@ -78,6 +120,138 @@ const AdminGifts = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, user_id')
+        .eq('status', 'active')
+        .order('full_name');
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchVarieties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('varieties')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setVarieties(data || []);
+    } catch (error) {
+      console.error('Error fetching varieties:', error);
+    }
+  };
+
+  const fetchGiftRounds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gift_rounds')
+        .select('id, title, is_active')
+        .eq('is_active', true)
+        .order('title');
+
+      if (error) throw error;
+      setGiftRounds(data || []);
+    } catch (error) {
+      console.error('Error fetching gift rounds:', error);
+    }
+  };
+
+  const fetchUserStocks = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_stocks')
+        .select(`
+          user_id,
+          variety_id,
+          quantity,
+          variety:varieties(name)
+        `)
+        .eq('user_id', userId)
+        .gt('quantity', 0);
+
+      if (error) throw error;
+      setUserStocks(data || []);
+    } catch (error) {
+      console.error('Error fetching user stocks:', error);
+      setUserStocks([]);
+    }
+  };
+
+  const handleCreateGift = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!createForm.receiverId || !createForm.senderId || !createForm.varietyId || !createForm.giftRoundId) {
+      toast({
+        title: "ত্রুটি",
+        description: "সকল ফিল্ড পূরণ করুন",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if sender has enough stock
+    const senderStock = userStocks.find(stock => 
+      stock.user_id === createForm.senderId && stock.variety_id === createForm.varietyId
+    );
+
+    if (!senderStock || senderStock.quantity < createForm.quantity) {
+      toast({
+        title: "ত্রুটি",
+        description: "প্রেরকের কাছে পর্যাপ্ত স্টক নেই",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('gifts')
+        .insert({
+          sender_id: createForm.senderId,
+          receiver_id: createForm.receiverId,
+          variety_id: createForm.varietyId,
+          gift_round_id: createForm.giftRoundId,
+          quantity: createForm.quantity,
+          admin_notes: createForm.adminNotes || null,
+          status: 'approved'
+        });
+
+      if (error) throw error;
+      
+      toast({
+        title: "সফল",
+        description: "গিফট তৈরি করা হয়েছে",
+      });
+      
+      setIsCreateOpen(false);
+      setCreateForm({
+        receiverId: '',
+        senderId: '',
+        varietyId: '',
+        giftRoundId: '',
+        quantity: 1,
+        adminNotes: ''
+      });
+      fetchGifts();
+    } catch (error) {
+      console.error('Error creating gift:', error);
+      toast({
+        title: "ত্রুটি",
+        description: "গিফট তৈরি করতে সমস্যা হয়েছে",
+        variant: "destructive",
+      });
     }
   };
 
@@ -161,6 +335,20 @@ const AdminGifts = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const handleSenderChange = (senderId: string) => {
+    setCreateForm({ ...createForm, senderId, varietyId: '' });
+    if (senderId) {
+      fetchUserStocks(senderId);
+    } else {
+      setUserStocks([]);
+    }
+  };
+
+  const getAvailableQuantity = (varietyId: string) => {
+    const stock = userStocks.find(s => s.variety_id === varietyId);
+    return stock?.quantity || 0;
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center h-64">লোড হচ্ছে...</div>;
   }
@@ -173,6 +361,10 @@ const AdminGifts = () => {
           <h2 className="text-2xl font-bold">গিফট ম্যানেজমেন্ট</h2>
           <p className="text-muted-foreground">গিফট অনুমোদন এবং ট্র্যাকিং</p>
         </div>
+        <Button onClick={() => setIsCreateOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          নতুন গিফট তৈরি
+        </Button>
       </div>
 
       {/* Filters */}
@@ -269,6 +461,130 @@ const AdminGifts = () => {
           <p className="text-muted-foreground">কোনো গিফট পাওয়া যায়নি</p>
         </div>
       )}
+
+      {/* Create Gift Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>নতুন গিফট তৈরি করুন</DialogTitle>
+            <DialogDescription>
+              একজন ইউজারকে অন্য ইউজারের কাছে গিফট পাঠানোর জন্য নির্দেশ দিন
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleCreateGift} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="receiver">গিফট প্রাপক</Label>
+                <Select value={createForm.receiverId} onValueChange={(value) => setCreateForm({ ...createForm, receiverId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="প্রাপক নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="sender">গিফট প্রেরক</Label>
+                <Select value={createForm.senderId} onValueChange={handleSenderChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="প্রেরক নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="variety">জাত</Label>
+                <Select 
+                  value={createForm.varietyId} 
+                  onValueChange={(value) => setCreateForm({ ...createForm, varietyId: value })}
+                  disabled={!createForm.senderId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="জাত নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userStocks.map((stock) => (
+                      <SelectItem key={stock.variety_id} value={stock.variety_id}>
+                        {stock.variety.name} (স্টক: {stock.quantity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="quantity">পরিমাণ</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  max={getAvailableQuantity(createForm.varietyId)}
+                  value={createForm.quantity}
+                  onChange={(e) => setCreateForm({ ...createForm, quantity: parseInt(e.target.value) || 1 })}
+                  disabled={!createForm.varietyId}
+                />
+                {createForm.varietyId && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    সর্বোচ্চ: {getAvailableQuantity(createForm.varietyId)}টি
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="giftRound">গিফট রাউন্ড</Label>
+              <Select value={createForm.giftRoundId} onValueChange={(value) => setCreateForm({ ...createForm, giftRoundId: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="গিফট রাউন্ড নির্বাচন করুন" />
+                </SelectTrigger>
+                <SelectContent>
+                  {giftRounds.map((round) => (
+                    <SelectItem key={round.id} value={round.id}>
+                      {round.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="adminNotes">অ্যাডমিন নোট (ঐচ্ছিক)</Label>
+              <Textarea
+                id="adminNotes"
+                value={createForm.adminNotes}
+                onChange={(e) => setCreateForm({ ...createForm, adminNotes: e.target.value })}
+                placeholder="অতিরিক্ত নোট লিখুন..."
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                বাতিল
+              </Button>
+              <Button type="submit">
+                <Send className="h-4 w-4 mr-2" />
+                গিফট তৈরি করুন
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Gift Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
