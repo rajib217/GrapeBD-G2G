@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home } from 'lucide-react';
+import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGifts from '@/components/admin/AdminGifts';
@@ -12,11 +12,24 @@ import AdminVarieties from '@/components/admin/AdminVarieties';
 import AdminGiftRounds from '@/components/admin/AdminGiftRounds';
 import AdminNotices from '@/components/admin/AdminNotices';
 import Messages from '@/components/Messages';
+import AllMembers from '@/components/AllMembers';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -38,11 +51,11 @@ const AdminDashboard = () => {
                 <p className="font-medium text-gray-900">{profile?.full_name}</p>
                 <Badge variant="default">অ্যাডমিন</Badge>
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+              <Button variant="outline" size="sm" onClick={handleHomeClick}>
                 <Home className="h-4 w-4 mr-2" />
                 হোম পেজ
               </Button>
-              <Button onClick={signOut} variant="outline" size="sm">
+              <Button onClick={handleSignOut} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 লগআউট
               </Button>
@@ -62,7 +75,7 @@ const AdminDashboard = () => {
 
         {/* Admin Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-7 mb-8">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>ইউজার</span>
@@ -86,6 +99,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="messages" className="flex items-center space-x-2">
               <MessageCircle className="h-4 w-4" />
               <span>মেসেজ</span>
+            </TabsTrigger>
+            <TabsTrigger value="all-members" className="flex items-center space-x-2">
+              <UserCheck className="h-4 w-4" />
+              <span>সকল মেম্বার</span>
             </TabsTrigger>
           </TabsList>
 
@@ -111,6 +128,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="messages">
             <Messages />
+          </TabsContent>
+
+          <TabsContent value="all-members">
+            <AllMembers />
           </TabsContent>
         </Tabs>
       </div>

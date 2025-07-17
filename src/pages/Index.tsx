@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus } from 'lucide-react';
+import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck } from 'lucide-react';
 import SeedlingStock from '@/components/SeedlingStock';
 import AddSeedling from '@/components/AddSeedling';
 import SendGift from '@/components/SendGift';
@@ -11,10 +11,19 @@ import GiftHistory from '@/components/GiftHistory';
 import Messages from '@/components/Messages';
 import UserNotices from '@/components/UserNotices';
 import MyGifts from '@/components/MyGifts';
+import AllMembers from '@/components/AllMembers';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
   const { profile, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -36,7 +45,7 @@ const Index = () => {
                 <p className="font-medium text-gray-900">{profile?.full_name}</p>
                 <p className="text-sm text-gray-500">{profile?.email}</p>
               </div>
-              <Button onClick={signOut} variant="outline" size="sm">
+              <Button onClick={handleSignOut} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 লগআউট
               </Button>
@@ -56,7 +65,7 @@ const Index = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-7 mb-8">
             <TabsTrigger value="stock" className="flex items-center space-x-2">
               <Sprout className="h-4 w-4" />
               <span>স্টক</span>
@@ -80,6 +89,10 @@ const Index = () => {
             <TabsTrigger value="notices" className="flex items-center space-x-2">
               <Bell className="h-4 w-4" />
               <span>নোটিশ</span>
+            </TabsTrigger>
+            <TabsTrigger value="all-members" className="flex items-center space-x-2">
+              <UserCheck className="h-4 w-4" />
+              <span>সকল মেম্বার</span>
             </TabsTrigger>
           </TabsList>
 
@@ -105,6 +118,10 @@ const Index = () => {
 
           <TabsContent value="notices">
             <UserNotices />
+          </TabsContent>
+
+          <TabsContent value="all-members">
+            <AllMembers />
           </TabsContent>
         </Tabs>
       </div>
