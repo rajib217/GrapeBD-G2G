@@ -304,7 +304,7 @@ const AdminVarieties = () => {
                   <img
                     src={variety.thumbnail_image}
                     alt={variety.name}
-                    className="w-6 h-6 object-cover rounded-sm flex-shrink-0"
+                    className="w-25 h-25 object-cover rounded-sm flex-shrink-0"
                   />
                 )}
                 <div className="flex-1">

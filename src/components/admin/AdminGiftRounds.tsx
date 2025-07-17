@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Play, Pause } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Play, Pause, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,8 +22,21 @@ interface GiftRound {
   created_by: string;
 }
 
+interface Variety {
+  id: string;
+  name: string;
+  thumbnail_image?: string;
+  total_quantity?: number;
+}
+
+interface GiftRoundVariety {
+  variety_id: string;
+  quantity: number;
+}
+
 const AdminGiftRounds = () => {
   const [giftRounds, setGiftRounds] = useState<GiftRound[]>([]);
+  const [varieties, setVarieties] = useState<Variety[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,10 +46,14 @@ const AdminGiftRounds = () => {
     description: '',
     is_active: true
   });
+  const [selectedVarieties, setSelectedVarieties] = useState<GiftRoundVariety[]>([]);
+  const [selectedVarietyId, setSelectedVarietyId] = useState('');
+  const [selectedQuantity, setSelectedQuantity] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchGiftRounds();
+    fetchVarieties();
   }, []);
 
   const fetchGiftRounds = async () => {
@@ -56,6 +74,41 @@ const AdminGiftRounds = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVarieties = async () => {
+    try {
+      // First get varieties
+      const { data: varietiesData, error: varietiesError } = await supabase
+        .from('varieties')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (varietiesError) throw varietiesError;
+
+      // Then get total quantities for each variety
+      const varietiesWithQuantities = await Promise.all(
+        (varietiesData || []).map(async (variety) => {
+          const { data: stockData, error: stockError } = await supabase
+            .from('user_stocks')
+            .select('quantity')
+            .eq('variety_id', variety.id);
+
+          if (stockError) {
+            console.error('Error fetching stock for variety:', variety.name, stockError);
+            return { ...variety, total_quantity: 0 };
+          }
+
+          const totalQuantity = stockData?.reduce((sum, stock) => sum + stock.quantity, 0) || 0;
+          return { ...variety, total_quantity: totalQuantity };
+        })
+      );
+
+      setVarieties(varietiesWithQuantities);
+    } catch (error) {
+      console.error('Error fetching varieties:', error);
     }
   };
 
@@ -102,6 +155,9 @@ const AdminGiftRounds = () => {
       setIsDialogOpen(false);
       setEditingRound(null);
       setFormData({ title: '', description: '', is_active: true });
+      setSelectedVarieties([]);
+      setSelectedVarietyId('');
+      setSelectedQuantity('');
       fetchGiftRounds();
     } catch (error) {
       console.error('Error saving gift round:', error);
@@ -120,7 +176,43 @@ const AdminGiftRounds = () => {
       description: round.description || '',
       is_active: round.is_active
     });
+    setSelectedVarieties([]);
+    setSelectedVarietyId('');
+    setSelectedQuantity('');
     setIsDialogOpen(true);
+  };
+
+  const addVarietyToRound = () => {
+    if (!selectedVarietyId || !selectedQuantity) return;
+    
+    const quantity = parseInt(selectedQuantity);
+    const variety = varieties.find(v => v.id === selectedVarietyId);
+    
+    if (!variety || quantity <= 0 || quantity > (variety.total_quantity || 0)) {
+      toast({
+        title: "ত্রুটি",
+        description: "অবৈধ পরিমাণ। উপলব্ধ চারার চেয়ে বেশি দিতে পারবেন না।",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if variety already exists
+    const existingIndex = selectedVarieties.findIndex(v => v.variety_id === selectedVarietyId);
+    if (existingIndex >= 0) {
+      const updatedVarieties = [...selectedVarieties];
+      updatedVarieties[existingIndex].quantity = quantity;
+      setSelectedVarieties(updatedVarieties);
+    } else {
+      setSelectedVarieties([...selectedVarieties, { variety_id: selectedVarietyId, quantity }]);
+    }
+
+    setSelectedVarietyId('');
+    setSelectedQuantity('');
+  };
+
+  const removeVarietyFromRound = (varietyId: string) => {
+    setSelectedVarieties(selectedVarieties.filter(v => v.variety_id !== varietyId));
   };
 
   const handleDelete = async (id: string) => {
@@ -197,6 +289,9 @@ const AdminGiftRounds = () => {
             <Button onClick={() => {
               setEditingRound(null);
               setFormData({ title: '', description: '', is_active: true });
+              setSelectedVarieties([]);
+              setSelectedVarietyId('');
+              setSelectedQuantity('');
             }}>
               <Plus className="h-4 w-4 mr-2" />
               নতুন গিফট রাউন্ড
@@ -236,6 +331,81 @@ const AdminGiftRounds = () => {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
                 <Label htmlFor="is_active">সক্রিয় রাউন্ড</Label>
+              </div>
+
+              {/* Variety Selection Section */}
+              <div className="space-y-4">
+                <Label>এই রাউন্ডে কোন জাত অন্তর্ভুক্ত করবেন?</Label>
+                
+                {/* Add Variety Form */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Select value={selectedVarietyId} onValueChange={setSelectedVarietyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="জাত নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {varieties.filter(v => (v.total_quantity || 0) > 0).map((variety) => (
+                        <SelectItem key={variety.id} value={variety.id}>
+                          <div className="flex items-center gap-2">
+                            {variety.thumbnail_image && (
+                              <img
+                                src={variety.thumbnail_image}
+                                alt={variety.name}
+                                className="w-6 h-6 object-cover rounded"
+                              />
+                            )}
+                            <span>{variety.name} ({variety.total_quantity || 0} টি)</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="পরিমাণ"
+                    value={selectedQuantity}
+                    onChange={(e) => setSelectedQuantity(e.target.value)}
+                    min="1"
+                  />
+                  <Button type="button" onClick={addVarietyToRound} disabled={!selectedVarietyId || !selectedQuantity}>
+                    যোগ করুন
+                  </Button>
+                </div>
+
+                {/* Selected Varieties List */}
+                {selectedVarieties.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>নির্বাচিত জাতসমূহ:</Label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {selectedVarieties.map((item) => {
+                        const variety = varieties.find(v => v.id === item.variety_id);
+                        return (
+                          <div key={item.variety_id} className="flex items-center justify-between bg-muted p-2 rounded">
+                            <div className="flex items-center gap-2">
+                              {variety?.thumbnail_image && (
+                                <img
+                                  src={variety.thumbnail_image}
+                                  alt={variety.name}
+                                  className="w-6 h-6 object-cover rounded"
+                                />
+                              )}
+                              <span className="text-sm">{variety?.name}</span>
+                              <Badge variant="secondary">{item.quantity} টি</Badge>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeVarietyFromRound(item.variety_id)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="submit">
