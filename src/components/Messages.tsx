@@ -94,9 +94,14 @@ const Messages = () => {
       const { data, error } = await supabase
         .from('messages')
         .select(`
-          *,
-          sender:sender_id(id, full_name, email, role, status, profile_image),
-          receiver:receiver_id(id, full_name, email, role, status, profile_image)
+          id,
+          content,
+          created_at,
+          is_read,
+          sender_id,
+          receiver_id,
+          sender:profiles!messages_sender_id_fkey(id, full_name, email, role, status, profile_image),
+          receiver:profiles!messages_receiver_id_fkey(id, full_name, email, role, status, profile_image)
         `)
         .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${profile.id})`)
         .order('created_at', { ascending: true });
