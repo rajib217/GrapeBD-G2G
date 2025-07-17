@@ -116,8 +116,8 @@ const ProfileEdit = () => {
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}.${fileExt}`;
-      const filePath = `${profile.id}/${fileName}`;
+      const fileName = `${profile.user_id}.${fileExt}`;
+      const filePath = `${profile.user_id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('profile-pictures')
