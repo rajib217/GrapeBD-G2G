@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Save, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const ProfileEdit = () => {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -87,6 +89,66 @@ const ProfileEdit = () => {
     }));
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile?.id) return;
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'ফাইলের সাইজ ৫MB এর কম হতে হবে',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'শুধুমাত্র ছবি ফাইল আপলোড করুন',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, file, {
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath);
+
+      handleInputChange('profile_image', data.publicUrl);
+
+      toast({
+        title: 'সফল',
+        description: 'প্রোফাইল ছবি আপলোড হয়েছে',
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: 'ত্রুটি',
+        description: 'ছবি আপলোড করতে সমস্যা হয়েছে',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const profileImageUrl = formData.profile_image || 
     (formData.email ? getGravatarUrl(formData.email) : '');
 
@@ -112,20 +174,49 @@ const ProfileEdit = () => {
                   {formData.full_name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="text-center">
-                <Label htmlFor="profile_image">প্রোফাইল ছবি URL</Label>
-                <Input
-                  id="profile_image"
-                  type="url"
-                  value={formData.profile_image}
-                  onChange={(e) => handleInputChange('profile_image', e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="mt-2"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  ইমেইলে Gravatar থাকলে স্বয়ংক্রিয়ভাবে দেখাবে
-                </p>
-              </div>
+              <Tabs defaultValue="upload" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload">ছবি আপলোড</TabsTrigger>
+                  <TabsTrigger value="url">URL লিংক</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="space-y-4">
+                  <div>
+                    <Label htmlFor="file_upload">ছবি ফাইল নির্বাচন করুন</Label>
+                    <Input
+                      id="file_upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      সর্বোচ্চ ৫MB সাইজের ছবি আপলোড করুন
+                    </p>
+                    {uploading && (
+                      <p className="text-sm text-blue-600 mt-2">
+                        ছবি আপলোড হচ্ছে...
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="url" className="space-y-4">
+                  <div>
+                    <Label htmlFor="profile_image">প্রোফাইল ছবি URL</Label>
+                    <Input
+                      id="profile_image"
+                      type="url"
+                      value={formData.profile_image}
+                      onChange={(e) => handleInputChange('profile_image', e.target.value)}
+                      placeholder="https://example.com/photo.jpg"
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      ইমেইলে Gravatar থাকলে স্বয়ংক্রিয়ভাবে দেখাবে
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Full Name */}
