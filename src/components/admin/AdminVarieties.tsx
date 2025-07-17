@@ -299,26 +299,25 @@ const AdminVarieties = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start gap-3 mb-3">
+              <div className="mb-3">
                 {variety.thumbnail_image && (
                   <img
                     src={variety.thumbnail_image}
                     alt={variety.name}
-                    className="w-25 h-25 object-cover rounded-sm flex-shrink-0"
+                    className="w-full max-w-[50%] h-auto object-cover rounded-sm mb-3"
                   />
                 )}
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    মোট পরিমাণ: <span className="font-bold text-foreground">{variety.total_quantity || 0} টি</span>
-                  </div>
+                
+                {variety.description && (
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    {variety.description}
+                  </p>
+                )}
+                
+                <div className="text-sm font-medium text-muted-foreground">
+                  মোট পরিমাণ: <span className="font-bold text-foreground">{variety.total_quantity || 0} টি</span>
                 </div>
               </div>
-              
-              {variety.description && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {variety.description}
-                </p>
-              )}
               
               <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
