@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings, User } from 'lucide-react';
+import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings, User, History } from 'lucide-react';
 import SeedlingStock from '@/components/SeedlingStock';
 import AddSeedling from '@/components/AddSeedling';
 import SendGift from '@/components/SendGift';
@@ -80,7 +80,7 @@ const Index = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-8">
+          <TabsList className="grid w-full grid-cols-9 mb-8">
             <TabsTrigger value="stock" className="flex items-center space-x-2">
               <Sprout className="h-4 w-4" />
               <span>স্টক</span>
@@ -96,6 +96,10 @@ const Index = () => {
             <TabsTrigger value="my-gifts" className="flex items-center space-x-2">
               <Gift className="h-4 w-4" />
               <span>আমার গিফট</span>
+            </TabsTrigger>
+            <TabsTrigger value="gift-history" className="flex items-center space-x-2">
+              <History className="h-4 w-4" />
+              <span>গিফট হিস্টোরি</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center space-x-2">
               <MessageCircle className="h-4 w-4" />
@@ -129,6 +133,10 @@ const Index = () => {
 
           <TabsContent value="my-gifts">
             <MyGifts />
+          </TabsContent>
+
+          <TabsContent value="gift-history">
+            <GiftHistory />
           </TabsContent>
 
           <TabsContent value="messages">
