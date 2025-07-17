@@ -19,6 +19,7 @@ interface Stock {
     id: string;
     name: string;
     description: string | null;
+    thumbnail_image: string | null;
   };
 }
 
@@ -41,7 +42,7 @@ const SeedlingStock = () => {
           id,
           quantity,
           notes,
-          variety:varieties(id, name, description)
+          variety:varieties(id, name, description, thumbnail_image)
         `)
         .eq('user_id', profile.id)
         .gt('quantity', 0);
@@ -146,7 +147,16 @@ const SeedlingStock = () => {
           <Card key={stock.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{stock.variety.name}</CardTitle>
+                <div className="flex items-center space-x-2">
+                  {stock.variety.thumbnail_image && (
+                    <img
+                      src={stock.variety.thumbnail_image}
+                      alt={stock.variety.name}
+                      className="w-8 h-8 object-cover rounded-sm flex-shrink-0"
+                    />
+                  )}
+                  <CardTitle className="text-lg">{stock.variety.name}</CardTitle>
+                </div>
                 <Badge variant="secondary">{stock.quantity} টি</Badge>
               </div>
               {stock.variety.description && (

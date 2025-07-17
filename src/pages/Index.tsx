@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Gift, Leaf, Users, LogOut, Settings, Grape } from 'lucide-react';
+import { Plus, Gift, Leaf, Users, LogOut, Settings, Grape, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import SeedlingStock from '@/components/SeedlingStock';
 import SendGift from '@/components/SendGift';
 import GiftHistory from '@/components/GiftHistory';
 import AddSeedling from '@/components/AddSeedling';
+import UserNotices from '@/components/UserNotices';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
@@ -103,7 +104,7 @@ const Index = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="stock" className="flex items-center space-x-2">
               <Leaf className="h-4 w-4" />
               <span>আমার স্টক</span>
@@ -119,6 +120,10 @@ const Index = () => {
             <TabsTrigger value="history" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>ইতিহাস</span>
+            </TabsTrigger>
+            <TabsTrigger value="notices" className="flex items-center space-x-2">
+              <Bell className="h-4 w-4" />
+              <span>নোটিশ</span>
             </TabsTrigger>
           </TabsList>
 
@@ -136,6 +141,10 @@ const Index = () => {
 
           <TabsContent value="history">
             <GiftHistory />
+          </TabsContent>
+
+          <TabsContent value="notices">
+            <UserNotices />
           </TabsContent>
         </Tabs>
       </div>
