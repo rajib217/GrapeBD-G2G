@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Edit, Trash2, Eye, EyeOff, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,10 @@ const AdminVarieties = () => {
     thumbnail_image: '',
     is_active: true
   });
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,11 +89,21 @@ const AdminVarieties = () => {
     e.preventDefault();
     
     try {
+      let updatedFormData = { ...formData };
+
+      // Upload image if file is selected
+      if (selectedFile) {
+        const imageUrl = await uploadImage();
+        if (imageUrl) {
+          updatedFormData.thumbnail_image = imageUrl;
+        }
+      }
+
       if (editingVariety) {
         // Update existing variety
         const { error } = await supabase
           .from('varieties')
-          .update(formData)
+          .update(updatedFormData)
           .eq('id', editingVariety.id);
 
         if (error) throw error;
@@ -102,7 +116,7 @@ const AdminVarieties = () => {
         // Create new variety
         const { error } = await supabase
           .from('varieties')
-          .insert([formData]);
+          .insert([updatedFormData]);
 
         if (error) throw error;
         
@@ -115,6 +129,7 @@ const AdminVarieties = () => {
       setIsDialogOpen(false);
       setEditingVariety(null);
       setFormData({ name: '', description: '', thumbnail_image: '', is_active: true });
+      removeSelectedImage();
       fetchVarieties();
     } catch (error) {
       console.error('Error saving variety:', error);
@@ -164,6 +179,81 @@ const AdminVarieties = () => {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "ত্রুটি",
+          description: "ছবির সাইজ ৫ এমবি এর কম হতে হবে",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "ত্রুটি",
+          description: "শুধুমাত্র ছবি ফাইল আপলোড করুন",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!selectedFile) return null;
+
+    setUploading(true);
+    try {
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `variety-${Date.now()}.${fileExt}`;
+      const filePath = `varieties/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "ত্রুটি",
+        description: "ছবি আপলোড করতে সমস্যা হয়েছে",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const toggleActiveStatus = async (variety: Variety) => {
     try {
       const { error } = await supabase
@@ -200,69 +290,146 @@ const AdminVarieties = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold">জাত ম্যানেজমেন্ট</h2>
-          <p className="text-muted-foreground">আঙ্গুরের জাত যোগ, সম্পাদনা এবং ব্যবস্থাপনা</p>
+          <h2 className="text-xl sm:text-2xl font-bold">জাত ম্যানেজমেন্ট</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">আঙ্গুরের জাত যোগ, সম্পাদনা এবং ব্যবস্থাপনা</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingVariety(null);
-              setFormData({ name: '', description: '', thumbnail_image: '', is_active: true });
-            }}>
+            <Button 
+              className="w-full sm:w-auto" 
+              size="lg"
+              onClick={() => {
+                setEditingVariety(null);
+                setFormData({ name: '', description: '', thumbnail_image: '', is_active: true });
+                removeSelectedImage();
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               নতুন জাত যোগ করুন
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingVariety ? 'জাত সম্পাদনা' : 'নতুন জাত যোগ করুন'}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg sm:text-xl">{editingVariety ? 'জাত সম্পাদনা' : 'নতুন জাত যোগ করুন'}</DialogTitle>
+              <DialogDescription className="text-sm">
                 আঙ্গুরের জাতের তথ্য দিন
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="name">জাতের নাম *</Label>
+                <Label htmlFor="name" className="text-sm font-medium">জাতের নাম *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="উদাহরণ: রেড গ্লোব"
+                  className="mt-1"
                   required
                 />
               </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">জাতের ছবি</Label>
+                
+                {/* File Input */}
+                <div className="space-y-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="w-full sm:w-auto"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      ছবি নির্বাচন করুন
+                    </Button>
+                    
+                    {selectedFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        className="w-full sm:w-auto"
+                        onClick={removeSelectedImage}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        ছবি সরান
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Image Preview */}
+                  {(previewUrl || formData.thumbnail_image) && (
+                    <div className="relative">
+                      <img
+                        src={previewUrl || formData.thumbnail_image}
+                        alt="Preview"
+                        className="w-full max-w-xs h-auto object-cover rounded-lg border"
+                      />
+                      {selectedFile && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          ফাইল: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Manual URL Input */}
+                <div className="border-t pt-3">
+                  <Label htmlFor="thumbnail" className="text-xs text-muted-foreground">অথবা ছবির লিংক দিন</Label>
+                  <Input
+                    id="thumbnail"
+                    value={formData.thumbnail_image}
+                    onChange={(e) => setFormData({ ...formData, thumbnail_image: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="description">বিবরণ</Label>
+                <Label htmlFor="description" className="text-sm font-medium">বিবরণ</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="জাতের বিস্তারিত তথ্য..."
+                  className="mt-1 min-h-[80px]"
                 />
               </div>
-              <div>
-                <Label htmlFor="thumbnail">ছবির লিংক</Label>
-                <Input
-                  id="thumbnail"
-                  value={formData.thumbnail_image}
-                  onChange={(e) => setFormData({ ...formData, thumbnail_image: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
+
+              <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
                 <Switch
                   id="is_active"
                   checked={formData.is_active}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
-                <Label htmlFor="is_active">সক্রিয় জাত</Label>
+                <Label htmlFor="is_active" className="text-sm font-medium">সক্রিয় জাত</Label>
               </div>
-              <DialogFooter>
-                <Button type="submit">
-                  {editingVariety ? 'আপডেট করুন' : 'যোগ করুন'}
+
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button 
+                  type="submit" 
+                  className="w-full sm:w-auto" 
+                  size="lg"
+                  disabled={uploading}
+                >
+                  {uploading ? 'আপলোড হচ্ছে...' : (editingVariety ? 'আপডেট করুন' : 'যোগ করুন')}
                 </Button>
               </DialogFooter>
             </form>
