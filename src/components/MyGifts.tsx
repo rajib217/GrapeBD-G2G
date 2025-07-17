@@ -23,6 +23,7 @@ interface UserGift {
   received_at?: string;
   sender_name?: string;
   variety_name?: string;
+  variety_thumbnail?: string;
   round_title?: string;
 }
 
@@ -47,7 +48,7 @@ const MyGifts = () => {
         .select(`
           *,
           sender:profiles!gifts_sender_id_fkey(full_name),
-          variety:varieties(name),
+          variety:varieties(name, thumbnail_image),
           gift_round:gift_rounds(title)
         `)
         .eq('receiver_id', profile.id)
@@ -59,6 +60,7 @@ const MyGifts = () => {
         ...gift,
         sender_name: gift.sender?.full_name,
         variety_name: gift.variety?.name,
+        variety_thumbnail: gift.variety?.thumbnail_image,
         round_title: gift.gift_round?.title
       })) || [];
       
@@ -77,16 +79,7 @@ const MyGifts = () => {
 
   const handleReceiveGift = async (giftId: string) => {
     try {
-      // Get gift details first
-      const { data: gift, error: giftError } = await supabase
-        .from('gifts')
-        .select('variety_id, quantity, receiver_id')
-        .eq('id', giftId)
-        .single();
-
-      if (giftError) throw giftError;
-
-      // Update gift status to received
+      // Update gift status to received without adding to stock
       const { error: updateError } = await supabase
         .from('gifts')
         .update({ 
@@ -96,43 +89,10 @@ const MyGifts = () => {
         .eq('id', giftId);
 
       if (updateError) throw updateError;
-
-      // Check if receiver already has this variety in stock
-      const { data: existingStock, error: stockError } = await supabase
-        .from('user_stocks')
-        .select('id, quantity')
-        .eq('user_id', gift.receiver_id)
-        .eq('variety_id', gift.variety_id)
-        .maybeSingle();
-
-      if (stockError) throw stockError;
-
-      if (existingStock) {
-        // Update existing stock
-        const { error: stockUpdateError } = await supabase
-          .from('user_stocks')
-          .update({
-            quantity: existingStock.quantity + gift.quantity
-          })
-          .eq('id', existingStock.id);
-
-        if (stockUpdateError) throw stockUpdateError;
-      } else {
-        // Create new stock entry
-        const { error: stockCreateError } = await supabase
-          .from('user_stocks')
-          .insert({
-            user_id: gift.receiver_id,
-            variety_id: gift.variety_id,
-            quantity: gift.quantity
-          });
-
-        if (stockCreateError) throw stockCreateError;
-      }
       
       toast({
         title: "সফল",
-        description: "গিফট প্রাপ্ত হিসেবে চিহ্নিত করা হয়েছে এবং আপনার স্টকে যোগ করা হয়েছে",
+        description: "গিফট প্রাপ্ত হিসেবে চিহ্নিত করা হয়েছে",
       });
       
       fetchMyGifts();
@@ -208,7 +168,17 @@ const MyGifts = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex items-center space-x-3">
-                  {getStatusIcon(gift.status)}
+                  {gift.variety_thumbnail ? (
+                    <img 
+                      src={gift.variety_thumbnail} 
+                      alt={gift.variety_name}
+                      className="w-12 h-12 rounded-lg object-cover border"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      {getStatusIcon(gift.status)}
+                    </div>
+                  )}
                   <div>
                     <CardTitle className="text-lg">
                       {gift.variety_name} - {gift.quantity}টি চারা
