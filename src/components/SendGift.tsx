@@ -40,6 +40,8 @@ interface AssignedGift {
   gift_round_id: string;
   admin_notes: string | null;
   receiver_name: string;
+  receiver_phone: string;
+  receiver_courier_address: string;
   variety_name: string;
   round_title: string;
 }
@@ -106,7 +108,7 @@ const SendGift = () => {
           quantity,
           gift_round_id,
           admin_notes,
-          receiver:profiles!gifts_receiver_id_fkey(full_name),
+          receiver:profiles!gifts_receiver_id_fkey(full_name, phone, courier_address),
           variety:varieties(name),
           gift_round:gift_rounds(title)
         `)
@@ -118,6 +120,8 @@ const SendGift = () => {
       const enrichedAssignedGifts = assignedData?.map(gift => ({
         ...gift,
         receiver_name: gift.receiver?.full_name || '',
+        receiver_phone: gift.receiver?.phone || '',
+        receiver_courier_address: gift.receiver?.courier_address || '',
         variety_name: gift.variety?.name || '',
         round_title: gift.gift_round?.title || ''
       })) || [];
@@ -279,8 +283,10 @@ const SendGift = () => {
         description: 'গিফট সফলভাবে পাঠানো হয়েছে এবং স্টক আপডেট করা হয়েছে!',
       });
 
-      fetchData(); // Refresh data
+      // Refresh data to remove sent gift from assigned gifts list
+      fetchData();
     } catch (error) {
+      console.error('Error sending assigned gift:', error);
       toast({
         title: 'ত্রুটি',
         description: 'গিফট পাঠাতে সমস্যা হয়েছে',
@@ -311,7 +317,7 @@ const SendGift = () => {
           <CardContent>
             <div className="space-y-4">
               {assignedGifts.map((gift) => (
-                <div key={gift.id} className="border rounded-lg p-4 bg-orange-50">
+                  <div key={gift.id} className="border rounded-lg p-4 bg-orange-50">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h4 className="font-semibold text-lg">
@@ -320,6 +326,16 @@ const SendGift = () => {
                       <p className="text-sm text-gray-600">
                         পরিমাণ: {gift.quantity}টি | রাউন্ড: {gift.round_title}
                       </p>
+                      {gift.receiver_phone && (
+                        <p className="text-sm text-green-600">
+                          📞 মোবাইল: {gift.receiver_phone}
+                        </p>
+                      )}
+                      {gift.receiver_courier_address && (
+                        <p className="text-sm text-green-600">
+                          📍 ঠিকানা: {gift.receiver_courier_address}
+                        </p>
+                      )}
                       {gift.admin_notes && (
                         <p className="text-sm text-blue-600 mt-1">
                           নোট: {gift.admin_notes}
