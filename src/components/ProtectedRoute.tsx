@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,12 +13,19 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
+  console.log('ProtectedRoute - User:', user?.id);
+  console.log('ProtectedRoute - Profile:', profile);
+  console.log('ProtectedRoute - Loading:', loading);
+  console.log('ProtectedRoute - AdminOnly:', adminOnly);
+
   useEffect(() => {
     if (!loading) {
       if (!user) {
+        console.log('No user found, redirecting to auth');
         navigate('/auth');
       } else if (adminOnly && profile?.role !== 'admin') {
-        navigate('/'); // Redirect non-admins to home page
+        console.log('User is not admin, redirecting to home');
+        navigate('/');
       }
     }
   }, [user, profile, loading, navigate, adminOnly]);
@@ -38,7 +46,14 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
   }
 
   if (adminOnly && profile?.role !== 'admin') {
-    return null; // Will redirect in useEffect
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">অ্যাক্সেস নিষিদ্ধ</h1>
+          <p className="text-muted-foreground">আপনার এই পেজে প্রবেশের অনুমতি নেই।</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

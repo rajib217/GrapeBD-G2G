@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck } from 'lucide-react';
+import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings } from 'lucide-react';
 import SeedlingStock from '@/components/SeedlingStock';
 import AddSeedling from '@/components/AddSeedling';
 import SendGift from '@/components/SendGift';
@@ -12,16 +12,24 @@ import Messages from '@/components/Messages';
 import UserNotices from '@/components/UserNotices';
 import MyGifts from '@/components/MyGifts';
 import AllMembers from '@/components/AllMembers';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
   const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
+    }
+  };
+
+  const handleAdminClick = () => {
+    if (profile?.role === 'admin') {
+      navigate('/admin');
     }
   };
 
@@ -45,6 +53,12 @@ const Index = () => {
                 <p className="font-medium text-gray-900">{profile?.full_name}</p>
                 <p className="text-sm text-gray-500">{profile?.email}</p>
               </div>
+              {profile?.role === 'admin' && (
+                <Button onClick={handleAdminClick} variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  অ্যাডমিন প্যানেল
+                </Button>
+              )}
               <Button onClick={handleSignOut} variant="outline" size="sm">
                 <LogOut className="h-4 w-4 mr-2" />
                 লগআউট

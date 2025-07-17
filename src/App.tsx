@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/auth" element={<Auth />} />
             <Route 
               path="/" 
               element={
@@ -31,12 +33,11 @@ const App = () => (
             <Route 
               path="/admin" 
               element={
-                <ProtectedRoute adminOnly>
+                <ProtectedRoute adminOnly={true}>
                   <AdminDashboard />
                 </ProtectedRoute>
               } 
             />
-            <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
