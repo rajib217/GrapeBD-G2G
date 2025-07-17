@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Gift, Leaf, Users, LogOut, Settings, Grape } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import AddSeedling from '@/components/AddSeedling';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('stock');
   const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
@@ -43,7 +45,7 @@ const Index = () => {
                 </div>
               </div>
               {profile?.role === 'admin' && (
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/admin'}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
                   <Settings className="h-4 w-4 mr-2" />
                   অ্যাডমিন প্যানেল
                 </Button>
