@@ -221,12 +221,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bio: string | null
           courier_address: string | null
           created_at: string
           email: string | null
           full_name: string
+          g2g_rounds_participated: string[] | null
           id: string
           phone: string | null
+          preferred_courier: string | null
           profile_image: string | null
           role: Database["public"]["Enums"]["app_role"]
           status: Database["public"]["Enums"]["member_status"]
@@ -235,12 +238,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bio?: string | null
           courier_address?: string | null
           created_at?: string
           email?: string | null
           full_name: string
+          g2g_rounds_participated?: string[] | null
           id?: string
           phone?: string | null
+          preferred_courier?: string | null
           profile_image?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["member_status"]
@@ -249,12 +255,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bio?: string | null
           courier_address?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
+          g2g_rounds_participated?: string[] | null
           id?: string
           phone?: string | null
+          preferred_courier?: string | null
           profile_image?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: Database["public"]["Enums"]["member_status"]
@@ -345,6 +354,48 @@ export type Database = {
           },
         ]
       }
+      user_varieties: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          variety_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          variety_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          variety_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_varieties_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_varieties_variety_id_fkey"
+            columns: ["variety_id"]
+            isOneToOne: false
+            referencedRelation: "varieties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       varieties: {
         Row: {
           created_at: string
@@ -397,6 +448,16 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_user_received_gift_varieties: {
+        Args: { profile_id: string }
+        Returns: {
+          variety_id: string
+          variety_name: string
+          variety_thumbnail: string
+          gift_count: number
+          latest_gift_date: string
+        }[]
       }
     }
     Enums: {

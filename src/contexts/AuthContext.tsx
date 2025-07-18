@@ -11,6 +11,9 @@ interface Profile {
   email?: string;
   courier_address?: string;
   profile_image?: string;
+  preferred_courier?: string;
+  bio?: string;
+  g2g_rounds_participated?: string[];
   role: 'admin' | 'member';
   status: 'active' | 'suspended' | 'pending';
   status_icon?: string;
