@@ -140,7 +140,7 @@ const AllMembers = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(`/profile/${member.id}`)}
+                onClick={() => navigate(`/user/${member.id}`)}
                 className="w-full"
               >
                 <Eye className="h-4 w-4 mr-2" />
