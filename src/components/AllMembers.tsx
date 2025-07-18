@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, User, Phone, Mail, MapPin, Calendar, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ interface Profile {
 }
 
 const AllMembers = () => {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -138,7 +140,7 @@ const AllMembers = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleViewProfile(member)}
+                onClick={() => navigate(`/profile/${member.id}`)}
                 className="w-full"
               >
                 <Eye className="h-4 w-4 mr-2" />
