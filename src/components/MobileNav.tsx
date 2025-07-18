@@ -110,8 +110,8 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
           </div>
 
           {/* Navigation Menu */}
-          <div className="flex-1 py-4">
-            <nav className="space-y-2 px-4">
+          <div className="flex-1 py-4 overflow-y-auto">
+            <nav className="space-y-1 px-3">
               {currentMenuItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const IconComponent = item.icon;
@@ -120,7 +120,7 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
                   <button
                     key={item.id}
                     onClick={() => handleTabClick(item.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
                       isActive
                         ? 'bg-green-100 text-green-700 border-l-4 border-green-600'
                         : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
@@ -135,15 +135,15 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
           </div>
 
           {/* Footer Actions */}
-          <div className="border-t p-4 space-y-2">
+          <div className="border-t bg-gray-50 p-3 space-y-2 mt-auto">
             {showAdminButton ? (
               <Button
                 onClick={handleHomeClick}
                 variant="outline"
                 className="w-full justify-start"
-                size="lg"
+                size="sm"
               >
-                <Home className="h-5 w-5 mr-3" />
+                <Home className="h-4 w-4 mr-2" />
                 হোম পেজ
               </Button>
             ) : (
@@ -152,9 +152,9 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
                   onClick={handleAdminClick}
                   variant="outline"
                   className="w-full justify-start"
-                  size="lg"
+                  size="sm"
                 >
-                  <Settings className="h-5 w-5 mr-3" />
+                  <Settings className="h-4 w-4 mr-2" />
                   অ্যাডমিন প্যানেল
                 </Button>
               )
@@ -164,9 +164,9 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
               onClick={handleSignOut}
               variant="destructive"
               className="w-full justify-start"
-              size="lg"
+              size="sm"
             >
-              <LogOut className="h-5 w-5 mr-3" />
+              <LogOut className="h-4 w-4 mr-2" />
               লগআউট
             </Button>
           </div>
