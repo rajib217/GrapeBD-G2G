@@ -90,8 +90,8 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
                   isActive ? 'text-green-600 scale-110' : ''
                 }`} />
                 {item.badge && item.badge > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center animate-pulse">
-                    {item.badge > 99 ? '99+' : item.badge}
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-4 h-4 flex items-center justify-center font-bold text-[10px] leading-none border border-white shadow-sm">
+                    {item.badge > 9 ? '9+' : item.badge}
                   </div>
                 )}
               </div>
