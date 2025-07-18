@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Mail, Phone, MapPin, Package, User, Truck } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Package, User, Truck, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -172,6 +172,29 @@ const UserProfile = () => {
                 <div className="flex justify-center space-x-2 mt-2">
                   {getRoleBadge(profile.role)}
                   {getStatusBadge(profile.status)}
+                </div>
+                
+                {/* Contact Actions */}
+                <div className="flex justify-center space-x-2 mt-4">
+                  {profile.phone && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      asChild
+                    >
+                      <a href={`tel:${profile.phone}`}>
+                        <Phone className="h-4 w-4 mr-2" />
+                        কল করুন
+                      </a>
+                    </Button>
+                  )}
+                  <Button 
+                    size="sm" 
+                    onClick={() => navigate(`/messages?userId=${profile.id}`)}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    মেসেজ করুন
+                  </Button>
                 </div>
               </CardHeader>
               
