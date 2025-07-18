@@ -2,7 +2,7 @@ import {
   Sprout, 
   Plus, 
   Gift, 
-  History, 
+  MessageSquare, 
   User 
 } from 'lucide-react';
 
@@ -16,7 +16,7 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
     { id: 'stock', label: 'স্টক', icon: Sprout },
     { id: 'add', label: 'যোগ করুন', icon: Plus },
     { id: 'send', label: 'গিফট', icon: Gift },
-    { id: 'gift-history', label: 'হিস্টোরি', icon: History },
+    { id: 'messages', label: 'ম্যাসেজ', icon: MessageSquare },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
 
