@@ -216,7 +216,7 @@ const Messages = () => {
             onClick={() => {
               setDirectMessaging(false);
               setSelectedUser(null);
-              navigate('/messages');
+              navigate(`/user/${targetUserId}`);
             }}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
