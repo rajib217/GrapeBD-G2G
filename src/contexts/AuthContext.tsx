@@ -120,34 +120,48 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Clean up auth state first
       const cleanupAuthState = () => {
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-            localStorage.removeItem(key);
+        // Clear all localStorage items related to auth
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
+            keysToRemove.push(key);
           }
-        });
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Also clear sessionStorage if needed
+        const sessionKeysToRemove = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
+            sessionKeysToRemove.push(key);
+          }
+        }
+        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
       };
 
-      // Clear state immediately
+      // Clear React state immediately
       setUser(null);
       setSession(null);
       setProfile(null);
+      setLoading(false);
       
-      // Clean up localStorage
+      // Clean up storage
       cleanupAuthState();
       
-      // Attempt global sign out (but don't fail if it errors)
+      // Try to sign out from Supabase (ignore errors)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        console.log('Sign out error (continuing anyway):', err);
+        // Ignore sign out errors, just continue
       }
       
-      // Use replace instead of href to avoid navigation errors
-      window.location.replace('/auth');
+      // Force redirect to auth page
+      window.location.href = '/auth';
     } catch (error) {
-      console.error('Sign out error:', error);
-      // Even if there's an error, still try to redirect to auth page
-      window.location.replace('/auth');
+      // Even if everything fails, still redirect
+      window.location.href = '/auth';
     }
   };
 
