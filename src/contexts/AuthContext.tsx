@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 interface Profile {
   id: string;
@@ -49,7 +48,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -120,7 +118,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      // Clean up auth state
+      // Clean up auth state first
       const cleanupAuthState = () => {
         Object.keys(localStorage).forEach((key) => {
           if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
@@ -129,20 +127,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         });
       };
 
+      // Clear state immediately
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Clean up localStorage
       cleanupAuthState();
       
+      // Attempt global sign out (but don't fail if it errors)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
+        console.log('Sign out error (continuing anyway):', err);
       }
       
-      // Force page reload for clean state
-      window.location.href = '/auth';
+      // Use replace instead of href to avoid navigation errors
+      window.location.replace('/auth');
     } catch (error) {
       console.error('Sign out error:', error);
-      // Still redirect to auth page
-      navigate('/auth');
+      // Even if there's an error, still try to redirect to auth page
+      window.location.replace('/auth');
     }
   };
 
