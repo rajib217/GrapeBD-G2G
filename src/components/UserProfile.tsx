@@ -139,7 +139,7 @@ const UserProfile = () => {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate('/')} 
             variant="outline" 
             size="sm"
             className="mb-4"
