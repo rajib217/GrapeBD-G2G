@@ -22,6 +22,14 @@ const Index = () => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const handleTabChange = (tab: string) => {
+    if (tab === 'home') {
+      navigate('/');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -46,7 +54,7 @@ const Index = () => {
             <div className="md:hidden">
               <MobileNav 
                 activeTab={activeTab} 
-                onTabChange={setActiveTab}
+                onTabChange={handleTabChange}
                 showAdminButton={false}
               />
             </div>
@@ -173,7 +181,7 @@ const Index = () => {
       </div>
       
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <MobileBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       
       {/* Add bottom padding for mobile bottom nav */}
       <div className="h-20 md:hidden"></div>

@@ -58,6 +58,7 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
   };
 
   const menuItems = [
+    { id: 'home', label: 'হোম', icon: Home },
     { id: 'stock', label: 'স্টক', icon: Sprout },
     { id: 'add', label: 'যোগ করুন', icon: Plus },
     { id: 'send', label: 'গিফট পাঠান', icon: Gift },
@@ -70,6 +71,8 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
   ];
 
   const adminMenuItems = [
+    { id: 'home', label: 'হোম', icon: Home },
+    { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: Settings },
     { id: 'users', label: 'ইউজার', icon: UserCheck },
     { id: 'gifts', label: 'গিফট', icon: Gift },
     { id: 'varieties', label: 'জাত', icon: Sprout },

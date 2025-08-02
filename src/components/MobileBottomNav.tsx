@@ -3,7 +3,8 @@ import {
   Plus, 
   Gift, 
   MessageSquare, 
-  User 
+  User,
+  Home
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,8 +59,8 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
   }, [profile?.id]);
 
   const quickMenuItems = [
+    { id: 'home', label: 'হোম', icon: Home },
     { id: 'stock', label: 'স্টক', icon: Sprout },
-    { id: 'add', label: 'যোগ করুন', icon: Plus },
     { id: 'send', label: 'গিফট', icon: Gift },
     { id: 'messages', label: 'ম্যাসেজ', icon: MessageSquare, badge: unreadCount },
     { id: 'profile', label: 'প্রোফাইল', icon: User },

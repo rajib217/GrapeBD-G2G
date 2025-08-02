@@ -32,6 +32,16 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
+  const handleTabChange = (tab: string) => {
+    if (tab === 'home') {
+      navigate('/');
+    } else if (tab === 'dashboard') {
+      navigate('/dashboard');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Mobile Header */}
@@ -42,7 +52,7 @@ const AdminDashboard = () => {
             <div className="md:hidden">
               <MobileNav 
                 activeTab={activeTab} 
-                onTabChange={setActiveTab}
+                onTabChange={handleTabChange}
                 showAdminButton={true}
               />
             </div>
