@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings, User, History } from 'lucide-react';
+import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings, User, History, Home } from 'lucide-react';
 import SeedlingStock from '@/components/SeedlingStock';
 import AddSeedling from '@/components/AddSeedling';
 import SendGift from '@/components/SendGift';
@@ -13,12 +13,13 @@ import UserNotices from '@/components/UserNotices';
 import MyGifts from '@/components/MyGifts';
 import AllMembers from '@/components/AllMembers';
 import ProfileEdit from '@/components/ProfileEdit';
+import SocialFeed from '@/components/SocialFeed';
 import MobileNav from '@/components/MobileNav';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('stock');
+  const [activeTab, setActiveTab] = useState('home');
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -103,7 +104,11 @@ const Index = () => {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-9 mb-8 h-auto gap-2 bg-transparent">
+          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-10 mb-8 h-auto gap-2 bg-transparent">
+            <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+              <Home className="h-4 w-4" />
+              <span className="text-xs md:text-sm">হোম</span>
+            </TabsTrigger>
             <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
               <Sprout className="h-4 w-4" />
               <span className="text-xs md:text-sm">স্টক</span>
@@ -141,6 +146,10 @@ const Index = () => {
               <span className="text-xs md:text-sm">প্রোফাইল</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="home">
+            <SocialFeed />
+          </TabsContent>
 
           <TabsContent value="stock">
             <SeedlingStock />
