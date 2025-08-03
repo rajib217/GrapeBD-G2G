@@ -103,7 +103,7 @@ const Index = () => {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-9 mb-8 h-auto gap-2 bg-transparent">
+          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-7 mb-8 h-auto gap-2 bg-transparent">
             <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
               <Sprout className="h-4 w-4" />
               <span className="text-xs md:text-sm">স্টক</span>
@@ -114,15 +114,7 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="send" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
               <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm">গিফট পাঠান</span>
-            </TabsTrigger>
-            <TabsTrigger value="my-gifts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
-              <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm">আমার গিফট</span>
-            </TabsTrigger>
-            <TabsTrigger value="gift-history" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
-              <History className="h-4 w-4" />
-              <span className="text-xs md:text-sm">গিফট হিস্টোরি</span>
+              <span className="text-xs md:text-sm">গিফট ম্যানেজমেন্ট</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
               <MessageCircle className="h-4 w-4" />
@@ -141,6 +133,71 @@ const Index = () => {
               <span className="text-xs md:text-sm">প্রোফাইল</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Gift Management Sub-tabs */}
+          {activeTab === 'send' && (
+            <div className="hidden md:flex gap-2 mb-4 p-2 bg-green-50 rounded-lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('send')}
+                className="bg-green-100 text-green-700"
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                গিফট পাঠান
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('my-gifts')}
+                className="text-green-600 hover:bg-green-100"
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                আমার গিফট
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('gift-history')}
+                className="text-green-600 hover:bg-green-100"
+              >
+                <History className="h-4 w-4 mr-2" />
+                গিফট হিস্টোরি
+              </Button>
+            </div>
+          )}
+
+          {['my-gifts', 'gift-history'].includes(activeTab) && (
+            <div className="hidden md:flex gap-2 mb-4 p-2 bg-green-50 rounded-lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('send')}
+                className="text-green-600 hover:bg-green-100"
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                গিফট পাঠান
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('my-gifts')}
+                className={activeTab === 'my-gifts' ? 'bg-green-100 text-green-700' : 'text-green-600 hover:bg-green-100'}
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                আমার গিফট
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('gift-history')}
+                className={activeTab === 'gift-history' ? 'bg-green-100 text-green-700' : 'text-green-600 hover:bg-green-100'}
+              >
+                <History className="h-4 w-4 mr-2" />
+                গিফট হিস্টোরি
+              </Button>
+            </div>
+          )}
 
           <TabsContent value="stock">
             <SeedlingStock />
