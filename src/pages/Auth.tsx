@@ -59,7 +59,7 @@ const Auth = () => {
           title: "সফলভাবে লগইন হয়েছে",
           description: "আপনি সফলভাবে লগইন করেছেন।",
         });
-        window.location.href = "/";
+        navigate("/dashboard");
       }
     } catch (error: any) {
       setError(error.message || "লগইনে সমস্যা হয়েছে");

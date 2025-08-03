@@ -29,7 +29,7 @@ const AdminDashboard = () => {
   };
 
   const handleHomeClick = () => {
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleTabChange = (tab: string) => {

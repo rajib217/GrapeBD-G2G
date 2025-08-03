@@ -5,41 +5,35 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Menu, 
-  Sprout, 
-  Plus, 
-  Gift, 
-  History, 
-  MessageCircle, 
-  Bell, 
-  UserCheck, 
-  User, 
-  LogOut, 
+  Home,
+  Gift,
+  PlusSquare,
+  Archive,
+  Send,
+  Users,
+  History,
+  Bell,
+  MessageSquare,
+  User,
   Settings,
-  Home
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-interface SubMenuItem {
-  id: string;
-  label: string;
-  icon: any;
-}
 
 interface MenuItem {
   id: string;
   label: string;
   icon: any;
-  subItems?: SubMenuItem[];
 }
 
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  showAdminButton?: boolean;
 }
 
-const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNavProps) => {
+const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -60,42 +54,23 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
     }
   };
 
-  const handleHomeClick = () => {
-    navigate('/');
-    setOpen(false);
-  };
-
   const handleTabClick = (tab: string) => {
     onTabChange(tab);
     setOpen(false);
   };
 
   const menuItems: MenuItem[] = [
-    { id: 'home', label: 'হোম', icon: Home },
-    { id: 'stock', label: 'স্টক', icon: Sprout },
-    { id: 'add', label: 'যোগ করুন', icon: Plus },
-    { id: 'send', label: 'গিফট পাঠান', icon: Gift },
-    { id: 'my-gifts', label: 'আমার গিফট', icon: Gift },
-    { id: 'gift-history', label: 'গিফট হিস্টোরি', icon: History },
-    { id: 'messages', label: 'মেসেজ', icon: MessageCircle },
+    { id: 'feed', label: 'ফিড', icon: Home },
+    { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
+    { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
+    { id: 'seedling-stock', label: 'চারাগাছের স্টক', icon: Archive },
+    { id: 'send-gift', label: 'উপহার পাঠান', icon: Send },
+    { id: 'all-members', label: 'সকল সদস্য', icon: Users },
+    { id: 'gift-history', label: 'উপহারের ইতিহাস', icon: History },
     { id: 'notices', label: 'নোটিশ', icon: Bell },
-    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
+    { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
-
-  const adminMenuItems: MenuItem[] = [
-    { id: 'home', label: 'হোম', icon: Home },
-    { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: Settings },
-    { id: 'users', label: 'ইউজার', icon: UserCheck },
-    { id: 'gifts', label: 'গিফট', icon: Gift },
-    { id: 'varieties', label: 'জাত', icon: Sprout },
-    { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: History },
-    { id: 'notices', label: 'নোটিশ', icon: Bell },
-    { id: 'messages', label: 'মেসেজ', icon: MessageCircle },
-    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
-  ];
-
-  const currentMenuItems = showAdminButton ? adminMenuItems : menuItems;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -128,7 +103,7 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
           {/* Navigation Menu */}
           <div className="flex-1 py-4 overflow-y-auto">
             <nav className="space-y-1 px-3">
-              {currentMenuItems.map((item) => {
+              {menuItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const IconComponent = item.icon;
                 
@@ -152,28 +127,16 @@ const MobileNav = ({ activeTab, onTabChange, showAdminButton = false }: MobileNa
 
           {/* Footer Actions */}
           <div className="border-t bg-gray-50 p-3 space-y-2 mt-auto">
-            {showAdminButton ? (
+            {profile?.role === 'admin' && (
               <Button
-                onClick={handleHomeClick}
+                onClick={handleAdminClick}
                 variant="outline"
                 className="w-full justify-start"
                 size="sm"
               >
-                <Home className="h-4 w-4 mr-2" />
-                হোম পেজ
+                <Shield className="h-4 w-4 mr-2" />
+                অ্যাডমিন প্যানেল
               </Button>
-            ) : (
-              profile?.role === 'admin' && (
-                <Button
-                  onClick={handleAdminClick}
-                  variant="outline"
-                  className="w-full justify-start"
-                  size="sm"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  অ্যাডমিন প্যানেল
-                </Button>
-              )
             )}
             
             <Button
