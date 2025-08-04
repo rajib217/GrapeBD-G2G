@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Phone, Mail, MapPin, Calendar, Eye } from 'lucide-react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ const AllMembers = () => {
         .from('profiles')
         .select('*')
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .order('full_name', { ascending: true });
 
       if (error) throw error;
       setMembers(data || []);
@@ -95,59 +95,57 @@ const AllMembers = () => {
         />
       </div>
 
-      {/* Members Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Members List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredMembers.map((member) => (
-          <Card key={member.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <Avatar>
+          <div key={member.id} className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3 flex-1">
+                <Avatar className="h-12 w-12 cursor-pointer" onClick={() => navigate(`/user/${member.id}`)}>
                   <AvatarImage src={member.profile_image} alt={member.full_name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-blue-100 text-blue-600">
                     {member.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
+                
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{member.full_name}</CardTitle>
-                  <CardDescription>
-                    {new Date(member.created_at).toLocaleDateString('bn-BD')}
-                  </CardDescription>
+                  <div 
+                    className="font-semibold text-lg text-gray-900 hover:underline cursor-pointer"
+                    onClick={() => navigate(`/user/${member.id}`)}
+                  >
+                    {member.full_name}
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    {member.role === 'admin' && (
+                      <Badge variant="default" className="mr-2">অ্যাডমিন</Badge>
+                    )}
+                    <span>{new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex space-x-2">
-                <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
-                  {member.role === 'admin' ? 'অ্যাডমিন' : 'মেম্বার'}
-                </Badge>
-                <Badge variant="default">সক্রিয়</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 mb-4">
-                {member.email && (
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4 mr-2" />
-                    <span className="truncate">{member.email}</span>
-                  </div>
-                )}
+
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 w-9 p-0"
+                  onClick={() => navigate(`/messages?user=${member.id}`)}
+                >
+                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                </Button>
                 {member.phone && (
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {member.phone}
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                    onClick={() => window.location.href = `tel:${member.phone}`}
+                  >
+                    <PhoneCall className="h-5 w-5 text-green-600" />
+                  </Button>
                 )}
               </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/user/${member.id}`)}
-                className="w-full"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                প্রোফাইল দেখুন
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
