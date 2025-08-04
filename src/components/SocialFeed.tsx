@@ -68,17 +68,27 @@ const SocialFeed = () => {
   useEffect(() => {
     fetchPosts();
     
-    const channel = supabase
-      .channel('social-feed')
+    const subscription = supabase
+      .channel('social-feed-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public' },
+        { event: '*', schema: 'public', table: 'posts' },
+        () => fetchPosts()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => fetchPosts()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reactions' },
         () => fetchPosts()
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(subscription);
     };
   }, []);
 
@@ -211,36 +221,76 @@ const SocialFeed = () => {
 
   const handleReaction = async (postId: string, reactionType: string) => {
     if (!profile) return;
-    const existingReaction = posts.find(p => p.id === postId)?.reactions.find(r => r.user_id === profile.id);
-    
+
+    const originalPosts = [...posts];
+    const postIndex = originalPosts.findIndex(p => p.id === postId);
+    if (postIndex === -1) return;
+
+    const post = originalPosts[postIndex];
+    const existingReactionIndex = post.reactions.findIndex(r => r.user_id === profile.id);
+    const newReactions = [...post.reactions];
+
+    if (existingReactionIndex !== -1) {
+      const existingReaction = newReactions[existingReactionIndex];
+      if (existingReaction.reaction_type === reactionType) {
+        newReactions.splice(existingReactionIndex, 1);
+      } else {
+        newReactions[existingReactionIndex] = { ...existingReaction, reaction_type: reactionType };
+      }
+    } else {
+      newReactions.push({ id: `temp-${Date.now()}`, user_id: profile.id, reaction_type: reactionType });
+    }
+
+    const updatedPosts = [...originalPosts];
+    updatedPosts[postIndex] = { ...post, reactions: newReactions };
+    setPosts(updatedPosts);
+
     try {
+      const existingReaction = post.reactions.find(r => r.user_id === profile.id);
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
-          // Un-react
           await supabase.from('reactions').delete().match({ id: existingReaction.id });
         } else {
-          // Change reaction
           await supabase.from('reactions').update({ reaction_type: reactionType }).match({ id: existingReaction.id });
         }
       } else {
-        // Add new reaction
         await supabase.from('reactions').insert({ post_id: postId, user_id: profile.id, reaction_type: reactionType });
       }
     } catch (error) {
       console.error('Error handling reaction:', error);
       toast({ title: "ত্রুটি", description: "প্রতিক্রিয়া জানাতে সমস্যা হয়েছে", variant: "destructive" });
+      setPosts(originalPosts);
     }
   };
 
   const handleCommentSubmit = async (postId: string) => {
     if (!newComment.trim() || !profile) return;
+    const commentContent = newComment.trim();
+
+    const originalPosts = [...posts];
+    const newCommentData: Comment = {
+      id: `temp-${Date.now()}`,
+      content: commentContent,
+      created_at: new Date().toISOString(),
+      user_id: profile.id,
+      profiles: {
+        full_name: profile.full_name || 'Unknown User',
+        profile_image: profile.profile_image || null,
+      },
+    };
+    
+    setPosts(posts.map(p => p.id === postId ? { ...p, comments: [...p.comments, newCommentData] } : p));
+    setNewComment('');
+
     try {
-      await supabase.from('comments').insert({ post_id: postId, user_id: profile.id, content: newComment.trim() });
-      setNewComment('');
+      const { error } = await supabase.from('comments').insert({ post_id: postId, user_id: profile.id, content: commentContent });
+      if (error) throw error;
       setCommentingPostId(null);
     } catch (error) {
       console.error('Error submitting comment:', error);
       toast({ title: "ত্রুটি", description: "মন্তব্য করতে সমস্যা হয়েছে", variant: "destructive" });
+      setPosts(originalPosts);
+      setNewComment(commentContent);
     }
   };
 
@@ -276,7 +326,7 @@ const SocialFeed = () => {
   const handleEditImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({ title: "ত্রুটি", description: "ছবির সাইজ সর্বোচ্চ ১০ এমবি হতে পারে", variant: "destructive" });
         return;
       }
@@ -310,57 +360,66 @@ const SocialFeed = () => {
     }
 
     setIsEditingSubmitting(true);
+    const originalPosts = [...posts];
+    let newImageUrl = editingImagePreview;
+
     try {
-      let imageUrl = editingImagePreview;
-      
-      // If new image was selected, upload it
       if (editingImage) {
-        imageUrl = await uploadImage(editingImage);
-        if (!imageUrl) {
+        newImageUrl = await uploadImage(editingImage);
+        if (!newImageUrl) {
           setIsEditingSubmitting(false);
           return;
         }
       }
 
+      const updatedPosts = posts.map(p => {
+        if (p.id === editingPostId) {
+          return { ...p, content: editingContent.trim() || '', image_url: newImageUrl };
+        }
+        return p;
+      });
+      setPosts(updatedPosts);
+      cancelEdit();
+
       const { error } = await supabase
         .from('posts')
         .update({ 
           content: editingContent.trim() || null, 
-          image_url: imageUrl,
+          image_url: newImageUrl,
           updated_at: new Date().toISOString()
         })
         .eq('id', editingPostId);
 
       if (error) throw error;
       
-      cancelEdit();
       toast({ title: "সফল", description: "পোস্ট আপডেট করা হয়েছে" });
     } catch (error) {
       console.error('Error updating post:', error);
       toast({ title: "ত্রুটি", description: "পোস্ট আপডেট করতে সমস্যা হয়েছে", variant: "destructive" });
+      setPosts(originalPosts);
     } finally {
       setIsEditingSubmitting(false);
     }
   };
 
   const handleDeletePost = async (postId: string, imageUrl: string | null) => {
+    const originalPosts = [...posts];
+    setPosts(posts.filter(p => p.id !== postId));
+
     try {
-      // Delete from database
       const { error } = await supabase.from('posts').delete().eq('id', postId);
       if (error) throw error;
 
-      // Delete image from storage if exists
       if (imageUrl) {
-        const urlParts = imageUrl.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        const filePath = `${profile?.id}/${fileName}`;
-        await supabase.storage.from('post-images').remove([filePath]);
+        const path = imageUrl.substring(imageUrl.indexOf('/post-images/') + '/post-images/'.length);
+        await supabase.storage.from('post-images').remove([path]);
       }
 
       toast({ title: "সফল", description: "পোস্ট ডিলেট করা হয়েছে" });
     } catch (error) {
       console.error('Error deleting post:', error);
       toast({ title: "ত্রুটি", description: "পোস্ট ডিলেট করতে সমস্যা হয়েছে", variant: "destructive" });
+      setPosts(originalPosts);
     }
   };
 
