@@ -25,6 +25,19 @@ interface Profile {
   unread_messages_count?: number;
 }
 
+// Rainbow border animation for admin avatars
+const rainbowKeyframes = `
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+`;
+
+const style = document.createElement('style');
+style.textContent = rainbowKeyframes;
+document.head.appendChild(style);
+
 const AllMembers = () => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<Profile[]>([]);
@@ -95,6 +108,15 @@ const AllMembers = () => {
 
   return (
     <div className="space-y-6">
+      <style>
+        {`
+          .rainbow-border {
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 200% 200%;
+            animation: rainbow 5s ease infinite;
+          }
+        `}
+      </style>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -124,15 +146,17 @@ const AllMembers = () => {
           >
             <div className="flex items-start space-x-3">
               <div className="relative">
-                <Avatar className="h-14 w-14 cursor-pointer border-2 border-gray-200">
-                  <AvatarImage src={member.profile_image} alt={member.full_name} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 text-lg">
-                    {member.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className={`${member.role === 'admin' ? 'rainbow-border rounded-full p-0.5' : ''}`}>
+                  <Avatar className={`h-14 w-14 cursor-pointer ${member.role === 'admin' ? 'border-2 border-white' : 'border-2 border-gray-200'}`}>
+                    <AvatarImage src={member.profile_image} alt={member.full_name} />
+                    <AvatarFallback className={`${member.role === 'admin' ? 'bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400' : 'bg-gradient-to-br from-blue-100 to-blue-200'} text-lg ${member.role === 'admin' ? 'text-white' : 'text-blue-600'}`}>
+                      {member.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
                 {member.role === 'admin' && (
                   <div className="absolute -top-1 -right-1">
-                    <Badge variant="default" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                    <Badge variant="default" className="h-5 w-5 rounded-full p-0 flex items-center justify-center bg-gradient-to-r from-yellow-400 to-orange-500 border-2 border-white">
                       ⭐
                     </Badge>
                   </div>
