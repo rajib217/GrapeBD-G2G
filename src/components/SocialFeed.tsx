@@ -369,7 +369,6 @@ const SocialFeed = () => {
     }
 
     setIsEditingSubmitting(true);
-    const originalPosts = [...posts];
     let newImageUrl = editingImagePreview;
 
     try {
@@ -380,15 +379,6 @@ const SocialFeed = () => {
           return;
         }
       }
-
-      const updatedPosts = posts.map(p => {
-        if (p.id === editingPostId) {
-          return { ...p, content: editingContent.trim() || '', image_url: newImageUrl };
-        }
-        return p;
-      });
-      setPosts(updatedPosts);
-      cancelEdit();
 
       const { error } = await supabase
         .from('posts')
@@ -401,11 +391,11 @@ const SocialFeed = () => {
 
       if (error) throw error;
       
+      cancelEdit();
       toast({ title: "সফল", description: "পোস্ট আপডেট করা হয়েছে" });
     } catch (error) {
       console.error('Error updating post:', error);
       toast({ title: "ত্রুটি", description: "পোস্ট আপডেট করতে সমস্যা হয়েছে", variant: "destructive" });
-      setPosts(originalPosts);
     } finally {
       setIsEditingSubmitting(false);
     }
