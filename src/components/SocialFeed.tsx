@@ -176,19 +176,53 @@ const SocialFeed = () => {
 
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
-      const compressedFile = await compressImage(file, 100);
-      const fileExt = compressedFile.name.split('.').pop();
-      const fileName = `${profile?.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({ title: "ত্রুটি", description: "শুধুমাত্র ছবি আপলোড করা যাবে", variant: "destructive" });
+        return null;
+      }
+
+      // Compress image
+      let compressedFile: File;
+      try {
+        compressedFile = await compressImage(file, 50);
+      } catch (compressionError) {
+        console.error('Error compressing image:', compressionError);
+        toast({ title: "ত্রুটি", description: "ছবি প্রসেস করতে সমস্যা হয়েছে", variant: "destructive" });
+        return null;
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const uniqueId = Date.now() + '-' + Math.random().toString(36).substring(2);
+      const fileName = `${profile?.id}/${uniqueId}.${fileExt}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('post-images')
-        .upload(fileName, compressedFile, { upsert: true });
+        .upload(fileName, compressedFile, { 
+          upsert: true,
+          contentType: `image/${fileExt}`
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        if (uploadError.message.includes('duplicate')) {
+          toast({ title: "ত্রুটি", description: "এই ছবিটি ইতিমধ্যে আপলোড করা হয়েছে", variant: "destructive" });
+        } else {
+          toast({ title: "ত্রুটি", description: "ছবি আপলোড করতে সমস্যা হয়েছে", variant: "destructive" });
+        }
+        return null;
+      }
 
-      const { data } = supabase.storage.from('post-images').getPublicUrl(fileName);
+      // Get public URL
+      const { data } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(fileName);
       
       if (!data || !data.publicUrl) {
-        throw new Error('Public URL not found after upload.');
+        toast({ title: "ত্রুটি", description: "ছবির লিংক তৈরি করতে সমস্যা হয়েছে", variant: "destructive" });
+        return null;
       }
       
       return data.publicUrl;
