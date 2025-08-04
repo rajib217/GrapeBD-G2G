@@ -62,8 +62,11 @@ const UserDashboard = () => {
       <div className="flex">
         {/* Sidebar */}
         <div className="hidden md:flex flex-col w-64 bg-white border-r">
-          <div className="flex items-center justify-center h-16 border-b">
-            <h1 className="text-2xl font-bold text-blue-600">GrapeBD</h1>
+          <div className="flex items-center justify-center h-20 border-b p-2">
+            <div className="flex items-center space-x-2">
+              <img src="/logo.png" alt="Grape BD G2G Logo" className="h-12 w-auto" />
+              <h1 className="text-2xl font-bold text-blue-600">Grape BD G2G</h1>
+            </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2">
             <Button variant={activeTab === 'feed' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('feed')} className="justify-start">
