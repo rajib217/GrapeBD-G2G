@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { MessageCircle, Send, Circle, User, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Send, Circle, User, ArrowLeft, Search, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +41,8 @@ const Messages = () => {
   const targetUserId = searchParams.get('userId');
   
   const [users, setUsers] = useState<UserWithUnreadCount[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserWithUnreadCount[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -82,6 +84,7 @@ const Messages = () => {
       }
 
       setUsers(usersWithUnreadCount);
+      setFilteredUsers(usersWithUnreadCount);
     } catch (error) {
       toast({
         title: 'ত্রুটি',
@@ -178,7 +181,39 @@ const Messages = () => {
     });
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(user =>
+        user.full_name.toLowerCase().includes(query.toLowerCase()) ||
+        user.email?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilteredUsers(users);
+  };
+
   const totalUnreadCount = users.reduce((sum, user) => sum + user.unread_count, 0);
+
+  // Update filtered users when users change
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = users.filter(user =>
+        user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [users, searchQuery]);
 
   useEffect(() => {
     fetchUsers();
@@ -302,8 +337,37 @@ const Messages = () => {
         )}
       </div>
 
+      {/* Search Box */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="ইউজার খুঁজুন (নাম বা ইমেইল)..."
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+              onClick={clearSearch}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-gray-500 mt-2">
+            "{searchQuery}" এর জন্য {filteredUsers.length} টি ফলাফল পাওয়া গেছে
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <Card 
             key={user.id}
             className={`hover:shadow-md transition-shadow cursor-pointer ${
@@ -425,7 +489,20 @@ const Messages = () => {
         ))}
       </div>
 
-      {users.length === 0 && (
+      {filteredUsers.length === 0 && searchQuery && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-600 mb-2">কোনো ইউজার পাওয়া যায়নি</h3>
+            <p className="text-gray-500">"{searchQuery}" এর জন্য কোনো ইউজার খুঁজে পাওয়া যায়নি</p>
+            <Button variant="outline" className="mt-4" onClick={clearSearch}>
+              সব ইউজার দেখান
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {users.length === 0 && !searchQuery && (
         <Card>
           <CardContent className="text-center py-12">
             <MessageCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
