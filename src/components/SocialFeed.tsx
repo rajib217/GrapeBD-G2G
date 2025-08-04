@@ -179,10 +179,19 @@ const SocialFeed = () => {
       const compressedFile = await compressImage(file, 100);
       const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${profile?.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('post-images').upload(fileName, compressedFile);
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(fileName, compressedFile, { upsert: true });
+
       if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(fileName);
-      return publicUrl;
+
+      const { data } = supabase.storage.from('post-images').getPublicUrl(fileName);
+      
+      if (!data || !data.publicUrl) {
+        throw new Error('Public URL not found after upload.');
+      }
+      
+      return data.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({ title: "ত্রুটি", description: "ছবি আপলোড করতে সমস্যা হয়েছে", variant: "destructive" });
@@ -411,8 +420,15 @@ const SocialFeed = () => {
       if (error) throw error;
 
       if (imageUrl) {
-        const path = imageUrl.substring(imageUrl.indexOf('/post-images/') + '/post-images/'.length);
-        await supabase.storage.from('post-images').remove([path]);
+        try {
+          const url = new URL(imageUrl);
+          const path = url.pathname.split('/post-images/').pop();
+          if (path) {
+            await supabase.storage.from('post-images').remove([path]);
+          }
+        } catch (e) {
+          console.error('Invalid image URL, skipping storage deletion:', e);
+        }
       }
 
       toast({ title: "সফল", description: "পোস্ট ডিলেট করা হয়েছে" });
