@@ -57,12 +57,33 @@ const Messages = () => {
     if (!profile?.id) return;
 
     try {
-      // Get all active users except current user
+      // Get users who have exchanged messages with current user
+      const { data: messageUsers, error: messageError } = await supabase
+        .from('messages')
+        .select('sender_id, receiver_id')
+        .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`);
+
+      if (messageError) throw messageError;
+
+      // Get unique user IDs who have exchanged messages
+      const uniqueUserIds = [...new Set(
+        messageUsers?.flatMap(msg => [msg.sender_id, msg.receiver_id])
+          .filter(id => id !== profile.id)
+      )];
+
+      if (uniqueUserIds.length === 0) {
+        setUsers([]);
+        setFilteredUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get user details for these IDs
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
         .eq('status', 'active')
-        .neq('id', profile.id);
+        .in('id', uniqueUserIds);
 
       if (usersError) throw usersError;
 

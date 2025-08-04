@@ -22,6 +22,7 @@ interface Profile {
   role: 'admin' | 'member';
   status: 'active' | 'suspended' | 'pending';
   created_at: string;
+  unread_messages_count?: number;
 }
 
 const AllMembers = () => {
@@ -39,14 +40,32 @@ const AllMembers = () => {
 
   const fetchMembers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .eq('status', 'active')
         .order('full_name', { ascending: true });
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (profilesError) throw profilesError;
+
+      // Get unread message counts for each user
+      const membersWithUnreadCount = await Promise.all(
+        (profilesData || []).map(async (profile) => {
+          const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('sender_id', profile.id)
+            .eq('receiver_id', profile.id)
+            .eq('is_read', false);
+
+          return {
+            ...profile,
+            unread_messages_count: count || 0
+          };
+        })
+      );
+
+      setMembers(membersWithUnreadCount);
     } catch (error) {
       console.error('Error fetching members:', error);
       toast({
@@ -98,51 +117,76 @@ const AllMembers = () => {
       {/* Members List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredMembers.map((member) => (
-          <div key={member.id} className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 flex-1">
-                <Avatar className="h-12 w-12 cursor-pointer" onClick={() => navigate(`/user/${member.id}`)}>
+          <div 
+            key={member.id} 
+            className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors border relative"
+            onClick={() => navigate(`/user/${member.id}`)}
+          >
+            <div className="flex items-start space-x-3">
+              <div className="relative">
+                <Avatar className="h-14 w-14 cursor-pointer border-2 border-gray-200">
                   <AvatarImage src={member.profile_image} alt={member.full_name} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 text-lg">
                     {member.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                
-                <div className="flex-1">
-                  <div 
-                    className="font-semibold text-lg text-gray-900 hover:underline cursor-pointer"
-                    onClick={() => navigate(`/user/${member.id}`)}
-                  >
-                    {member.full_name}
+                {member.role === 'admin' && (
+                  <div className="absolute -top-1 -right-1">
+                    <Badge variant="default" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                      ⭐
+                    </Badge>
                   </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    {member.role === 'admin' && (
-                      <Badge variant="default" className="mr-2">অ্যাডমিন</Badge>
+                )}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 hover:underline cursor-pointer truncate">
+                      {member.full_name}
+                    </h3>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500 mt-0.5">
+                      <span>যোগদান: {new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
+                      {member.unread_messages_count > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {member.unread_messages_count} অপঠিত মেসেজ
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`h-9 w-9 p-0 relative ${member.unread_messages_count > 0 ? 'text-blue-600' : 'text-gray-500'}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/messages?user=${member.id}`);
+                      }}
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      {member.unread_messages_count > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {member.unread_messages_count}
+                        </span>
+                      )}
+                    </Button>
+                    {member.phone && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-9 w-9 p-0 text-green-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `tel:${member.phone}`;
+                        }}
+                      >
+                        <PhoneCall className="h-5 w-5" />
+                      </Button>
                     )}
-                    <span>{new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 w-9 p-0"
-                  onClick={() => navigate(`/messages?user=${member.id}`)}
-                >
-                  <MessageSquare className="h-5 w-5 text-blue-600" />
-                </Button>
-                {member.phone && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-9 w-9 p-0"
-                    onClick={() => window.location.href = `tel:${member.phone}`}
-                  >
-                    <PhoneCall className="h-5 w-5 text-green-600" />
-                  </Button>
-                )}
               </div>
             </div>
           </div>
