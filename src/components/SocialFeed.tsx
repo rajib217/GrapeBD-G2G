@@ -76,7 +76,8 @@ const SocialFeed = () => {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch posts with profiles
+      const { data: posts, error: postsError } = await supabase
         .from('posts')
         .select(`
           id,
@@ -84,15 +85,54 @@ const SocialFeed = () => {
           image_url,
           created_at,
           user_id,
-          profiles ( full_name, profile_image ),
-          reactions ( id, user_id, reaction_type ),
-          comments ( id, content, created_at, user_id, profiles ( full_name, profile_image ) )
+          profiles ( full_name, profile_image )
         `)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+
+      // Fetch reactions for these posts
+      const postIds = posts?.map(p => p.id) || [];
+      const { data: reactions } = await supabase
+        .from('reactions')
+        .select('*')
+        .in('post_id', postIds);
+
+      // Fetch comments for these posts  
+      const { data: comments } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          post_id
+        `)
+        .in('post_id', postIds)
+        .order('created_at', { ascending: true });
+
+      // Get user profiles for comments
+      const commentUserIds = [...new Set(comments?.map(c => c.user_id) || [])];
+      const { data: commentProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_image')
+        .in('id', commentUserIds);
+
+      // Map profiles to comments
+      const commentsWithProfiles = comments?.map(comment => ({
+        ...comment,
+        profiles: commentProfiles?.find(p => p.id === comment.user_id) || { full_name: 'Unknown User', profile_image: null }
+      })) || [];
+
+      // Combine the data
+      const postsWithReactionsAndComments = posts?.map(post => ({
+        ...post,
+        reactions: reactions?.filter(r => r.post_id === post.id) || [],
+        comments: commentsWithProfiles?.filter(c => c.post_id === post.id) || []
+      })) || [];
+
+      setPosts(postsWithReactionsAndComments);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast({ title: "ত্রুটি", description: "পোস্ট লোড করতে সমস্যা হয়েছে", variant: "destructive" });

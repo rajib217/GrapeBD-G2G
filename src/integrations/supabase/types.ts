@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gift_rounds: {
         Row: {
           created_at: string
@@ -304,6 +331,30 @@ export type Database = {
           status?: Database["public"]["Enums"]["member_status"]
           status_icon?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reaction_type?: string
           user_id?: string
         }
         Relationships: []

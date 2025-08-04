@@ -53,7 +53,6 @@ const AdminDashboard = () => {
               <MobileNav 
                 activeTab={activeTab} 
                 onTabChange={handleTabChange}
-                showAdminButton={true}
               />
             </div>
             

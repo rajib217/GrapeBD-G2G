@@ -56,7 +56,6 @@ const Index = () => {
               <MobileNav 
                 activeTab={activeTab} 
                 onTabChange={handleTabChange}
-                showAdminButton={false}
               />
             </div>
             

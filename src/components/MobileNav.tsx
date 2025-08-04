@@ -60,7 +60,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
   };
 
   const menuItems: MenuItem[] = [
-    { id: 'feed', label: 'ফিড', icon: Home },
+    { id: 'home', label: 'হোম', icon: Home },
     { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
     { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
     { id: 'seedling-stock', label: 'চারাগাছের স্টক', icon: Archive },
