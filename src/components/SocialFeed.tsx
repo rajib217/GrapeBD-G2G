@@ -10,8 +10,11 @@ import { toast } from '@/hooks/use-toast';
 import { compressImage } from '@/utils/imageCompression';
 import { formatDistanceToNow } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { Camera, Heart, MessageCircle, Share2, Send, X, Loader2, ThumbsUp, Angry, Laugh, Frown } from 'lucide-react';
+import { Camera, Heart, MessageCircle, Share2, Send, X, Loader2, ThumbsUp, Angry, Laugh, Frown, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Reaction {
   id: string;
@@ -53,8 +56,14 @@ const SocialFeed = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [commentingPostId, setCommentingPostId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [editingImage, setEditingImage] = useState<File | null>(null);
+  const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
+  const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -264,6 +273,103 @@ const SocialFeed = () => {
     sad: Frown,
   };
 
+  const handleEditImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({ title: "ত্রুটি", description: "ছবির সাইজ সর্বোচ্চ ১০ এমবি হতে পারে", variant: "destructive" });
+        return;
+      }
+      setEditingImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setEditingImagePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditPost = (post: Post) => {
+    setEditingPostId(post.id);
+    setEditingContent(post.content || '');
+    if (post.image_url) {
+      setEditingImagePreview(post.image_url);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingPostId(null);
+    setEditingContent('');
+    setEditingImage(null);
+    setEditingImagePreview(null);
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
+  };
+
+  const submitEdit = async () => {
+    if (!editingPostId || (!editingContent.trim() && !editingImagePreview)) {
+      toast({ title: "ত্রুটি", description: "কিছু লিখুন বা ছবি যোগ করুন", variant: "destructive" });
+      return;
+    }
+
+    setIsEditingSubmitting(true);
+    try {
+      let imageUrl = editingImagePreview;
+      
+      // If new image was selected, upload it
+      if (editingImage) {
+        imageUrl = await uploadImage(editingImage);
+        if (!imageUrl) {
+          setIsEditingSubmitting(false);
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('posts')
+        .update({ 
+          content: editingContent.trim() || null, 
+          image_url: imageUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingPostId);
+
+      if (error) throw error;
+      
+      cancelEdit();
+      toast({ title: "সফল", description: "পোস্ট আপডেট করা হয়েছে" });
+    } catch (error) {
+      console.error('Error updating post:', error);
+      toast({ title: "ত্রুটি", description: "পোস্ট আপডেট করতে সমস্যা হয়েছে", variant: "destructive" });
+    } finally {
+      setIsEditingSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: string, imageUrl: string | null) => {
+    try {
+      // Delete from database
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
+      if (error) throw error;
+
+      // Delete image from storage if exists
+      if (imageUrl) {
+        const urlParts = imageUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const filePath = `${profile?.id}/${fileName}`;
+        await supabase.storage.from('post-images').remove([filePath]);
+      }
+
+      toast({ title: "সফল", description: "পোস্ট ডিলেট করা হয়েছে" });
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({ title: "ত্রুটি", description: "পোস্ট ডিলেট করতে সমস্যা হয়েছে", variant: "destructive" });
+    }
+  };
+
+  const removeEditImage = () => {
+    setEditingImage(null);
+    setEditingImagePreview(null);
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Create Post */}
@@ -331,6 +437,88 @@ const SocialFeed = () => {
                         <p className="font-medium text-gray-900">{post.profiles?.full_name || 'Unknown User'}</p>
                         <p className="text-sm text-gray-500">{formatPostDate(post.created_at)}</p>
                       </div>
+                      {/* Show edit/delete options only for post owner */}
+                      {post.user_id === profile?.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleEditPost(post); }}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  এডিট করুন
+                                </DropdownMenuItem>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-lg">
+                                <DialogHeader>
+                                  <DialogTitle>পোস্ট এডিট করুন</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <Textarea
+                                    placeholder="আপনার মনের কথা লিখুন..."
+                                    value={editingContent}
+                                    onChange={(e) => setEditingContent(e.target.value)}
+                                    className="min-h-[100px] resize-none"
+                                    maxLength={500}
+                                  />
+                                  {editingImagePreview && (
+                                    <div className="relative">
+                                      <img src={editingImagePreview} alt="Preview" className="w-full max-h-64 object-cover rounded-lg border" />
+                                      <Button size="sm" variant="destructive" className="absolute top-2 right-2 h-8 w-8 p-0" onClick={removeEditImage}>
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <Input type="file" ref={editFileInputRef} onChange={handleEditImageSelect} accept="image/*" className="hidden" />
+                                      <Button variant="ghost" size="sm" onClick={() => editFileInputRef.current?.click()} className="text-green-600 hover:text-green-700">
+                                        <Camera className="h-4 w-4 mr-2" />ছবি
+                                      </Button>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <Button variant="outline" onClick={cancelEdit}>বাতিল</Button>
+                                      <Button onClick={submitEdit} disabled={isEditingSubmitting || (!editingContent.trim() && !editingImagePreview)}>
+                                        {isEditingSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                        আপডেট করুন
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  ডিলেট করুন
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>পোস্ট ডিলেট করবেন?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    এই পোস্টটি স্থায়ীভাবে ডিলেট হয়ে যাবে। এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeletePost(post.id, post.image_url)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    ডিলেট করুন
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
