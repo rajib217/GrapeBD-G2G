@@ -198,15 +198,11 @@ const AllMembers = () => {
                       <span>যোগদান: {new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {member.own_varieties && member.own_varieties.length > 0 && (
-                        <Badge variant="default" className="bg-blue-500 text-white">নিজস্ব জাত: {member.own_varieties.join(', ')}</Badge>
-                      )}
+                     
                       {member.gift_varieties && member.gift_varieties.length > 0 && (
-                        <Badge variant="default" className="bg-green-500 text-white">গিফট: {member.gift_varieties.join(', ')}</Badge>
+                        <Badge variant="default" className="bg-green-500 text-white">জি২জি থেকে প্রাপ্ত গিফট: {member.gift_varieties.join(', ')}</Badge>
                       )}
-                      {member.g2g_program && member.g2g_program !== 'N/A' && (
-                        <Badge variant="default" className="bg-purple-500 text-white">প্রোগ্রাম: {member.g2g_program}</Badge>
-                      )}
+                     
                       {member.g2g_rounds_participated && member.g2g_rounds_participated.length > 0 && (
                         <Badge variant="default" className="bg-fuchsia-500 text-white">G2G রাউন্ড: {member.g2g_rounds_participated.join(', ')}</Badge>
                       )}
