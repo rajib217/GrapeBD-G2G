@@ -186,7 +186,7 @@ const AllMembers = () => {
                       className={`h-9 w-9 p-0 relative ${member.unread_messages_count > 0 ? 'text-blue-600' : 'text-gray-500'}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/messages?user=${member.id}`);
+                        navigate(`/messages?userId=${member.id}`);
                       }}
                     >
                       <MessageSquare className="h-5 w-5" />
