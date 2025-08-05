@@ -27,6 +27,11 @@ export default defineConfig(({ mode }) => ({
         'pwa/manifest-icon-512.png',
         'pwa/apple-icon-180.png'
       ],
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
+      strategies: 'generateSW',
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -89,7 +94,7 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       manifest: {
-        id: '/',
+        id: 'grapebd-g2g',
         start_url: '/',
         scope: '/',
         name: 'GrapeBD-G2G',
@@ -98,6 +103,7 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone'],
         orientation: 'portrait',
         categories: ['social', 'lifestyle'],
         shortcuts: [

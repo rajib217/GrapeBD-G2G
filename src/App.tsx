@@ -39,7 +39,6 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route 
@@ -85,7 +84,6 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<Auth />} />
           </Routes>
-        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
