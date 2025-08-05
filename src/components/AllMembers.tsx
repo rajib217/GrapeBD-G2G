@@ -26,6 +26,7 @@ interface Profile {
   own_varieties?: string[];
   gift_varieties?: string[];
   g2g_program?: string;
+  g2g_rounds_participated?: string[];
 }
 
 // Rainbow border animation for admin avatars
@@ -97,6 +98,7 @@ const AllMembers = () => {
             own_varieties: ownVarietiesData?.map((v: any) => v.varieties.name) || [],
             gift_varieties: giftVarietiesData?.map((v: any) => v.variety_name) || [],
             g2g_program: g2gProgramData?.g2g_programs?.name || 'N/A',
+            g2g_rounds_participated: profile.g2g_rounds_participated || [],
           };
         })
       );
@@ -204,6 +206,9 @@ const AllMembers = () => {
                       )}
                       {member.g2g_program && member.g2g_program !== 'N/A' && (
                         <Badge variant="default" className="bg-purple-500 text-white">প্রোগ্রাম: {member.g2g_program}</Badge>
+                      )}
+                      {member.g2g_rounds_participated && member.g2g_rounds_participated.length > 0 && (
+                        <Badge variant="default" className="bg-fuchsia-500 text-white">G2G রাউন্ড: {member.g2g_rounds_participated.join(', ')}</Badge>
                       )}
                     </div>
                   </div>
