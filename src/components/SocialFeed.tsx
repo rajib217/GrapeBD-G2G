@@ -48,7 +48,7 @@ interface Post {
 }
 
 const SocialFeed = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -195,7 +195,7 @@ const SocialFeed = () => {
       // Generate unique filename
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const uniqueId = Date.now() + '-' + Math.random().toString(36).substring(2);
-      const fileName = `${profile?.id}/${uniqueId}.${fileExt}`;
+      const fileName = `${user?.id}/${uniqueId}.${fileExt}`;
 
       // Upload to Supabase storage
       const { error: uploadError, data: uploadData } = await supabase.storage
