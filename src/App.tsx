@@ -14,24 +14,26 @@ import NotFound from "./pages/NotFound";
 import UserProfile from "./components/UserProfile";
 import Messages from "./components/Messages";
 import { useEffect } from "react";
-import { useNotifications } from "@/hooks/use-notifications";
+import { requestNotificationPermission, hasRejectedNotifications } from "@/services/notification";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { notificationsEnabled, enableNotifications } = useNotifications();
-
   useEffect(() => {
-    if (!notificationsEnabled) {
+    const isGranted = localStorage.getItem('notificationGranted') === 'true';
+    
+    if (!hasRejectedNotifications() && !isGranted) {
       const askPermission = async () => {
         const shouldAsk = window.confirm('নোটিফিকেশন চালু করতে চান? মেসেজ ও গিফট সংক্রান্ত আপডেট পেতে নোটিফিকেশন দরকার।');
         if (shouldAsk) {
-          await enableNotifications();
+          await requestNotificationPermission();
+        } else {
+          localStorage.setItem('notificationRejected', 'true');
         }
       };
       askPermission();
     }
-  }, [notificationsEnabled, enableNotifications]);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

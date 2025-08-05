@@ -1,12 +1,28 @@
+export function hasRejectedNotifications() {
+  return localStorage.getItem('notificationRejected') === 'true';
+}
+
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
     console.log('This browser does not support notifications');
     return false;
   }
+  
+  if (hasRejectedNotifications()) {
+    return false;
+  }
 
   try {
     const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    if (permission === 'granted') {
+      localStorage.setItem('notificationGranted', 'true');
+      localStorage.removeItem('notificationRejected');
+      return true;
+    } else if (permission === 'denied') {
+      localStorage.setItem('notificationRejected', 'true');
+      localStorage.removeItem('notificationGranted');
+    }
+    return false;
   } catch (error) {
     console.error('Error requesting notification permission:', error);
     return false;
