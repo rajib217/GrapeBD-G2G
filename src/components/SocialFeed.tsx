@@ -253,6 +253,8 @@ const SocialFeed = () => {
       setNewPost('');
       setSelectedImage(null);
       setImagePreview(null);
+      // Refresh posts to show the new post immediately
+      await fetchPosts();
       toast({ title: "সফল", description: "পোস্ট শেয়ার করা হয়েছে" });
     } catch (error) {
       console.error('Error creating post:', error);
