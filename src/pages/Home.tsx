@@ -68,7 +68,7 @@ export default function Home() {
     if (!file) return;
 
     try {
-      const compressedImage = await compressImage(file, 100);
+      const compressedImage = await compressImage(file, 50);
       setSelectedImage(compressedImage);
       setImagePreview(URL.createObjectURL(compressedImage));
     } catch (error) {
