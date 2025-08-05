@@ -51,23 +51,48 @@ export async function showNotification(title: string, options?: NotificationOpti
 
 export async function setupPushNotifications(userId: string) {
   try {
+    // Check if service worker is ready
+    if (!('serviceWorker' in navigator)) {
+      console.error('Service Worker not supported');
+      return false;
+    }
+
+    // Wait for service worker registration
     const registration = await navigator.serviceWorker.ready;
+    
+    // Check if push is supported
+    if (!registration.pushManager) {
+      console.error('Push notifications not supported');
+      return false;
+    }
+
+    // Get existing subscription
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      await existingSubscription.unsubscribe();
+    }
+
+    // Create new subscription
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' // You'll need to replace this with your VAPID key
+      applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
     });
 
-    // Send the subscription to your server
-    await fetch('/api/push-subscription', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        subscription
-      }),
-    });
+    // Store subscription in Supabase
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .upsert([
+        {
+          user_id: userId,
+          subscription: JSON.stringify(subscription),
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+    if (error) {
+      console.error('Error saving push subscription:', error);
+      return false;
+    }
 
     return true;
   } catch (error) {

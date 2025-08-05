@@ -9,6 +9,22 @@ const {CacheFirst, NetworkFirst, StaleWhileRevalidate} = workbox.strategies;
 const {CacheableResponse} = workbox.cacheableResponse;
 const {ExpirationPlugin} = workbox.expiration;
 
+// Initialize push notifications
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    Promise.all([
+      // Enable navigation preload if available
+      self.registration.navigationPreload && self.registration.navigationPreload.enable(),
+      // Subscribe to push notifications if available
+      self.registration.pushManager && self.registration.pushManager.getSubscription().then(subscription => {
+        if (!subscription) {
+          console.log('Push notifications not subscribed');
+        }
+      })
+    ])
+  );
+});
+
 // Cache page navigations (html) with a Network First strategy
 registerRoute(
   ({request}) => request.mode === 'navigate',
