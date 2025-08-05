@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { MessageCircle, Send, Circle, User, ArrowLeft, Search, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageCircle, Send, User, ArrowLeft, Search, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -258,280 +257,308 @@ const Messages = () => {
   }, [targetUserId, users]);
 
   if (loading) {
-    return <div className="text-center py-8">লোড হচ্ছে...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">লোড হচ্ছে...</span>
+      </div>
+    );
   }
 
   // If in direct messaging mode, show the direct message interface
   if (directMessaging && selectedUser) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2 mb-6">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              setDirectMessaging(false);
-              setSelectedUser(null);
-              navigate(`/user/${targetUserId}`);
-            }}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            ফিরে যান
-          </Button>
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={selectedUser.profile_image} />
-            <AvatarFallback>
-              <User className="h-4 w-4" />
-            </AvatarFallback>
-          </Avatar>
-          <h2 className="text-xl font-semibold">{selectedUser.full_name} এর সাথে মেসেজ</h2>
-        </div>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {/* Messages Area */}
-              <div className="h-96 overflow-y-auto border rounded-lg p-4 space-y-3">
-                {messages.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">
-                    কোনো মেসেজ নেই
-                  </div>
-                ) : (
-                  messages.map((message) => (
-                    <div 
-                      key={message.id}
-                      className={`flex ${
-                        message.sender.id === profile?.id ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.sender.id === profile?.id 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-200 text-gray-800'
-                      }`}>
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.sender.id === profile?.id 
-                            ? 'text-blue-100' 
-                            : 'text-gray-500'
-                        }`}>
-                          {formatDate(message.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Send Message Form */}
-              <div className="space-y-3">
-                <Textarea
-                  placeholder="আপনার মেসেজ লিখুন..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="min-h-[80px]"
-                />
-                <Button 
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim() || sendingMessage}
-                  className="w-full"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {sendingMessage ? 'পাঠানো হচ্ছে...' : 'মেসেজ পাঠান'}
-                </Button>
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setDirectMessaging(false);
+                  setSelectedUser(null);
+                  navigate(`/user/${targetUserId}`);
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                ফিরে যান
+              </Button>
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={selectedUser.profile_image} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {selectedUser.full_name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="font-semibold">{selectedUser.full_name}</h2>
+                <p className="text-xs text-muted-foreground">অনলাইন</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Messages Area */}
+          <ScrollArea className="h-96 p-4">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>কোনো মেসেজ নেই</p>
+                <p className="text-xs">প্রথম মেসেজ পাঠান!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((message) => (
+                  <div 
+                    key={message.id}
+                    className={`flex ${
+                      message.sender.id === profile?.id ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <div className={`max-w-[70%] px-4 py-2 rounded-2xl relative ${
+                      message.sender.id === profile?.id 
+                        ? 'bg-blue-500 text-white rounded-br-md' 
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                      <p className={`text-xs mt-1 ${
+                        message.sender.id === profile?.id 
+                          ? 'text-blue-100' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        {formatDate(message.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          {/* Send Message Form */}
+          <div className="p-4 border-t bg-gray-50 dark:bg-gray-700">
+            <div className="flex space-x-2">
+              <Input
+                placeholder="মেসেজ লিখুন..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="flex-1 rounded-full border-0 bg-white dark:bg-gray-600"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+              <Button 
+                onClick={sendMessage}
+                disabled={!newMessage.trim() || sendingMessage}
+                size="icon"
+                className="rounded-full bg-blue-500 hover:bg-blue-600"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2 mb-6">
-        <MessageCircle className="h-5 w-5 text-blue-600" />
-        <h2 className="text-xl font-semibold">মেসেজ</h2>
-        <Badge variant="secondary">{users.length} জন ইউজার</Badge>
-        {totalUnreadCount > 0 && (
-          <Badge variant="destructive">{totalUnreadCount} টি নতুন</Badge>
-        )}
-      </div>
-
-      {/* Search Box */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="ইউজার খুঁজুন (নাম বা ইমেইল)..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 pr-10"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
-              onClick={clearSearch}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border mb-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-2">
+              <MessageCircle className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">চ্যাট</h1>
+              <p className="text-sm text-muted-foreground">{users.length} জন কনভার্সেশন</p>
+            </div>
+          </div>
+          {totalUnreadCount > 0 && (
+            <div className="bg-red-500 text-white rounded-full px-3 py-1 text-sm font-medium">
+              {totalUnreadCount} টি নতুন
+            </div>
           )}
         </div>
-        {searchQuery && (
-          <p className="text-sm text-gray-500 mt-2">
-            "{searchQuery}" এর জন্য {filteredUsers.length} টি ফলাফল পাওয়া গেছে
-          </p>
-        )}
+
+        {/* Search */}
+        <div className="px-6 py-4">
+          <div className="relative">
+            <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="মেসেজ বা নাম খুঁজুন..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10 pr-10 bg-gray-50 dark:bg-gray-700 border-0 rounded-full"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full"
+                onClick={clearSearch}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredUsers.map((user) => (
-          <Card 
-            key={user.id}
-            className={`hover:shadow-md transition-shadow cursor-pointer ${
-              user.unread_count > 0 ? 'border-l-4 border-l-blue-500 bg-blue-50/50' : ''
-            }`}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.profile_image} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-sm">{user.full_name}</CardTitle>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                        {user.role === 'admin' ? 'অ্যাডমিন' : 'মেম্বার'}
-                      </Badge>
-                      {user.unread_count > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          {user.unread_count} নতুন
+      {/* Conversations List */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
+        <ScrollArea className="h-[600px]">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-muted-foreground">
+                {searchQuery ? 'কোনো ফলাফল নেই' : 'কোনো কনভার্সেশন নেই'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {searchQuery ? `"${searchQuery}" এর জন্য কোনো ইউজার পাওয়া যায়নি` : 'নতুন মেসেজ শুরু করুন'}
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className={`flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                    user.unread_count > 0 ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedUser(user);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <div className="relative mr-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={user.profile_image} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                        {user.full_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user.unread_count > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                        {user.unread_count}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className={`text-sm font-medium truncate ${
+                        user.unread_count > 0 ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {user.full_name}
+                      </h3>
+                      <div className="flex items-center space-x-1">
+                        <Badge 
+                          variant={user.role === 'admin' ? 'default' : 'secondary'} 
+                          className="text-xs"
+                        >
+                          {user.role === 'admin' ? 'অ্যাডমিন' : 'মেম্বার'}
                         </Badge>
-                      )}
+                      </div>
                     </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      মেসেজ করতে ক্লিক করুন
+                    </p>
                   </div>
                 </div>
-                {user.unread_count > 0 && (
-                  <Circle className="h-3 w-3 text-blue-500 fill-current" />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={dialogOpen && selectedUser?.id === user.id} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    মেসেজ করুন
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh]">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.profile_image} />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{user.full_name} এর সাথে মেসেজ</span>
-                    </DialogTitle>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    {/* Messages Area */}
-                    <div className="h-64 overflow-y-auto border rounded-lg p-4 space-y-3">
-                      {messages.length === 0 ? (
-                        <div className="text-center text-gray-500 py-8">
-                          কোনো মেসেজ নেই
-                        </div>
-                      ) : (
-                        messages.map((message) => (
-                          <div 
-                            key={message.id}
-                            className={`flex ${
-                              message.sender.id === profile?.id ? 'justify-end' : 'justify-start'
-                            }`}
-                          >
-                            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.sender.id === profile?.id 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-gray-200 text-gray-800'
-                            }`}>
-                              <p className="text-sm">{message.content}</p>
-                              <p className={`text-xs mt-1 ${
-                                message.sender.id === profile?.id 
-                                  ? 'text-blue-100' 
-                                  : 'text-gray-500'
-                              }`}>
-                                {formatDate(message.created_at)}
-                              </p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    {/* Send Message Form */}
-                    <div className="space-y-3">
-                      <Textarea
-                        placeholder="আপনার মেসেজ লিখুন..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        className="min-h-[80px]"
-                      />
-                      <Button 
-                        onClick={sendMessage}
-                        disabled={!newMessage.trim() || sendingMessage}
-                        className="w-full"
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        {sendingMessage ? 'পাঠানো হচ্ছে...' : 'মেসেজ পাঠান'}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        ))}
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </div>
 
-      {filteredUsers.length === 0 && searchQuery && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">কোনো ইউজার পাওয়া যায়নি</h3>
-            <p className="text-gray-500">"{searchQuery}" এর জন্য কোনো ইউজার খুঁজে পাওয়া যায়নি</p>
-            <Button variant="outline" className="mt-4" onClick={clearSearch}>
-              সব ইউজার দেখান
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* Message Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md p-0 bg-white dark:bg-gray-800">
+          <DialogHeader className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-700">
+            <DialogTitle className="flex items-center space-x-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={selectedUser?.profile_image} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {selectedUser?.full_name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <span className="font-medium">{selectedUser?.full_name}</span>
+                <p className="text-xs text-muted-foreground">অনলাইন</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+            
+          {/* Messages Area */}
+          <ScrollArea className="h-96 p-4">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>কোনো মেসেজ নেই</p>
+                <p className="text-xs">প্রথম মেসেজ পাঠান!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((message) => (
+                  <div 
+                    key={message.id}
+                    className={`flex ${
+                      message.sender.id === profile?.id ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <div className={`max-w-[70%] px-4 py-2 rounded-2xl relative ${
+                      message.sender.id === profile?.id 
+                        ? 'bg-blue-500 text-white rounded-br-md' 
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                      <p className={`text-xs mt-1 ${
+                        message.sender.id === profile?.id 
+                          ? 'text-blue-100' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        {formatDate(message.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
 
-      {users.length === 0 && !searchQuery && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <MessageCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">কোনো ইউজার নেই</h3>
-            <p className="text-gray-500">এখনো কোনো অন্য ইউজার সক্রিয় নেই</p>
-          </CardContent>
-        </Card>
-      )}
+          {/* Send Message Form */}
+          <div className="p-4 border-t bg-gray-50 dark:bg-gray-700">
+            <div className="flex space-x-2">
+              <Input
+                placeholder="মেসেজ লিখুন..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="flex-1 rounded-full border-0 bg-white dark:bg-gray-600"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+              <Button 
+                onClick={sendMessage}
+                disabled={!newMessage.trim() || sendingMessage}
+                size="icon"
+                className="rounded-full bg-blue-500 hover:bg-blue-600"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
