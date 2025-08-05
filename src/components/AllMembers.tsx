@@ -23,6 +23,9 @@ interface Profile {
   status: 'active' | 'suspended' | 'pending';
   created_at: string;
   unread_messages_count?: number;
+  own_varieties?: string[];
+  gift_varieties?: string[];
+  g2g_program?: string;
 }
 
 // Rainbow border animation for admin avatars
@@ -61,24 +64,44 @@ const AllMembers = () => {
 
       if (profilesError) throw profilesError;
 
-      // Get unread message counts for each user
-      const membersWithUnreadCount = await Promise.all(
+      // Get additional data for each user
+      const membersWithDetails = await Promise.all(
         (profilesData || []).map(async (profile) => {
+          // 1. Unread message count
           const { count } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
-            .eq('sender_id', profile.id)
             .eq('receiver_id', profile.id)
             .eq('is_read', false);
 
+          // 2. Own varieties
+          const { data: ownVarietiesData } = await supabase
+            .from('user_varieties')
+            .select('varieties(name)')
+            .eq('user_id', profile.id);
+
+          // 3. Gifted varieties
+          const { data: giftVarietiesData } = await supabase
+            .rpc('get_user_received_gift_varieties', { profile_id: profile.id });
+
+          // 4. G2G Program
+          const { data: g2gProgramData } = await supabase
+            .from('user_g2g_programs')
+            .select('g2g_programs(name)')
+            .eq('user_id', profile.id)
+            .single();
+
           return {
             ...profile,
-            unread_messages_count: count || 0
+            unread_messages_count: count || 0,
+            own_varieties: ownVarietiesData?.map((v: any) => v.varieties.name) || [],
+            gift_varieties: giftVarietiesData?.map((v: any) => v.variety_name) || [],
+            g2g_program: g2gProgramData?.g2g_programs?.name || 'N/A',
           };
         })
       );
 
-      setMembers(membersWithUnreadCount);
+      setMembers(membersWithDetails);
     } catch (error) {
       console.error('Error fetching members:', error);
       toast({
@@ -171,10 +194,16 @@ const AllMembers = () => {
                     </h3>
                     <div className="flex items-center space-x-2 text-sm text-gray-500 mt-0.5">
                       <span>যোগদান: {new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
-                      {member.unread_messages_count > 0 && (
-                        <Badge variant="destructive" className="ml-2">
-                          {member.unread_messages_count} অপঠিত মেসেজ
-                        </Badge>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {member.own_varieties && member.own_varieties.length > 0 && (
+                        <Badge variant="default" className="bg-blue-500 text-white">নিজস্ব জাত: {member.own_varieties.join(', ')}</Badge>
+                      )}
+                      {member.gift_varieties && member.gift_varieties.length > 0 && (
+                        <Badge variant="default" className="bg-green-500 text-white">গিফট: {member.gift_varieties.join(', ')}</Badge>
+                      )}
+                      {member.g2g_program && member.g2g_program !== 'N/A' && (
+                        <Badge variant="default" className="bg-purple-500 text-white">প্রোগ্রাম: {member.g2g_program}</Badge>
                       )}
                     </div>
                   </div>
