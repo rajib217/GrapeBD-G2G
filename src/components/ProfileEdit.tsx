@@ -205,6 +205,9 @@ const ProfileEdit = () => {
         title: 'সফল',
         description: 'প্রোফাইল ছবি আপলোড হয়েছে',
       });
+
+      // Refresh profile data to reflect changes immediately
+      await refreshProfile();
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
