@@ -24,29 +24,16 @@ const MessageModal = ({ isOpen, onClose, recipient }: MessageModalProps) => {
   const { profile, user } = useAuth();
   const { toast } = useToast();
 
-  console.log('MessageModal - Auth state:', { profile, user });
+  // ...existing code...
 
   const handleSendMessage = async () => {
-    console.log('MessageModal - Profile:', profile);
-    console.log('MessageModal - Recipient:', recipient);
-    console.log('MessageModal - Message:', message.trim());
-    
     if (!message.trim() || !profile?.id) {
-      console.log('MessageModal - Validation failed:', { 
-        messageEmpty: !message.trim(), 
-        noProfileId: !profile?.id,
-        profile 
-      });
       return;
     }
 
     setSending(true);
     try {
-      console.log('MessageModal - Sending message data:', {
-        sender_id: profile.id,
-        receiver_id: recipient.id,
-        content: message.trim(),
-      });
+      // ...existing code...
 
       const { error } = await supabase
         .from('messages')
@@ -58,7 +45,7 @@ const MessageModal = ({ isOpen, onClose, recipient }: MessageModalProps) => {
           },
         ]);
 
-      console.log('MessageModal - Insert result:', { error });
+      // ...existing code...
 
       if (error) throw error;
 
@@ -105,9 +92,7 @@ const MessageModal = ({ isOpen, onClose, recipient }: MessageModalProps) => {
             className="resize-none"
           />
 
-          <div className="text-xs text-muted-foreground mb-2">
-            Debug: Profile ID: {profile?.id || 'নেই'} | User ID: {user?.id || 'নেই'}
-          </div>
+          {/* ...existing code... */}
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose} disabled={sending}>
