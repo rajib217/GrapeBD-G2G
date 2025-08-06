@@ -71,8 +71,7 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: '/pwa/manifest-icon-192.png',
       badge: '/pwa/manifest-icon-192.png',
-      data: data.url,
-      vibrate: [200, 100, 200]
+      data: data.url
     })
   );
 });
@@ -83,7 +82,7 @@ self.addEventListener('notificationclick', (event) => {
   
   if (event.notification.data) {
     event.waitUntil(
-      clients.openWindow(event.notification.data)
+      self.clients.openWindow(event.notification.data)
     );
   }
 });

@@ -49,6 +49,8 @@ export async function showNotification(title: string, options?: NotificationOpti
   }
 }
 
+import { supabase } from '@/integrations/supabase/client';
+
 export async function setupPushNotifications(userId: string) {
   try {
     // Check if service worker is ready
@@ -78,22 +80,7 @@ export async function setupPushNotifications(userId: string) {
       applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
     });
 
-    // Store subscription in Supabase
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .upsert([
-        {
-          user_id: userId,
-          subscription: JSON.stringify(subscription),
-          created_at: new Date().toISOString()
-        }
-      ]);
-
-    if (error) {
-      console.error('Error saving push subscription:', error);
-      return false;
-    }
-
+    console.log('Push notification subscription created:', subscription);
     return true;
   } catch (error) {
     console.error('Error setting up push notifications:', error);

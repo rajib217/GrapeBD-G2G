@@ -52,8 +52,7 @@ export function useNotifications() {
           if (sender) {
             showNotification('নতুন মেসেজ', {
               body: `${sender.full_name}: ${content}`,
-              tag: 'new-message',
-              renotify: true
+              tag: 'new-message'
             });
           }
         }
@@ -74,9 +73,8 @@ export function useNotifications() {
           const { gift_name } = payload.new;
           
           showNotification('নতুন গিফট!', {
-            body: `আপনি ${gift_name} গিফট পেয়েছেন!`,
-            tag: 'new-gift',
-            renotify: true
+            body: `আপনি গিফট পেয়েছেন!`,
+            tag: 'new-gift'
           });
         }
       )
@@ -96,9 +94,8 @@ export function useNotifications() {
           const { gift_name } = payload.new;
           
           showNotification('গিফট এসাইনমেন্ট', {
-            body: `আপনাকে ${gift_name} গিফট এসাইন করা হয়েছে।`,
-            tag: 'gift-assignment',
-            renotify: true
+            body: `আপনাকে গিফট এসাইন করা হয়েছে।`,
+            tag: 'gift-assignment'
           });
         }
       )

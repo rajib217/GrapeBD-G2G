@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import MessageModal from './MessageModal';
 
 interface Profile {
   id: string;
@@ -25,8 +26,6 @@ interface Profile {
   unread_messages_count?: number;
   own_varieties?: string[];
   gift_varieties?: string[];
-  g2g_program?: string;
-  g2g_rounds_participated?: string[];
 }
 
 // Rainbow border animation for admin avatars
@@ -49,6 +48,8 @@ const AllMembers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedMessageRecipient, setSelectedMessageRecipient] = useState<Profile | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,20 +86,11 @@ const AllMembers = () => {
           const { data: giftVarietiesData } = await supabase
             .rpc('get_user_received_gift_varieties', { profile_id: profile.id });
 
-          // 4. G2G Program
-          const { data: g2gProgramData } = await supabase
-            .from('user_g2g_programs')
-            .select('g2g_programs(name)')
-            .eq('user_id', profile.id)
-            .single();
-
           return {
             ...profile,
             unread_messages_count: count || 0,
             own_varieties: ownVarietiesData?.map((v: any) => v.varieties.name) || [],
             gift_varieties: giftVarietiesData?.map((v: any) => v.variety_name) || [],
-            g2g_program: g2gProgramData?.g2g_programs?.name || 'N/A',
-            g2g_rounds_participated: profile.g2g_rounds_participated || [],
           };
         })
       );
@@ -119,6 +111,11 @@ const AllMembers = () => {
   const handleViewProfile = (member: Profile) => {
     setSelectedMember(member);
     setIsDialogOpen(true);
+  };
+
+  const handleOpenMessageModal = (member: Profile) => {
+    setSelectedMessageRecipient(member);
+    setMessageModalOpen(true);
   };
 
   const filteredMembers = members.filter(member =>
@@ -202,10 +199,6 @@ const AllMembers = () => {
                       {member.gift_varieties && member.gift_varieties.length > 0 && (
                         <Badge variant="default" className="bg-green-500 text-white">জি২জি থেকে প্রাপ্ত গিফট: {member.gift_varieties.join(', ')}</Badge>
                       )}
-                     
-                      {member.g2g_rounds_participated && member.g2g_rounds_participated.length > 0 && (
-                        <Badge variant="default" className="bg-fuchsia-500 text-white">G2G রাউন্ড: {member.g2g_rounds_participated.join(', ')}</Badge>
-                      )}
                     </div>
                   </div>
                   
@@ -216,7 +209,7 @@ const AllMembers = () => {
                       className={`h-9 w-9 p-0 relative ${member.unread_messages_count > 0 ? 'text-blue-600' : 'text-gray-500'}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/messages?userId=${member.id}`);
+                        handleOpenMessageModal(member);
                       }}
                     >
                       <MessageSquare className="h-5 w-5" />
@@ -313,6 +306,18 @@ const AllMembers = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Message Modal */}
+      {selectedMessageRecipient && (
+        <MessageModal
+          isOpen={messageModalOpen}
+          onClose={() => {
+            setMessageModalOpen(false);
+            setSelectedMessageRecipient(null);
+          }}
+          recipient={selectedMessageRecipient}
+        />
+      )}
 
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
