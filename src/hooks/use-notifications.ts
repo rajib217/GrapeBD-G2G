@@ -32,6 +32,16 @@ export function useNotifications() {
     const messagesChannel = supabase
       .channel('messages')
       .on(
+  useEffect(() => {
+    if (!profile?.id || !notificationsEnabled) {
+      console.info('[useNotifications] Skipping subscription: profile or notifications not enabled');
+      return;
+    }
+
+    // Subscribe to real-time notifications
+    const messagesChannel = supabase
+      .channel('messages')
+      .on(
         'postgres_changes',
         {
           event: 'INSERT',
@@ -41,7 +51,7 @@ export function useNotifications() {
         },
         async (payload) => {
           const { sender_id, content } = payload.new;
-          
+          console.info('[useNotifications] New message payload:', payload);
           // Fetch sender details
           const { data: sender } = await supabase
             .from('profiles')
@@ -50,10 +60,13 @@ export function useNotifications() {
             .single();
 
           if (sender) {
-            showNotification('নতুন মেসেজ', {
+            console.info('[useNotifications] Triggering showNotification for message:', sender.full_name, content);
+            showNotification('\u09a8\u09a4\u09c1\u09a8 \u09ae\u09c7\u09b8\u09c7\u099c', {
               body: `${sender.full_name}: ${content}`,
               tag: 'new-message'
             });
+          } else {
+            console.warn('[useNotifications] Sender not found for notification');
           }
         }
       )
@@ -71,22 +84,15 @@ export function useNotifications() {
         },
         async (payload) => {
           const { gift_name } = payload.new;
-          
-          showNotification('নতুন গিফট!', {
-            body: `আপনি গিফট পেয়েছেন!`,
+          console.info('[useNotifications] New gift payload:', payload);
+          showNotification('\u09a8\u09a4\u09c1\u09a8 \u0997\u09bf\u09ab\u099f!', {
+            body: `\u0986\u09aa\u09a8\u09bf \u0997\u09bf\u09ab\u099f \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09c7\u09a8!`,
             tag: 'new-gift'
           });
         }
       )
       .subscribe();
-
-    const assignmentsChannel = supabase
-      .channel('gift_assignments')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
+  }, [profile?.id, notificationsEnabled]);
           table: 'gift_assignments',
           filter: `receiver_id=eq.${profile.id}`,
         },
