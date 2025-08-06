@@ -12,6 +12,7 @@ import { User, Save, Upload, Plus, X, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { compressImage } from '@/utils/imageCompression';
 
 const ProfileEdit = () => {
   const [loading, setLoading] = useState(false);
@@ -43,8 +44,8 @@ const ProfileEdit = () => {
         profile_image: profile.profile_image || '',
         preferred_courier: profile.preferred_courier || '',
         bio: profile.bio || '',
-        g2g_rounds: Array.isArray(profile.g2g_rounds_participated) 
-          ? profile.g2g_rounds_participated.join(', ') 
+        g2g_rounds: Array.isArray(profile.g2g_rounds_participated)
+          ? profile.g2g_rounds_participated.join(', ')
           : ''
       });
     }
@@ -60,7 +61,7 @@ const ProfileEdit = () => {
         .select('id, name, thumbnail_image')
         .eq('is_active', true)
         .order('name');
-      
+
       if (error) throw error;
       setVarieties(data || []);
     } catch (error) {
@@ -70,7 +71,7 @@ const ProfileEdit = () => {
 
   const fetchUserVarieties = async () => {
     if (!profile?.id) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('user_varieties')
@@ -81,7 +82,7 @@ const ProfileEdit = () => {
           varieties(name, thumbnail_image)
         `)
         .eq('user_id', profile.id);
-      
+
       if (error) throw error;
       setUserVarieties(data || []);
     } catch (error) {
@@ -91,11 +92,11 @@ const ProfileEdit = () => {
 
   const fetchReceivedGiftVarieties = async () => {
     if (!profile?.id) return;
-    
+
     try {
       const { data, error } = await supabase
         .rpc('get_user_received_gift_varieties', { profile_id: profile.id });
-      
+
       if (error) throw error;
       setReceivedGiftVarieties(data || []);
     } catch (error) {
@@ -168,16 +169,6 @@ const ProfileEdit = () => {
     const file = event.target.files?.[0];
     if (!file || !profile?.id) return;
 
-    // Check file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: 'ত্রুটি',
-        description: 'ফাইলের সাইজ ৫MB এর কম হতে হবে',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     // Check file type
     if (!file.type.startsWith('image/')) {
       toast({
@@ -190,13 +181,15 @@ const ProfileEdit = () => {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const compressedFile = await compressImage(file, 10);
+
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${profile.user_id}.${fileExt}`;
       const filePath = `${profile.user_id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('profile-pictures')
-        .upload(filePath, file, {
+        .upload(filePath, compressedFile, {
           upsert: true
         });
 
@@ -330,7 +323,7 @@ const ProfileEdit = () => {
                       className="mt-2"
                     />
                     <p className="text-sm text-muted-foreground mt-2">
-                      সর্বোচ্চ ৫MB সাইজের ছবি আপলোড করুন
+                      সর্বোচ্চ ১০কেবি সাইজের ছবি আপলোড করুন
                     </p>
                     {uploading && (
                       <p className="text-sm text-blue-600 mt-2">
