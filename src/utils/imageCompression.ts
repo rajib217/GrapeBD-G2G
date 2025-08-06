@@ -6,7 +6,7 @@ export const compressImage = (file: File, maxSizeKB: number = 50): Promise<File>
 
     img.onload = () => {
       // Calculate new dimensions while maintaining aspect ratio
-      const maxDimension = 800; // Maximum width or height
+      const maxDimension = 175; // Maximum width or height
       let { width, height } = img;
       
       if (width > height) {

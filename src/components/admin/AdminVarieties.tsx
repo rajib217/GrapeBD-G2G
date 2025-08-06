@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage } from '@/utils/imageCompression';
 
 interface Variety {
   id: string;
@@ -182,19 +183,9 @@ const AdminVarieties = () => {
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "ত্রুটি",
-          description: "ছবির সাইজ ৫ এমবি এর কম হতে হবে",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Check file type
       if (!file.type.startsWith('image/')) {
         toast({
@@ -218,13 +209,15 @@ const AdminVarieties = () => {
 
     setUploading(true);
     try {
-      const fileExt = selectedFile.name.split('.').pop();
+      const compressedFile = await compressImage(selectedFile, 200); // Compress to 200KB
+
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `variety-${Date.now()}.${fileExt}`;
       const filePath = `varieties/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(filePath, selectedFile);
+        .from('profile-pictures') // Assuming 'profile-pictures' bucket is used for varieties too
+        .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
@@ -385,7 +378,7 @@ const AdminVarieties = () => {
                       />
                       {selectedFile && (
                         <div className="mt-2 text-xs text-muted-foreground">
-                          ফাইল: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                          ফাইল: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
                         </div>
                       )}
                     </div>

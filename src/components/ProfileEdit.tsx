@@ -181,7 +181,7 @@ const ProfileEdit = () => {
 
     setUploading(true);
     try {
-      const compressedFile = await compressImage(file, 10);
+      const compressedFile = await compressImage(file, 200);
 
       const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${profile.user_id}.${fileExt}`;
@@ -326,7 +326,7 @@ const ProfileEdit = () => {
                       className="mt-2"
                     />
                     <p className="text-sm text-muted-foreground mt-2">
-                      সর্বোচ্চ ১০কেবি সাইজের ছবি আপলোড করুন
+                      সর্বোচ্চ ২০০কেবি সাইজের ছবি আপলোড করুন
                     </p>
                     {uploading && (
                       <p className="text-sm text-blue-600 mt-2">
