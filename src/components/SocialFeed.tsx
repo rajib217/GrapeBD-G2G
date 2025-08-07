@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { compressImage } from '@/utils/imageCompression';
+import { compressPostImage } from '@/utils/imageCompression';
 import { formatDistanceToNow } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { Camera, Heart, MessageCircle, Share2, Send, X, Loader2, ThumbsUp, Angry, Laugh, Frown, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
@@ -185,7 +185,7 @@ const SocialFeed = () => {
       // Compress image
       let compressedFile: File;
       try {
-        compressedFile = await compressImage(file, 50);
+        compressedFile = await compressPostImage(file);
       } catch (compressionError) {
         console.error('Error compressing image:', compressionError);
         toast({ title: "ত্রুটি", description: "ছবি প্রসেস করতে সমস্যা হয়েছে", variant: "destructive" });
