@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import AdminStats from '@/components/admin/AdminStats';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGifts from '@/components/admin/AdminGifts';
 import AdminVarieties from '@/components/admin/AdminVarieties';
@@ -96,6 +97,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Admin Tabs */}
+        <AdminStats />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
           <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-7 mb-8 h-auto gap-2 bg-transparent">
