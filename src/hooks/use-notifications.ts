@@ -26,13 +26,6 @@ export function useNotifications() {
   };
 
   useEffect(() => {
-    if (!profile?.id || !notificationsEnabled) return;
-
-    // Subscribe to real-time notifications
-    const messagesChannel = supabase
-      .channel('messages')
-      .on(
-  useEffect(() => {
     if (!profile?.id || !notificationsEnabled) {
       console.info('[useNotifications] Skipping subscription: profile or notifications not enabled');
       return;
@@ -61,7 +54,7 @@ export function useNotifications() {
 
           if (sender) {
             console.info('[useNotifications] Triggering showNotification for message:', sender.full_name, content);
-            showNotification('\u09a8\u09a4\u09c1\u09a8 \u09ae\u09c7\u09b8\u09c7\u099c', {
+            showNotification('নতুন মেসেজ', {
               body: `${sender.full_name}: ${content}`,
               tag: 'new-message'
             });
@@ -85,23 +78,9 @@ export function useNotifications() {
         async (payload) => {
           const { gift_name } = payload.new;
           console.info('[useNotifications] New gift payload:', payload);
-          showNotification('\u09a8\u09a4\u09c1\u09a8 \u0997\u09bf\u09ab\u099f!', {
-            body: `\u0986\u09aa\u09a8\u09bf \u0997\u09bf\u09ab\u099f \u09aa\u09c7\u09af\u09bc\u09c7\u099b\u09c7\u09a8!`,
+          showNotification('নতুন গিফট!', {
+            body: `আপনি গিফট পেয়েছেন!`,
             tag: 'new-gift'
-          });
-        }
-      )
-      .subscribe();
-  }, [profile?.id, notificationsEnabled]);
-          table: 'gift_assignments',
-          filter: `receiver_id=eq.${profile.id}`,
-        },
-        async (payload) => {
-          const { gift_name } = payload.new;
-          
-          showNotification('গিফট এসাইনমেন্ট', {
-            body: `আপনাকে গিফট এসাইন করা হয়েছে।`,
-            tag: 'gift-assignment'
           });
         }
       )
@@ -110,7 +89,6 @@ export function useNotifications() {
     return () => {
       messagesChannel.unsubscribe();
       giftsChannel.unsubscribe();
-      assignmentsChannel.unsubscribe();
     };
   }, [profile?.id, notificationsEnabled]);
 

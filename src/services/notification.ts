@@ -76,32 +76,17 @@ export async function setupPushNotifications(userId: string) {
       return false;
     }
 
-    // Check if push is supported
-    if (!registration.pushManager) {
-      console.error('[Notification] Push notifications not supported');
-      return false;
+    // For basic notifications, we don't need push manager subscription
+    // Just return true if notification permission is granted
+    if (Notification.permission === 'granted') {
+      console.info('[Notification] Basic notifications enabled without push subscription');
+      return true;
     }
 
-    // Get existing subscription
-    const existingSubscription = await registration.pushManager.getSubscription();
-    if (existingSubscription) {
-      await existingSubscription.unsubscribe();
-      console.info('[Notification] Existing push subscription unsubscribed');
-    }
-
-    // Create new subscription
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
-    });
-    if (!subscription) {
-      console.error('[Notification] Failed to create push subscription');
-      return false;
-    }
-    console.info('[Notification] Push notification subscription created:', subscription);
-    return true;
+    console.warn('[Notification] Notification permission not granted');
+    return false;
   } catch (error) {
-    console.error('[Notification] Error setting up push notifications:', error);
+    console.error('[Notification] Error setting up notifications:', error);
     return false;
   }
 }

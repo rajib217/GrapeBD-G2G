@@ -199,9 +199,6 @@ const AllMembers = () => {
                      {member.gift_varieties && member.gift_varieties.length > 0 && (
                        <Badge variant="default" className="bg-green-500 text-white"> G2G গিফট: {member.gift_varieties.join(', ')}</Badge>
                      )}
-                     {member.g2g_rounds_participated && member.g2g_rounds_participated.length > 0 && (
-                       <Badge variant="default" className="bg-fuchsia-500 text-white">G2G রাউন্ড: {member.g2g_rounds_participated.join(', ')}</Badge>
-                     )}
                     </div>
                   </div>
                   
