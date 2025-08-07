@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -535,7 +536,9 @@ const SocialFeed = () => {
                         <AvatarFallback className="bg-blue-100 text-blue-700">{post.profiles?.full_name?.charAt(0) || 'U'}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{post.profiles?.full_name || 'Unknown User'}</p>
+                        <Link to={`/user/${post.user_id}`} className="font-medium text-gray-900 hover:underline">
+                          {post.profiles?.full_name || 'Unknown User'}
+                        </Link>
                         <p className="text-sm text-gray-500">{formatPostDate(post.created_at)}</p>
                       </div>
                       {/* Show edit/delete options only for post owner */}
@@ -690,7 +693,9 @@ const SocialFeed = () => {
                             </Avatar>
                             <div className="flex-1 bg-gray-100 rounded-lg p-3">
                               <div className="flex items-center justify-between">
-                                <p className="font-medium text-sm">{comment.profiles?.full_name}</p>
+                                <Link to={`/user/${comment.user_id}`} className="font-medium text-sm hover:underline">
+                                  {comment.profiles?.full_name}
+                                </Link>
                                 <p className="text-xs text-gray-500">{formatPostDate(comment.created_at)}</p>
                               </div>
                               <p className="text-sm mt-1">{comment.content}</p>
