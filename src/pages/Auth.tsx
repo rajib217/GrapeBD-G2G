@@ -131,7 +131,7 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-green-800">
-            গ্রেপ চারা বিনিময়
+            GrapeBD G2G
           </CardTitle>
           <CardDescription>
             আপনার অ্যাকাউন্টে প্রবেশ করুন অথবা নতুন অ্যাকাউন্ট তৈরি করুন
