@@ -1,30 +1,30 @@
 import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
 import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from './contexts/AuthContext'
 
-// Register service worker
+const queryClient = new QueryClient();
+
+// Service worker registration disabled for StackBlitz compatibility
+// Uncomment the following code when running in environments that support Service Workers:
+/*
+import { registerSW } from 'virtual:pwa-register';
+
 const updateSW = registerSW({
-  immediate: true,
   onNeedRefresh() {
-    if (confirm('নতুন আপডেট পাওয়া গেছে। রিফ্রেশ করবেন?')) {
-      updateSW()
-    }
+    console.log('New content available, please refresh.');
   },
   onOfflineReady() {
-    console.log('অফলাইন মোড চালু আছে!')
-  },
-  onRegistered(r) {
-    console.log('Service worker registered')
-    r && setInterval(() => {
-      r.update()
-    }, 60 * 60 * 1000) // Check for updates every hour
+    console.log('App ready to work offline');
   },
   onRegisterError(error) {
-    console.error('Service worker registration error:', error)
-  }
-})
+    console.error('Service worker registration error:', error);
+  },
+});
+*/
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
