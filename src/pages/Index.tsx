@@ -46,10 +46,10 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       {/* Mobile Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-sm border-b sticky top-0 z-40">
-        <div className="px-4 py-3">
+      <div className="bg-white/70 backdrop-blur-md shadow-lg border-b sticky top-0 z-40">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Mobile Menu */}
             <div className="md:hidden">
@@ -61,28 +61,38 @@ const Index = () => {
             
             {/* Logo and Title */}
             <div className="flex items-center space-x-3 flex-1 justify-center md:justify-start">
-              <div className="bg-gradient-to-br from-green-600 to-green-700 p-2 rounded-full shadow-md">
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-full shadow-lg ring-2 ring-emerald-500/10">
                 <Sprout className="h-6 w-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-green-800">চারা ব্যবস্থাপনা</h1>
-                <p className="text-sm text-gray-600 hidden lg:block">আপনার চারা সংগ্রহ এবং গিফট ব্যবস্থাপনা</p>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">চারা ব্যবস্থাপনা</h1>
+                <p className="text-sm text-gray-500 hidden lg:block font-medium">আপনার চারা সংগ্রহ এবং গিফট ব্যবস্থাপনা</p>
               </div>
             </div>
             
             {/* Desktop User Info */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-6">
               <div className="text-right hidden lg:block">
-                <p className="font-medium text-gray-900">{profile?.full_name}</p>
+                <p className="font-semibold text-gray-800">{profile?.full_name}</p>
                 <p className="text-sm text-gray-500">{profile?.email}</p>
               </div>
               {profile?.role === 'admin' && (
-                <Button onClick={handleAdminClick} variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
+                <Button 
+                  onClick={handleAdminClick} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-white/50 hover:bg-white/80 transition-all duration-200 border-emerald-200 hover:border-emerald-300"
+                >
+                  <Settings className="h-4 w-4 mr-2 text-emerald-600" />
                   <span className="hidden lg:inline">অ্যাডমিন প্যানেল</span>
                 </Button>
               )}
-              <Button onClick={handleSignOut} variant="outline" size="sm">
+              <Button 
+                onClick={handleSignOut} 
+                variant="outline" 
+                size="sm"
+                className="bg-white/50 hover:bg-white/80 transition-all duration-200"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 <span className="hidden lg:inline">লগআউট</span>
               </Button>
@@ -92,57 +102,57 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-        <div className="mb-4 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-green-700 mb-2">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+        <div className="mb-6 md:mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
             স্বাগতম, {profile?.full_name}!
           </h2>
-          <p className="text-gray-600 text-sm md:text-base">আপনার চারা সংগ্রহ পরিচালনা করুন এবং অন্যদের সাথে গিফট শেয়ার করুন</p>
+          <p className="text-gray-600 text-sm md:text-base font-medium">আপনার চারা সংগ্রহ পরিচালনা করুন এবং অন্যদের সাথে গিফট শেয়ার করুন</p>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
           <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-10 mb-8 h-auto gap-2 bg-transparent">
-            <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Home className="h-4 w-4" />
-              <span className="text-xs md:text-sm">হোম</span>
+              <span className="text-xs md:text-sm font-medium">হোম</span>
             </TabsTrigger>
-            <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Sprout className="h-4 w-4" />
-              <span className="text-xs md:text-sm">স্টক</span>
+              <span className="text-xs md:text-sm font-medium">স্টক</span>
             </TabsTrigger>
-            <TabsTrigger value="add" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="add" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Plus className="h-4 w-4" />
-              <span className="text-xs md:text-sm">যোগ করুন</span>
+              <span className="text-xs md:text-sm font-medium">যোগ করুন</span>
             </TabsTrigger>
-            <TabsTrigger value="send" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="send" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm">গিফট পাঠান</span>
+              <span className="text-xs md:text-sm font-medium">গিফট পাঠান</span>
             </TabsTrigger>
-            <TabsTrigger value="my-gifts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="my-gifts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm">আমার গিফট</span>
+              <span className="text-xs md:text-sm font-medium">আমার গিফট</span>
             </TabsTrigger>
-            <TabsTrigger value="gift-history" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="gift-history" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <History className="h-4 w-4" />
-              <span className="text-xs md:text-sm">গিফট হিস্টোরি</span>
+              <span className="text-xs md:text-sm font-medium">গিফট হিস্টোরি</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <MessageCircle className="h-4 w-4" />
-              <span className="text-xs md:text-sm">মেসেজ</span>
+              <span className="text-xs md:text-sm font-medium">মেসেজ</span>
             </TabsTrigger>
-            <TabsTrigger value="notices" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="notices" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <Bell className="h-4 w-4" />
-              <span className="text-xs md:text-sm">নোটিশ</span>
+              <span className="text-xs md:text-sm font-medium">নোটিশ</span>
             </TabsTrigger>
-            <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <UserCheck className="h-4 w-4" />
-              <span className="text-xs md:text-sm">সকল মেম্বার</span>
+              <span className="text-xs md:text-sm font-medium">সকল মেম্বার</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+            <TabsTrigger value="profile" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
               <User className="h-4 w-4" />
-              <span className="text-xs md:text-sm">প্রোফাইল</span>
+              <span className="text-xs md:text-sm font-medium">প্রোফাইল</span>
             </TabsTrigger>
           </TabsList>
 
