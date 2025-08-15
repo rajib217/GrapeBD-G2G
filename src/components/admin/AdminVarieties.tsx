@@ -457,83 +457,79 @@ const AdminVarieties = () => {
       </div>
 
       {/* Varieties Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredVarieties.map((variety) => (
-          <Card key={variety.id} className={!variety.is_active ? 'opacity-60' : ''}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{variety.name}</CardTitle>
-                  <CardDescription>
-                    {new Date(variety.created_at).toLocaleDateString('bn-BD')}
-                  </CardDescription>
+          <Card key={variety.id} className={`${!variety.is_active ? 'opacity-60' : ''} p-3`}>
+            <div className="flex items-center gap-3">
+              {variety.thumbnail_image && (
+                <img
+                  src={variety.thumbnail_image}
+                  alt={variety.name}
+                  className="w-12 h-12 object-cover rounded-sm"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-medium text-sm truncate">{variety.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(variety.created_at).toLocaleDateString('bn-BD')}
+                    </p>
+                  </div>
+                  <Badge variant={variety.is_active ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                    {variety.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                  </Badge>
                 </div>
-                <Badge variant={variety.is_active ? 'default' : 'secondary'}>
-                  {variety.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-3">
-                {variety.thumbnail_image && (
-                  <img
-                    src={variety.thumbnail_image}
-                    alt={variety.name}
-                    className="w-full max-w-[50%] h-auto object-cover rounded-sm mb-3"
-                  />
-                )}
-                
+
                 {variety.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                     {variety.description}
                   </p>
                 )}
                 
-                <div className="text-sm font-medium text-muted-foreground">
-                  মোট পরিমাণ: <span className="font-bold text-foreground">{variety.total_quantity || 0} টি</span>
-                </div>
-
-                {variety.details_url && (
-                  <div className="mt-2">
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs">
+                    মোট: <span className="font-medium">{variety.total_quantity || 0} টি</span>
+                  </span>
+                  <div className="flex gap-1">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => window.open(variety.details_url, '_blank', 'noopener,noreferrer')}
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleEdit(variety)}
                     >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      বিস্তারিত দেখুন
+                      <Edit className="h-3 w-3" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => toggleActiveStatus(variety)}
+                    >
+                      {variety.is_active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleDelete(variety.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                    {variety.details_url && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => window.open(variety.details_url, '_blank', 'noopener,noreferrer')}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
-                )}
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(variety)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleActiveStatus(variety)}
-                  >
-                    {variety.is_active ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(variety.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
                 </div>
               </div>
-            </CardContent>
+            </div>
           </Card>
         ))}
       </div>
