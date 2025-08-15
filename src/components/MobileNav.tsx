@@ -19,6 +19,8 @@ import {
   LogOut,
   Shield
 } from 'lucide-react';
+
+import { Leaf, Clock, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +30,7 @@ interface MenuItem {
   icon: any;
 }
 
+  import { ChevronDown, ChevronUp } from 'lucide-react';
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -37,6 +40,7 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [showAdminItems, setShowAdminItems] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -72,6 +76,19 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
 
+  // Admin-specific menu items (shown for admins)
+  const adminMenuItems: MenuItem[] = profile?.role === 'admin'
+    ? [
+        { id: 'users', label: 'ইউজার', icon: Users },
+        { id: 'gifts', label: 'গিফট', icon: Gift },
+        { id: 'varieties', label: 'জাত', icon: Leaf },
+        { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: Clock },
+        { id: 'notices', label: 'নোটিশ', icon: Bell },
+        { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
+        { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
+      ]
+    : [];
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -106,7 +123,6 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
               {menuItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const IconComponent = item.icon;
-                
                 return (
                   <button
                     key={item.id}
@@ -122,23 +138,50 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
                   </button>
                 );
               })}
+
+              {/* Admin toggle for mobile */}
+              {profile?.role === 'admin' && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setShowAdminItems(s => !s)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-100 text-gray-600"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Shield className="h-5 w-5 text-gray-600" />
+                      <span className="font-medium">অ্যাডমিন প্যানেল</span>
+                    </div>
+                    {showAdminItems ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+
+                  {showAdminItems && (
+                    <div className="mt-2 space-y-1">
+                      {adminMenuItems.map((item) => {
+                        const isActive = activeTab === item.id;
+                        const IconComponent = item.icon;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => { navigate('/admin'); onTabChange(item.id); setOpen(false); }}
+                            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
+                              isActive
+                                ? 'bg-green-100 text-green-700 border-l-4 border-green-600'
+                                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                            }`}
+                          >
+                            <IconComponent className={`h-5 w-5 ${isActive ? 'text-green-600' : ''}`} />
+                            <span className="font-medium">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
 
           {/* Footer Actions */}
           <div className="border-t bg-gray-50 p-3 space-y-2 mt-auto">
-            {profile?.role === 'admin' && (
-              <Button
-                onClick={handleAdminClick}
-                variant="outline"
-                className="w-full justify-start"
-                size="sm"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                অ্যাডমিন প্যানেল
-              </Button>
-            )}
-            
             <Button
               onClick={handleSignOut}
               variant="destructive"
