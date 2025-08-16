@@ -134,82 +134,10 @@ const AdminUsers = () => {
     }
   };
 
-  const deleteFromTable = async (table: string, field: string, userId: string) => {
-    console.log(`Deleting from ${table}...`);
-    const { error } = await supabase.rpc('delete_user_data', {
-      p_table: table,
-      p_field: field,
-      p_user_id: userId
-    });
-    
-    if (error) {
-      console.log(`Error deleting from ${table}:`, error);
-    }
-    return error;
-  };
-
   const handleDelete = async () => {
-    if (!deletingUser) {
-      console.error('No user selected for deletion');
-      return;
-    }
+    if (!deletingUser) return;
     
     try {
-      // Check if we have an active session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error('Session expired');
-      }
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      console.log('Starting delete process for user:', deletingUser.id);
-
-      // Now check user role
-      console.log('Checking current user role...');
-      const { data: currentUser, error: roleError } = await supabase.auth.getUser();
-      if (roleError) {
-        console.error('Error getting current user:', roleError);
-        throw roleError;
-      }
-
-      const { data: userRole, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', currentUser.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error checking user role:', profileError);
-        throw profileError;
-      }
-
-      console.log('Current user role:', userRole?.role);
-      
-      if (userRole?.role !== 'admin') {
-        throw new Error('Only admins can delete users');
-      }
-
-      // Delete all related data first
-      const deleteOperations = [
-        deleteFromTable('messages', 'sender_id', deletingUser.id),
-        deleteFromTable('messages', 'receiver_id', deletingUser.id),
-        deleteFromTable('user_stocks', 'user_id', deletingUser.id),
-        deleteFromTable('posts', 'user_id', deletingUser.id),
-        deleteFromTable('comments', 'user_id', deletingUser.id),
-        deleteFromTable('reactions', 'user_id', deletingUser.id),
-        deleteFromTable('notifications', 'user_id', deletingUser.id),
-        deleteFromTable('gifts', 'sender_id', deletingUser.id),
-        deleteFromTable('gifts', 'recipient_id', deletingUser.id)
-      ];
-
-      // Wait for all delete operations to complete
-      await Promise.all(deleteOperations);
-
-      // Then delete the profile
-      console.log('Deleting user profile...');
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -219,8 +147,6 @@ const AdminUsers = () => {
         console.error('Error deleting user:', error);
         throw error;
       }
-
-      console.log('User deleted successfully');
       
       toast({
         title: "সফল",
@@ -230,35 +156,11 @@ const AdminUsers = () => {
       setIsDeleteDialogOpen(false);
       setDeletingUser(null);
       fetchUsers();
-    } catch (error: any) {
-      console.error('Delete process failed:', error);
-
-      console.log('Full error object:', error);
-      console.log('Error message:', error.message);
-      console.log('Error code:', error.code);
-      console.log('Error details:', error.details);
-      
-      // Show specific error message based on the error type
-      let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
-      
-      if (error.message?.includes('Only admins can delete users')) {
-        errorMessage = "শুধুমাত্র অ্যাডমিনরা ইউজার মুছতে পারবেন";
-      } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
-        errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
-      } else if (error.code === '23503' || error.message?.includes('foreign key')) {
-        errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
-      } else if (error.message?.includes('User not found')) {
-        errorMessage = "ইউজার পাওয়া যায়নি";
-      } else if (error.message?.includes('auth.uid()')) {
-        errorMessage = "সেশন এক্সপায়ার হয়েছে। আবার লগইন করুন";
-      }
-      
-      // Log the final error message we're showing to the user
-      console.log('Showing error message to user:', errorMessage);
-
+    } catch (error) {
+      console.error('Error deleting user:', error);
       toast({
         title: "ত্রুটি",
-        description: errorMessage,
+        description: "ইউজার মুছে ফেলতে সমস্যা হয়েছে",
         variant: "destructive",
       });
     }
