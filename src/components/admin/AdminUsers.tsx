@@ -138,17 +138,79 @@ const AdminUsers = () => {
     if (!deletingUser) return;
     
     try {
-      // First try to delete messages
-      const { error: messageError } = await supabase
+      console.log('Starting delete process for user:', deletingUser.id);
+
+      // First check if there are any messages
+      const { data: messageCount, error: countError } = await supabase
         .from('messages')
-        .delete()
+        .select('id', { count: 'exact', head: true })
         .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
 
-      if (messageError) {
-        console.error('Error deleting messages:', messageError);
+      if (countError) {
+        console.error('Error checking messages:', countError);
+        throw countError;
+      }
+      console.log('Found messages count:', messageCount);
+
+      // Delete messages if any exist
+      if (messageCount && messageCount.length > 0) {
+        console.log('Deleting messages...');
+        const { error: messageError } = await supabase
+          .from('messages')
+          .delete()
+          .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+        if (messageError) {
+          console.error('Error deleting messages:', messageError);
+          throw messageError;
+        }
+        console.log('Messages deleted successfully');
+      }
+
+      // Now check user role
+      console.log('Checking current user role...');
+      const { data: currentUser, error: roleError } = await supabase.auth.getUser();
+      if (roleError) {
+        console.error('Error getting current user:', roleError);
+        throw roleError;
+      }
+
+      const { data: userRole, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', currentUser.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error checking user role:', profileError);
+        throw profileError;
+      }
+
+      console.log('Current user role:', userRole?.role);
+      
+      if (userRole?.role !== 'admin') {
+        throw new Error('Only admins can delete users');
+      }
+
+      // First check if the user exists
+      console.log('Checking if user exists...');
+      const { data: userExists, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', deletingUser.id)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking user:', checkError);
+        throw checkError;
+      }
+
+      if (!userExists) {
+        throw new Error('User not found');
       }
 
       // Then delete the profile
+      console.log('Deleting user profile...');
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -158,6 +220,8 @@ const AdminUsers = () => {
         console.error('Error deleting user:', error);
         throw error;
       }
+
+      console.log('User deleted successfully');
       
       toast({
         title: "সফল",
@@ -167,11 +231,25 @@ const AdminUsers = () => {
       setIsDeleteDialogOpen(false);
       setDeletingUser(null);
       fetchUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
+    } catch (error: any) {
+      console.error('Delete process failed:', error);
+
+      // Show specific error message based on the error type
+      let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
+      
+      if (error.message === 'Only admins can delete users') {
+        errorMessage = "শুধুমাত্র অ্যাডমিনরা ইউজার মুছতে পারবেন";
+      } else if (error.code === 'PGRST116') {
+        errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
+      } else if (error.code === '23503') {
+        errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
+      } else if (error.message?.includes('Foreign key violation')) {
+        errorMessage = "রিলেটেড ডাটা ডিলিট করতে সমস্যা হয়েছে";
+      }
+
       toast({
         title: "ত্রুটি",
-        description: "ইউজার মুছে ফেলতে সমস্যা হয়েছে",
+        description: errorMessage,
         variant: "destructive",
       });
     }
