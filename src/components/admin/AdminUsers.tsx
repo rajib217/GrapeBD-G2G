@@ -166,89 +166,6 @@ const AdminUsers = () => {
       }
 
       console.log('Starting delete process for user:', deletingUser.id);
-      
-      // Delete all related data first
-      const deleteOperations = [
-        deleteFromTable('messages', 'sender_id', deletingUser.id),
-        deleteFromTable('messages', 'receiver_id', deletingUser.id),
-        deleteFromTable('user_stocks', 'user_id', deletingUser.id),
-        deleteFromTable('posts', 'user_id', deletingUser.id),
-        deleteFromTable('comments', 'user_id', deletingUser.id),
-        deleteFromTable('reactions', 'user_id', deletingUser.id),
-        deleteFromTable('notifications', 'user_id', deletingUser.id),
-        deleteFromTable('gifts', 'sender_id', deletingUser.id),
-        deleteFromTable('gifts', 'recipient_id', deletingUser.id),
-      ];
-
-      // Wait for all delete operations to complete
-      const errors = await Promise.all(deleteOperations);
-      const hasErrors = errors.some(error => error !== null);
-
-      if (hasErrors) {
-        console.log('Some delete operations failed, but continuing...');
-
-      // First delete from tables with foreign keys
-      const tablesToDelete = [
-        'messages',      // user's messages
-        'user_stocks',   // user's varieties
-        'posts',         // user's posts
-        'comments',      // user's comments
-        'reactions',     // user's reactions
-        'notifications', // user's notifications
-      ];
-
-      // Delete from gift_recipients and gift_senders separately
-      console.log('Deleting gift related data...');
-      await supabase
-        .from('gifts')
-        .delete()
-        .eq('sender_id', deletingUser.id);
-
-      await supabase
-        .from('gifts')
-        .delete()
-        .eq('recipient_id', deletingUser.id);
-
-      // Delete from all other related tables
-      for (const table of tablesToDelete) {
-        console.log(`Deleting from ${table}...`);
-        const { error } = await supabase
-          .from(table)
-          .delete()
-          .eq('user_id', deletingUser.id);
-
-        if (error) {
-          console.log(`Error deleting from ${table}:`, error);
-          // Continue with other tables even if one fails
-        }
-      }
-
-      // First check if there are any messages
-      const { data: messageCount, error: countError } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
-
-      if (countError) {
-        console.error('Error checking messages:', countError);
-        throw countError;
-      }
-      console.log('Found messages count:', messageCount);
-
-      // Delete messages if any exist
-      if (messageCount && messageCount.length > 0) {
-        console.log('Deleting messages...');
-        const { error: messageError } = await supabase
-          .from('messages')
-          .delete()
-          .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
-
-        if (messageError) {
-          console.error('Error deleting messages:', messageError);
-          throw messageError;
-        }
-        console.log('Messages deleted successfully');
-      }
 
       // Now check user role
       console.log('Checking current user role...');
@@ -275,22 +192,21 @@ const AdminUsers = () => {
         throw new Error('Only admins can delete users');
       }
 
-      // First check if the user exists
-      console.log('Checking if user exists...');
-      const { data: userExists, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', deletingUser.id)
-        .single();
+      // Delete all related data first
+      const deleteOperations = [
+        deleteFromTable('messages', 'sender_id', deletingUser.id),
+        deleteFromTable('messages', 'receiver_id', deletingUser.id),
+        deleteFromTable('user_stocks', 'user_id', deletingUser.id),
+        deleteFromTable('posts', 'user_id', deletingUser.id),
+        deleteFromTable('comments', 'user_id', deletingUser.id),
+        deleteFromTable('reactions', 'user_id', deletingUser.id),
+        deleteFromTable('notifications', 'user_id', deletingUser.id),
+        deleteFromTable('gifts', 'sender_id', deletingUser.id),
+        deleteFromTable('gifts', 'recipient_id', deletingUser.id)
+      ];
 
-      if (checkError) {
-        console.error('Error checking user:', checkError);
-        throw checkError;
-      }
-
-      if (!userExists) {
-        throw new Error('User not found');
-      }
+      // Wait for all delete operations to complete
+      await Promise.all(deleteOperations);
 
       // Then delete the profile
       console.log('Deleting user profile...');
