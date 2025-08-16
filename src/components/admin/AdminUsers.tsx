@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Edit, Shield, ShieldOff, User, Mail, Phone } from 'lucide-react';
+import { Search, Edit, Shield, ShieldOff, User, Mail, Phone, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,9 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [deletingUser, setDeletingUser] = useState<Profile | null>(null);
   const [formData, setFormData] = useState({
     role: 'member' as 'admin' | 'member',
     status: 'active' as 'active' | 'suspended' | 'pending'
@@ -127,6 +129,44 @@ const AdminUsers = () => {
       toast({
         title: "ত্রুটি",
         description: "ইউজার স্ট্যাটাস পরিবর্তন করতে সমস্যা হয়েছে",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingUser) return;
+    
+    try {
+      // First delete all related records
+      await supabase.from('comments').delete().eq('user_id', deletingUser.id);
+      await supabase.from('reactions').delete().eq('user_id', deletingUser.id);
+      await supabase.from('posts').delete().eq('user_id', deletingUser.id);
+      await supabase.from('user_varieties').delete().eq('user_id', deletingUser.id);
+      await supabase.from('gifts').delete().eq('sender_id', deletingUser.id);
+      await supabase.from('gifts').delete().eq('recipient_id', deletingUser.id);
+      
+      // Finally delete the user profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deletingUser.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "সফল",
+        description: "ইউজার সম্পূর্ণভাবে মুছে ফেলা হয়েছে",
+      });
+      
+      setIsDeleteDialogOpen(false);
+      setDeletingUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "ত্রুটি",
+        description: "ইউজার মুছে ফেলতে সমস্যা হয়েছে",
         variant: "destructive",
       });
     }
@@ -307,6 +347,52 @@ const AdminUsers = () => {
                 >
                   {user.status === 'active' ? <ShieldOff className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
                 </Button>
+
+                <Dialog open={isDeleteDialogOpen && deletingUser?.id === user.id} onOpenChange={(open) => {
+                  if (!open) {
+                    setIsDeleteDialogOpen(false);
+                    setDeletingUser(null);
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setDeletingUser(user);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>ইউজার মুছে ফেলুন</DialogTitle>
+                      <DialogDescription>
+                        আপনি কি নিশ্চিত যে <span className="font-semibold">{user.full_name}</span> কে মুছে ফেলতে চান?
+                        এই ইউজারের সব ডাটা (পোস্ট, কমেন্ট, রিয়্যাকশন, গিফট) স্থায়ীভাবে মুছে ফেলা হবে।
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsDeleteDialogOpen(false);
+                          setDeletingUser(null);
+                        }}
+                      >
+                        বাতিল করুন
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                      >
+                        মুছে ফেলুন
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
