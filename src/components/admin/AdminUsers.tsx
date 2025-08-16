@@ -134,11 +134,94 @@ const AdminUsers = () => {
     }
   };
 
+  const deleteFromTable = async (table: string, field: string, userId: string) => {
+    console.log(`Deleting from ${table}...`);
+    const { error } = await supabase.rpc('delete_user_data', {
+      p_table: table,
+      p_field: field,
+      p_user_id: userId
+    });
+    
+    if (error) {
+      console.log(`Error deleting from ${table}:`, error);
+    }
+    return error;
+  };
+
   const handleDelete = async () => {
-    if (!deletingUser) return;
+    if (!deletingUser) {
+      console.error('No user selected for deletion');
+      return;
+    }
     
     try {
+      // Check if we have an active session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Session expired');
+      }
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       console.log('Starting delete process for user:', deletingUser.id);
+      
+      // Delete all related data first
+      const deleteOperations = [
+        deleteFromTable('messages', 'sender_id', deletingUser.id),
+        deleteFromTable('messages', 'receiver_id', deletingUser.id),
+        deleteFromTable('user_stocks', 'user_id', deletingUser.id),
+        deleteFromTable('posts', 'user_id', deletingUser.id),
+        deleteFromTable('comments', 'user_id', deletingUser.id),
+        deleteFromTable('reactions', 'user_id', deletingUser.id),
+        deleteFromTable('notifications', 'user_id', deletingUser.id),
+        deleteFromTable('gifts', 'sender_id', deletingUser.id),
+        deleteFromTable('gifts', 'recipient_id', deletingUser.id),
+      ];
+
+      // Wait for all delete operations to complete
+      const errors = await Promise.all(deleteOperations);
+      const hasErrors = errors.some(error => error !== null);
+
+      if (hasErrors) {
+        console.log('Some delete operations failed, but continuing...');
+
+      // First delete from tables with foreign keys
+      const tablesToDelete = [
+        'messages',      // user's messages
+        'user_stocks',   // user's varieties
+        'posts',         // user's posts
+        'comments',      // user's comments
+        'reactions',     // user's reactions
+        'notifications', // user's notifications
+      ];
+
+      // Delete from gift_recipients and gift_senders separately
+      console.log('Deleting gift related data...');
+      await supabase
+        .from('gifts')
+        .delete()
+        .eq('sender_id', deletingUser.id);
+
+      await supabase
+        .from('gifts')
+        .delete()
+        .eq('recipient_id', deletingUser.id);
+
+      // Delete from all other related tables
+      for (const table of tablesToDelete) {
+        console.log(`Deleting from ${table}...`);
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('user_id', deletingUser.id);
+
+        if (error) {
+          console.log(`Error deleting from ${table}:`, error);
+          // Continue with other tables even if one fails
+        }
+      }
 
       // First check if there are any messages
       const { data: messageCount, error: countError } = await supabase
@@ -234,18 +317,28 @@ const AdminUsers = () => {
     } catch (error: any) {
       console.error('Delete process failed:', error);
 
+      console.log('Full error object:', error);
+      console.log('Error message:', error.message);
+      console.log('Error code:', error.code);
+      console.log('Error details:', error.details);
+      
       // Show specific error message based on the error type
       let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
       
-      if (error.message === 'Only admins can delete users') {
+      if (error.message?.includes('Only admins can delete users')) {
         errorMessage = "শুধুমাত্র অ্যাডমিনরা ইউজার মুছতে পারবেন";
-      } else if (error.code === 'PGRST116') {
+      } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
         errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
-      } else if (error.code === '23503') {
+      } else if (error.code === '23503' || error.message?.includes('foreign key')) {
         errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
-      } else if (error.message?.includes('Foreign key violation')) {
-        errorMessage = "রিলেটেড ডাটা ডিলিট করতে সমস্যা হয়েছে";
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = "ইউজার পাওয়া যায়নি";
+      } else if (error.message?.includes('auth.uid()')) {
+        errorMessage = "সেশন এক্সপায়ার হয়েছে। আবার লগইন করুন";
       }
+      
+      // Log the final error message we're showing to the user
+      console.log('Showing error message to user:', errorMessage);
 
       toast({
         title: "ত্রুটি",
