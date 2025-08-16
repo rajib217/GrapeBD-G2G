@@ -146,18 +146,144 @@ const AdminUsers = () => {
       }
 
       // First check the current user's session
+      console.log('Starting delete process for user:', deletingUser);
+
       const { data: { user: currentUser }, error: sessionError } = await supabase.auth.getUser();
+      console.log('Current user session:', currentUser, 'Session error:', sessionError);
+      
       if (sessionError || !currentUser) {
+        console.error('Session error:', sessionError);
         throw new Error('session_expired');
       }
 
+      // Check if the current user has admin role
+      const { data: adminCheck, error: adminCheckError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      console.log('Admin check:', adminCheck, 'Admin check error:', adminCheckError);
+
+      if (adminCheckError || adminCheck?.role !== 'admin') {
+        throw new Error('Only admins can delete users');
+      }
+
       // Then try to delete the user
-      const { error: deleteError } = await supabase.rpc('delete_user_cascade', {
-        target_user_id: deletingUser.user_id // Using auth user_id instead of profile id
-      });
+      console.log('Attempting to delete user with target_user_id:', deletingUser.user_id);
+      
+      try {
+        if (!deletingUser?.id || !deletingUser?.user_id) {
+          console.error('Missing user information:', deletingUser);
+          throw new Error('invalid_user_data');
+        }
+
+        console.log('Deleting user with profile ID:', deletingUser.id);
+        console.log('Deleting user with auth ID:', deletingUser.user_id);
+
+        // Manual deletion in correct order
+        console.log('Starting manual deletion in order...');
+        
+        // 1. Delete user notices and reads
+        console.log('Deleting user notice reads...');
+        const { error: noticeReadsError } = await supabase
+          .from('user_notice_reads')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (noticeReadsError) throw noticeReadsError;
+
+        // 2. Delete messages
+        console.log('Deleting messages...');
+        const { error: messagesError } = await supabase
+          .from('messages')
+          .delete()
+          .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+        if (messagesError) throw messagesError;
+
+        // 3. Delete reactions
+        console.log('Deleting reactions...');
+        const { error: reactionsError } = await supabase
+          .from('reactions')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (reactionsError) throw reactionsError;
+
+        // 4. Delete comments
+        console.log('Deleting comments...');
+        const { error: commentsError } = await supabase
+          .from('comments')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (commentsError) throw commentsError;
+
+        // 5. Delete posts
+        console.log('Deleting posts...');
+        const { error: postsError } = await supabase
+          .from('posts')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (postsError) throw postsError;
+
+        // 6. Delete gifts - both sent and received
+        console.log('Deleting gifts...');
+        const { error: giftsError } = await supabase
+          .from('gifts')
+          .delete()
+          .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+        if (giftsError) throw giftsError;
+
+        // 7. Delete stocks
+        console.log('Deleting user stocks...');
+        const { error: stocksError } = await supabase
+          .from('user_stocks')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (stocksError) throw stocksError;
+
+        // 8. Delete varieties
+        console.log('Deleting user varieties...');
+        const { error: varietiesError } = await supabase
+          .from('user_varieties')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (varietiesError) throw varietiesError;
+
+        // 9. Delete notices
+        console.log('Deleting notices...');
+        const { error: noticesError } = await supabase
+          .from('notices')
+          .delete()
+          .eq('user_id', deletingUser.id);
+        if (noticesError) throw noticesError;
+
+        // 10. Finally delete profile
+        console.log('Deleting profile...');
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', deletingUser.id);
+        if (profileError) throw profileError;
+
+        console.log('All data deleted successfully!');
+
+        console.log('User deleted successfully');
+      } catch (deleteError: any) {
+        console.error('Delete error details:', {
+          error: deleteError,
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint
+        });
+        throw deleteError;
+      }
 
       if (deleteError) {
-        console.error('Delete error:', deleteError);
+        console.error('Delete error details:', {
+          code: deleteError.code,
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint
+        });
         throw deleteError;
       }
 
@@ -170,12 +296,21 @@ const AdminUsers = () => {
       setDeletingUser(null);
       fetchUsers();
     } catch (error: any) {
-      console.error('Delete process failed:', error);
+      console.error('Delete process failed:', {
+        error: error,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        user: deletingUser
+      });
       
       let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
       
       if (error.message === 'session_expired') {
         errorMessage = "সেশন মেয়াদ শেষ হয়েছে। আবার লগইন করুন";
+      } else if (error.message === 'invalid_user_data') {
+        errorMessage = "ইউজারের তথ্য সঠিক নয়";
       } else if (error.message?.includes('Cannot delete admin users')) {
         errorMessage = "অ্যাডমিন ইউজার মুছে ফেলা যাবে না";
       } else if (error.message?.includes('Only admins can delete users')) {
@@ -183,8 +318,22 @@ const AdminUsers = () => {
       } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
         errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
       } else if (error.code === '23503') {
-        errorMessage = "ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
+        if (error.message?.includes('gifts_receiver_id_fkey')) {
+          errorMessage = "ইউজারের গিফট হিস্টরি আছে। মুছে ফেলা সম্ভব নয়।";
+        } else if (error.message?.includes('posts_user_id_fkey')) {
+          errorMessage = "ইউজারের পোস্ট আছে। আগে সেগুলো মুছুন।";
+        } else if (error.message?.includes('comments_user_id_fkey')) {
+          errorMessage = "ইউজারের কমেন্ট আছে। আগে সেগুলো মুছুন।";
+        } else {
+          errorMessage = "ইউজারের কিছু ডাটা আছে যা মুছে ফেলা যায়নি।";
+        }
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = "ইউজার পাওয়া যায়নি";
+      } else if (error.message?.includes('auth.')) {
+        errorMessage = "অথেনটিকেশন সমস্যা, দয়া করে আবার চেষ্টা করুন";
       }
+      
+      console.log('Showing error message to user:', errorMessage);
 
       toast({
         title: "ত্রুটি",
