@@ -160,6 +160,13 @@ const AdminUsers = () => {
         throw new Error('Unauthorized');
       }
 
+      // Delete user notice reads
+      console.log('Deleting user notice reads...');
+      await supabase
+        .from('user_notice_reads')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
       // Delete messages
       console.log('Deleting messages...');
       await supabase
@@ -178,6 +185,13 @@ const AdminUsers = () => {
       console.log('Deleting stocks...');
       await supabase
         .from('user_stocks')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      // Delete user varieties
+      console.log('Deleting user varieties...');
+      await supabase
+        .from('user_varieties')
         .delete()
         .eq('user_id', deletingUser.id);
 
@@ -201,6 +215,22 @@ const AdminUsers = () => {
         .from('reactions')
         .delete()
         .eq('user_id', deletingUser.id);
+
+      // Delete notices
+      console.log('Deleting notices...');
+      await supabase
+        .from('notices')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      // Delete auth user using Admin API
+      console.log('Deleting auth user...');
+      const adminAuthClient = supabase.auth.admin;
+      const { error: authDeleteError } = await adminAuthClient.deleteUser(deletingUser.id);
+      
+      if (authDeleteError) {
+        throw authDeleteError;
+      }
 
       // Finally delete the profile
       console.log('Deleting profile...');
