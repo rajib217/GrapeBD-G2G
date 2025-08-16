@@ -31,9 +31,7 @@ export default defineConfig(({ mode }) => ({
         enabled: true,
         type: 'module'
       },
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
+      strategies: 'generateSW',
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
