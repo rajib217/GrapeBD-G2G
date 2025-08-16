@@ -160,29 +160,50 @@ const AdminUsers = () => {
         throw new Error('Unauthorized');
       }
 
-      // Delete user data one by one
-      const tables = [
-        { name: 'messages', condition: `sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}` },
-        { name: 'gifts', condition: `sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}` },
-        { name: 'user_stocks', field: 'user_id' },
-        { name: 'posts', field: 'user_id' },
-        { name: 'comments', field: 'user_id' },
-        { name: 'reactions', field: 'user_id' }
-      ];
+      // Delete messages
+      console.log('Deleting messages...');
+      await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
 
-      for (const table of tables) {
-        const { error } = await supabase
-          .from(table.name)
-          .delete()
-          .or(table.condition || `${table.field}.eq.${deletingUser.id}`);
+      // Delete gifts
+      console.log('Deleting gifts...');
+      await supabase
+        .from('gifts')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}`);
 
-        if (error) {
-          console.error(`Error deleting from ${table.name}:`, error);
-          throw error;
-        }
-      }
+      // Delete user stocks
+      console.log('Deleting stocks...');
+      await supabase
+        .from('user_stocks')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      // Delete posts
+      console.log('Deleting posts...');
+      await supabase
+        .from('posts')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      // Delete comments
+      console.log('Deleting comments...');
+      await supabase
+        .from('comments')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      // Delete reactions
+      console.log('Deleting reactions...');
+      await supabase
+        .from('reactions')
+        .delete()
+        .eq('user_id', deletingUser.id);
 
       // Finally delete the profile
+      console.log('Deleting profile...');
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
