@@ -35,14 +35,42 @@ ALTER TABLE IF EXISTS public.gifts
     REFERENCES public.profiles(id)
     ON DELETE CASCADE;
 
-ALTER TABLE IF EXISTS public.messages
-  DROP CONSTRAINT IF EXISTS messages_sender_id_fkey,
-  ADD CONSTRAINT messages_sender_id_fkey
-    FOREIGN KEY (sender_id)
-    REFERENCES public.profiles(id)
-    ON DELETE CASCADE,
-  DROP CONSTRAINT IF EXISTS messages_receiver_id_fkey,
-  ADD CONSTRAINT messages_receiver_id_fkey
-    FOREIGN KEY (receiver_id)
-    REFERENCES public.profiles(id)
-    ON DELETE CASCADE;
+-- Messages table constraints
+DO $$ BEGIN
+    -- First drop if exists
+    ALTER TABLE IF EXISTS public.messages
+        DROP CONSTRAINT IF EXISTS messages_sender_id_fkey,
+        DROP CONSTRAINT IF EXISTS messages_receiver_id_fkey;
+    
+    -- Then add with CASCADE
+    ALTER TABLE public.messages
+        ADD CONSTRAINT messages_sender_id_fkey
+            FOREIGN KEY (sender_id)
+            REFERENCES public.profiles(id)
+            ON DELETE CASCADE;
+            
+    ALTER TABLE public.messages
+        ADD CONSTRAINT messages_receiver_id_fkey
+            FOREIGN KEY (receiver_id)
+            REFERENCES public.profiles(id)
+            ON DELETE CASCADE;
+            
+EXCEPTION
+    WHEN others THEN
+        -- If any error occurs, try alternative approach
+        ALTER TABLE public.messages
+            DROP CONSTRAINT IF EXISTS messages_sender_id_fkey CASCADE,
+            DROP CONSTRAINT IF EXISTS messages_receiver_id_fkey CASCADE;
+            
+        ALTER TABLE public.messages
+            ADD CONSTRAINT messages_sender_id_fkey
+                FOREIGN KEY (sender_id)
+                REFERENCES public.profiles(id)
+                ON DELETE CASCADE;
+                
+        ALTER TABLE public.messages
+            ADD CONSTRAINT messages_receiver_id_fkey
+                FOREIGN KEY (receiver_id)
+                REFERENCES public.profiles(id)
+                ON DELETE CASCADE;
+END $$;
