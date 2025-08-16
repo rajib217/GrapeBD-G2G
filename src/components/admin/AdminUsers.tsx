@@ -36,6 +36,7 @@ const AdminUsers = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [deletingUser, setDeletingUser] = useState<Profile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     role: 'member' as 'admin' | 'member',
     status: 'active' as 'active' | 'suspended' | 'pending'
@@ -134,48 +135,35 @@ const AdminUsers = () => {
     }
   };
 
-  // Using a single stored procedure to delete all user data
-  const deleteUserAndRelatedData = async (userId: string) => {
-    console.log('Deleting user and all related data...');
-    const { error } = await supabase.rpc('delete_user_cascade', {
-      user_id: userId
-    });
+  const handleDeleteConfirm = async () => {
+    if (!deletingUser) return;
     
-    if (error) {
-      console.error('Error in cascade delete:', error);
-      throw error;
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deletingUser) {
-      console.error('No user selected for deletion');
-      return;
-    }
-    
+    setIsDeleting(true);
     try {
-      // Check session and admin role
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        throw new Error('Unauthorized');
+      // Check if trying to delete an admin
+      if (deletingUser.role === 'admin') {
+        throw new Error('Cannot delete admin users');
       }
 
-      // Call the serverless function to delete user and all related data
-      console.log('Calling delete user function...');
+      // First check the current user's session
+      const { data: { user: currentUser }, error: sessionError } = await supabase.auth.getUser();
+      if (sessionError || !currentUser) {
+        throw new Error('session_expired');
+      }
+
+      // Then try to delete the user
       const { error: deleteError } = await supabase.rpc('delete_user_cascade', {
-        target_user_id: deletingUser.id
+        target_user_id: deletingUser.user_id // Using auth user_id instead of profile id
       });
 
       if (deleteError) {
-        console.error('Error from delete function:', deleteError);
+        console.error('Delete error:', deleteError);
         throw deleteError;
       }
 
-      console.log('Successfully deleted user and all related data');
-      
       toast({
         title: "সফল",
-        description: "ইউজার সম্পূর্ণভাবে মুছে ফেলা হয়েছে",
+        description: "ইউজার এবং সংশ্লিষ্ট সকল তথ্য মুছে ফেলা হয়েছে",
       });
       
       setIsDeleteDialogOpen(false);
@@ -183,35 +171,28 @@ const AdminUsers = () => {
       fetchUsers();
     } catch (error: any) {
       console.error('Delete process failed:', error);
-
-      console.log('Full error object:', error);
-      console.log('Error message:', error.message);
-      console.log('Error code:', error.code);
-      console.log('Error details:', error.details);
       
-      // Show specific error message based on the error type
       let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
       
-      if (error.message?.includes('Only admins can delete users')) {
+      if (error.message === 'session_expired') {
+        errorMessage = "সেশন মেয়াদ শেষ হয়েছে। আবার লগইন করুন";
+      } else if (error.message?.includes('Cannot delete admin users')) {
+        errorMessage = "অ্যাডমিন ইউজার মুছে ফেলা যাবে না";
+      } else if (error.message?.includes('Only admins can delete users')) {
         errorMessage = "শুধুমাত্র অ্যাডমিনরা ইউজার মুছতে পারবেন";
       } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
         errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
-      } else if (error.code === '23503' || error.message?.includes('foreign key')) {
-        errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
-      } else if (error.message?.includes('User not found')) {
-        errorMessage = "ইউজার পাওয়া যায়নি";
-      } else if (error.message?.includes('auth.uid()')) {
-        errorMessage = "সেশন এক্সপায়ার হয়েছে। আবার লগইন করুন";
+      } else if (error.code === '23503') {
+        errorMessage = "ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
       }
-      
-      // Log the final error message we're showing to the user
-      console.log('Showing error message to user:', errorMessage);
 
       toast({
         title: "ত্রুটি",
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -401,12 +382,19 @@ const AdminUsers = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                      onClick={() => {
+                        if (user.role === 'admin') {
+                          toast({
+                            title: "ত্রুটি",
+                            description: "অ্যাডমিন ইউজার মুছে ফেলা যাবে না",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
                         setDeletingUser(user);
                         setIsDeleteDialogOpen(true);
                       }}
+                      disabled={user.role === 'admin' || isDeleting}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -416,7 +404,18 @@ const AdminUsers = () => {
                       <DialogTitle>ইউজার মুছে ফেলুন</DialogTitle>
                       <DialogDescription>
                         আপনি কি নিশ্চিত যে <span className="font-semibold">{user.full_name}</span> কে মুছে ফেলতে চান?
-                        এই ইউজারের সব ডাটা (পোস্ট, কমেন্ট, রিয়্যাকশন, গিফট) স্থায়ীভাবে মুছে ফেলা হবে।
+                        <br />
+                        <br />
+                        এই কাজটি অপরিবর্তনীয়। ইউজারের সব ডাটা স্থায়ীভাবে মুছে যাবে:
+                        <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                          <li>ব্যক্তিগত তথ্য</li>
+                          <li>পোস্ট এবং কমেন্ট</li>
+                          <li>রিয়্যাকশন</li>
+                          <li>মেসেজ</li>
+                          <li>গিফট হিস্টরি</li>
+                          <li>স্টক এবং ভ্যারাইটি তথ্য</li>
+                          <li>নোটিশ এবং নোটিফিকেশন</li>
+                        </ul>
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -426,14 +425,23 @@ const AdminUsers = () => {
                           setIsDeleteDialogOpen(false);
                           setDeletingUser(null);
                         }}
+                        disabled={isDeleting}
                       >
                         বাতিল করুন
                       </Button>
                       <Button
                         variant="destructive"
-                        onClick={handleDelete}
+                        onClick={handleDeleteConfirm}
+                        disabled={isDeleting}
                       >
-                        মুছে ফেলুন
+                        {isDeleting ? (
+                          <>মুছে ফেলা হচ্ছে...</>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            মুছে ফেলুন
+                          </>
+                        )}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
