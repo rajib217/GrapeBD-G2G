@@ -134,54 +134,139 @@ const AdminUsers = () => {
     }
   };
 
+  // Using a single stored procedure to delete all user data
+  const deleteUserAndRelatedData = async (userId: string) => {
+    console.log('Deleting user and all related data...');
+    const { error } = await supabase.rpc('delete_user_cascade', {
+      user_id: userId
+    });
+    
+    if (error) {
+      console.error('Error in cascade delete:', error);
+      throw error;
+    }
+  };
+
   const handleDelete = async () => {
-    if (!deletingUser) return;
+    if (!deletingUser) {
+      console.error('No user selected for deletion');
+      return;
+    }
     
     try {
-      // First delete all related records from different tables
-      const deleteRelatedData = async () => {
-        const tables = [
-          { name: 'comments', field: 'user_id' },
-          { name: 'reactions', field: 'user_id' },
-          { name: 'posts', field: 'user_id' },
-          { name: 'user_varieties', field: 'user_id' },
-          { name: 'gifts', field: 'sender_id' },
-          { name: 'gifts', field: 'recipient_id' },
-          { name: 'notifications', field: 'user_id' }
-        ];
-
-        for (const table of tables) {
-          const { error } = await supabase
-            .from(table.name)
-            .delete()
-            .eq(table.field, deletingUser.id);
-          
-          if (error) {
-            console.error(`Error deleting from ${table.name}:`, error);
-          }
-        }
-      };
-
-      // Delete related data first
-      await deleteRelatedData();
-      
-      // Delete the auth user (if exists)
-      if (deletingUser.user_id) {
-        const { error: authError } = await supabase.auth.admin.deleteUser(
-          deletingUser.user_id
-        );
-        if (authError) {
-          console.error('Error deleting auth user:', authError);
-        }
+      // Check if we have an active session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Session expired');
       }
-      
-      // Finally delete the user profile
-      const { error } = await supabase
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      console.log('Starting delete process for user:', deletingUser.id);
+
+      // Now check user role
+      console.log('Checking current user role...');
+      const { data: currentUser, error: roleError } = await supabase.auth.getUser();
+      if (roleError) {
+        console.error('Error getting current user:', roleError);
+        throw roleError;
+      }
+
+      const { data: userRole, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', currentUser.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error checking user role:', profileError);
+        throw profileError;
+      }
+
+      if (userRole?.role !== 'admin') {
+        throw new Error('Only admins can delete users');
+      }
+
+      // Delete messages
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        throw messagesError;
+      }
+
+      // Delete gifts
+      const { error: giftsError } = await supabase
+        .from('gifts')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}`);
+
+      if (giftsError) {
+        console.error('Error deleting gifts:', giftsError);
+        throw giftsError;
+      }
+
+      // Delete user stocks
+      const { error: stocksError } = await supabase
+        .from('user_stocks')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (stocksError) {
+        console.error('Error deleting stocks:', stocksError);
+        throw stocksError;
+      }
+
+      // Delete posts and related data
+      const { error: postsError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (postsError) {
+        console.error('Error deleting posts:', postsError);
+        throw postsError;
+      }
+
+      // Delete comments
+      const { error: commentsError } = await supabase
+        .from('comments')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (commentsError) {
+        console.error('Error deleting comments:', commentsError);
+        throw commentsError;
+      }
+
+      // Delete reactions
+      const { error: reactionsError } = await supabase
+        .from('reactions')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (reactionsError) {
+        console.error('Error deleting reactions:', reactionsError);
+        throw reactionsError;
+      }
+
+      // Finally delete the profile
+      const { error: profileDeleteError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', deletingUser.id);
 
-      if (error) throw error;
+      if (profileDeleteError) {
+        console.error('Error deleting profile:', profileDeleteError);
+        throw profileDeleteError;
+      }
+
+      console.log('User and all related data deleted successfully');
       
       toast({
         title: "সফল",
@@ -191,11 +276,35 @@ const AdminUsers = () => {
       setIsDeleteDialogOpen(false);
       setDeletingUser(null);
       fetchUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
+    } catch (error: any) {
+      console.error('Delete process failed:', error);
+
+      console.log('Full error object:', error);
+      console.log('Error message:', error.message);
+      console.log('Error code:', error.code);
+      console.log('Error details:', error.details);
+      
+      // Show specific error message based on the error type
+      let errorMessage = "ইউজার মুছে ফেলতে সমস্যা হয়েছে";
+      
+      if (error.message?.includes('Only admins can delete users')) {
+        errorMessage = "শুধুমাত্র অ্যাডমিনরা ইউজার মুছতে পারবেন";
+      } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
+        errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
+      } else if (error.code === '23503' || error.message?.includes('foreign key')) {
+        errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = "ইউজার পাওয়া যায়নি";
+      } else if (error.message?.includes('auth.uid()')) {
+        errorMessage = "সেশন এক্সপায়ার হয়েছে। আবার লগইন করুন";
+      }
+      
+      // Log the final error message we're showing to the user
+      console.log('Showing error message to user:', errorMessage);
+
       toast({
         title: "ত্রুটি",
-        description: "ইউজার মুছে ফেলতে সমস্যা হয়েছে",
+        description: errorMessage,
         variant: "destructive",
       });
     }
