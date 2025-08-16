@@ -160,87 +160,15 @@ const AdminUsers = () => {
         throw new Error('Unauthorized');
       }
 
-      // Delete user notice reads
-      console.log('Deleting user notice reads...');
-      await supabase
-        .from('user_notice_reads')
-        .delete()
-        .eq('user_id', deletingUser.id);
+      // Call the serverless function to delete user and all related data
+      console.log('Calling delete user function...');
+      const { error: deleteError } = await supabase.rpc('delete_user_cascade', {
+        target_user_id: deletingUser.id
+      });
 
-      // Delete messages
-      console.log('Deleting messages...');
-      await supabase
-        .from('messages')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
-
-      // Delete gifts
-      console.log('Deleting gifts...');
-      await supabase
-        .from('gifts')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}`);
-
-      // Delete user stocks
-      console.log('Deleting stocks...');
-      await supabase
-        .from('user_stocks')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete user varieties
-      console.log('Deleting user varieties...');
-      await supabase
-        .from('user_varieties')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete posts
-      console.log('Deleting posts...');
-      await supabase
-        .from('posts')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete comments
-      console.log('Deleting comments...');
-      await supabase
-        .from('comments')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete reactions
-      console.log('Deleting reactions...');
-      await supabase
-        .from('reactions')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete notices
-      console.log('Deleting notices...');
-      await supabase
-        .from('notices')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      // Delete auth user using Admin API
-      console.log('Deleting auth user...');
-      const adminAuthClient = supabase.auth.admin;
-      const { error: authDeleteError } = await adminAuthClient.deleteUser(deletingUser.id);
-      
-      if (authDeleteError) {
-        throw authDeleteError;
-      }
-
-      // Finally delete the profile
-      console.log('Deleting profile...');
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', deletingUser.id);
-
-      if (profileError) {
-        throw profileError;
+      if (deleteError) {
+        console.error('Error from delete function:', deleteError);
+        throw deleteError;
       }
 
       console.log('Successfully deleted user and all related data');
