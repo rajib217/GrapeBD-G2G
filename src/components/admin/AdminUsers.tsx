@@ -138,6 +138,17 @@ const AdminUsers = () => {
     if (!deletingUser) return;
     
     try {
+      // First try to delete messages
+      const { error: messageError } = await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+      if (messageError) {
+        console.error('Error deleting messages:', messageError);
+      }
+
+      // Then delete the profile
       const { error } = await supabase
         .from('profiles')
         .delete()
