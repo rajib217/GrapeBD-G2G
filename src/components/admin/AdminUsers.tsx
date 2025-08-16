@@ -134,17 +134,18 @@ const AdminUsers = () => {
     }
   };
 
-  // Using a single stored procedure to delete all user data
-  const deleteUserAndRelatedData = async (userId: string) => {
-    console.log('Deleting user and all related data...');
-    const { error } = await supabase.rpc('delete_user_cascade', {
-      user_id: userId
+  const deleteFromTable = async (table: string, field: string, userId: string) => {
+    console.log(`Deleting from ${table}...`);
+    const { error } = await supabase.rpc('delete_user_data', {
+      p_table: table,
+      p_field: field,
+      p_user_id: userId
     });
     
     if (error) {
-      console.error('Error in cascade delete:', error);
-      throw error;
+      console.log(`Error deleting from ${table}:`, error);
     }
+    return error;
   };
 
   const handleDelete = async () => {
@@ -165,6 +166,89 @@ const AdminUsers = () => {
       }
 
       console.log('Starting delete process for user:', deletingUser.id);
+      
+      // Delete all related data first
+      const deleteOperations = [
+        deleteFromTable('messages', 'sender_id', deletingUser.id),
+        deleteFromTable('messages', 'receiver_id', deletingUser.id),
+        deleteFromTable('user_stocks', 'user_id', deletingUser.id),
+        deleteFromTable('posts', 'user_id', deletingUser.id),
+        deleteFromTable('comments', 'user_id', deletingUser.id),
+        deleteFromTable('reactions', 'user_id', deletingUser.id),
+        deleteFromTable('notifications', 'user_id', deletingUser.id),
+        deleteFromTable('gifts', 'sender_id', deletingUser.id),
+        deleteFromTable('gifts', 'recipient_id', deletingUser.id),
+      ];
+
+      // Wait for all delete operations to complete
+      const errors = await Promise.all(deleteOperations);
+      const hasErrors = errors.some(error => error !== null);
+
+      if (hasErrors) {
+        console.log('Some delete operations failed, but continuing...');
+
+      // First delete from tables with foreign keys
+      const tablesToDelete = [
+        'messages',      // user's messages
+        'user_stocks',   // user's varieties
+        'posts',         // user's posts
+        'comments',      // user's comments
+        'reactions',     // user's reactions
+        'notifications', // user's notifications
+      ];
+
+      // Delete from gift_recipients and gift_senders separately
+      console.log('Deleting gift related data...');
+      await supabase
+        .from('gifts')
+        .delete()
+        .eq('sender_id', deletingUser.id);
+
+      await supabase
+        .from('gifts')
+        .delete()
+        .eq('recipient_id', deletingUser.id);
+
+      // Delete from all other related tables
+      for (const table of tablesToDelete) {
+        console.log(`Deleting from ${table}...`);
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('user_id', deletingUser.id);
+
+        if (error) {
+          console.log(`Error deleting from ${table}:`, error);
+          // Continue with other tables even if one fails
+        }
+      }
+
+      // First check if there are any messages
+      const { data: messageCount, error: countError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+      if (countError) {
+        console.error('Error checking messages:', countError);
+        throw countError;
+      }
+      console.log('Found messages count:', messageCount);
+
+      // Delete messages if any exist
+      if (messageCount && messageCount.length > 0) {
+        console.log('Deleting messages...');
+        const { error: messageError } = await supabase
+          .from('messages')
+          .delete()
+          .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+        if (messageError) {
+          console.error('Error deleting messages:', messageError);
+          throw messageError;
+        }
+        console.log('Messages deleted successfully');
+      }
 
       // Now check user role
       console.log('Checking current user role...');
@@ -185,88 +269,42 @@ const AdminUsers = () => {
         throw profileError;
       }
 
+      console.log('Current user role:', userRole?.role);
+      
       if (userRole?.role !== 'admin') {
         throw new Error('Only admins can delete users');
       }
 
-      // Delete messages
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+      // First check if the user exists
+      console.log('Checking if user exists...');
+      const { data: userExists, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', deletingUser.id)
+        .single();
 
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-        throw messagesError;
+      if (checkError) {
+        console.error('Error checking user:', checkError);
+        throw checkError;
       }
 
-      // Delete gifts
-      const { error: giftsError } = await supabase
-        .from('gifts')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}`);
-
-      if (giftsError) {
-        console.error('Error deleting gifts:', giftsError);
-        throw giftsError;
+      if (!userExists) {
+        throw new Error('User not found');
       }
 
-      // Delete user stocks
-      const { error: stocksError } = await supabase
-        .from('user_stocks')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (stocksError) {
-        console.error('Error deleting stocks:', stocksError);
-        throw stocksError;
-      }
-
-      // Delete posts and related data
-      const { error: postsError } = await supabase
-        .from('posts')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (postsError) {
-        console.error('Error deleting posts:', postsError);
-        throw postsError;
-      }
-
-      // Delete comments
-      const { error: commentsError } = await supabase
-        .from('comments')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (commentsError) {
-        console.error('Error deleting comments:', commentsError);
-        throw commentsError;
-      }
-
-      // Delete reactions
-      const { error: reactionsError } = await supabase
-        .from('reactions')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (reactionsError) {
-        console.error('Error deleting reactions:', reactionsError);
-        throw reactionsError;
-      }
-
-      // Finally delete the profile
-      const { error: profileDeleteError } = await supabase
+      // Then delete the profile
+      console.log('Deleting user profile...');
+      const { error } = await supabase
         .from('profiles')
         .delete()
         .eq('id', deletingUser.id);
 
-      if (profileDeleteError) {
-        console.error('Error deleting profile:', profileDeleteError);
-        throw profileDeleteError;
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
       }
 
-      console.log('User and all related data deleted successfully');
+      console.log('User deleted successfully');
       
       toast({
         title: "সফল",
