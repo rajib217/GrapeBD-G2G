@@ -138,13 +138,42 @@ const AdminUsers = () => {
     if (!deletingUser) return;
     
     try {
-      // First delete all related records
-      await supabase.from('comments').delete().eq('user_id', deletingUser.id);
-      await supabase.from('reactions').delete().eq('user_id', deletingUser.id);
-      await supabase.from('posts').delete().eq('user_id', deletingUser.id);
-      await supabase.from('user_varieties').delete().eq('user_id', deletingUser.id);
-      await supabase.from('gifts').delete().eq('sender_id', deletingUser.id);
-      await supabase.from('gifts').delete().eq('recipient_id', deletingUser.id);
+      // First delete all related records from different tables
+      const deleteRelatedData = async () => {
+        const tables = [
+          { name: 'comments', field: 'user_id' },
+          { name: 'reactions', field: 'user_id' },
+          { name: 'posts', field: 'user_id' },
+          { name: 'user_varieties', field: 'user_id' },
+          { name: 'gifts', field: 'sender_id' },
+          { name: 'gifts', field: 'recipient_id' },
+          { name: 'notifications', field: 'user_id' }
+        ];
+
+        for (const table of tables) {
+          const { error } = await supabase
+            .from(table.name)
+            .delete()
+            .eq(table.field, deletingUser.id);
+          
+          if (error) {
+            console.error(`Error deleting from ${table.name}:`, error);
+          }
+        }
+      };
+
+      // Delete related data first
+      await deleteRelatedData();
+      
+      // Delete the auth user (if exists)
+      if (deletingUser.user_id) {
+        const { error: authError } = await supabase.auth.admin.deleteUser(
+          deletingUser.user_id
+        );
+        if (authError) {
+          console.error('Error deleting auth user:', authError);
+        }
+      }
       
       // Finally delete the user profile
       const { error } = await supabase
@@ -358,7 +387,9 @@ const AdminUsers = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setDeletingUser(user);
                         setIsDeleteDialogOpen(true);
                       }}
