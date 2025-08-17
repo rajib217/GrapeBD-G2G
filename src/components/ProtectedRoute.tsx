@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,18 +12,11 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
-  console.log('ProtectedRoute - User:', user?.id);
-  console.log('ProtectedRoute - Profile:', profile);
-  console.log('ProtectedRoute - Loading:', loading);
-  console.log('ProtectedRoute - AdminOnly:', adminOnly);
-
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        console.log('No user found, redirecting to auth');
         navigate('/auth');
       } else if (adminOnly && profile?.role !== 'admin') {
-        console.log('User is not admin, redirecting to home');
         navigate('/');
       }
     }
