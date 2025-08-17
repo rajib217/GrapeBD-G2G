@@ -27,8 +27,6 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,7 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+  const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -60,135 +58,120 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .single();
 
       if (error) {
+        console.error('Profile fetch error:', error);
         return null;
       }
 
-      return data as Profile;
+      return data;
     } catch (error) {
+      console.error('Profile fetch error:', error);
       return null;
     }
   };
 
   const refreshProfile = async () => {
-    if (user?.id) {
+    if (user) {
       const profileData = await fetchProfile(user.id);
       setProfile(profileData);
     }
   };
 
-  // Auth state listener
   useEffect(() => {
-    let mounted = true;
-
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-
         setSession(session);
         setUser(session?.user ?? null);
 
-        if (session?.user && event !== 'SIGNED_OUT') {
-          try {
+        if (session?.user) {
+          // Defer profile fetching to prevent deadlocks
+          setTimeout(async () => {
             const profileData = await fetchProfile(session.user.id);
-            if (mounted) {
-              setProfile(profileData);
-            }
-          } catch (error) {
-            if (mounted) {
-              setProfile(null);
-            }
-          }
+            setProfile(profileData);
+            setLoading(false);
+          }, 0);
         } else {
-          if (mounted) {
-            setProfile(null);
-          }
-        }
-
-        if (mounted) {
+          setProfile(null);
           setLoading(false);
         }
       }
     );
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          try {
-            const profileData = await fetchProfile(session.user.id);
-            if (mounted) {
-              setProfile(profileData);
-            }
-          } catch (error) {
-            // Handle profile fetch error silently
-          }
-        }
-
-        if (mounted) {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        setTimeout(async () => {
+          const profileData = await fetchProfile(session.user.id);
+          setProfile(profileData);
           setLoading(false);
-        }
-      } catch (error) {
-        if (mounted) {
-          setLoading(false);
-        }
+        }, 0);
+      } else {
+        setLoading(false);
       }
-    };
+    });
 
-    getInitialSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
     try {
-      setLoading(true);
-      
-      // Clear state first
+      // Clean up auth state first
+      const cleanupAuthState = () => {
+        // Clear all localStorage items related to auth
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Also clear sessionStorage if needed
+        const sessionKeysToRemove = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
+            sessionKeysToRemove.push(key);
+          }
+        }
+        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+      };
+
+      // Clear React state immediately
       setUser(null);
       setSession(null);
       setProfile(null);
-
-      // Clear localStorage
-      const keysToRemove = Object.keys(localStorage).filter(
-        key => key.startsWith('sb-') || key.includes('supabase')
-      );
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-
-      // Sign out from Supabase
-      await supabase.auth.signOut({ scope: 'global' });
-
-      // Force reload to clear any remaining state
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
-
-    } catch (error) {
-      // Force redirect even on error
-      window.location.href = '/auth';
-    } finally {
       setLoading(false);
+      
+      // Clean up storage
+      cleanupAuthState();
+      
+      // Try to sign out from Supabase (ignore errors)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Ignore sign out errors, just continue
+      }
+      
+      // Force redirect to auth page
+      window.location.href = '/auth';
+    } catch (error) {
+      // Even if everything fails, still redirect
+      window.location.href = '/auth';
     }
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
     session,
     profile,
     loading,
     signOut,
-    refreshProfile,
-    isAuthenticated: !!user,
-    isAdmin: profile?.role === 'admin',
+    refreshProfile
   };
 
   return (
