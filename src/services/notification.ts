@@ -59,8 +59,23 @@ export async function showNotification(title: string, options?: NotificationOpti
   }
 }
 
-import { supabase } from '@/integrations/supabase/client';
+// Helper function to convert VAPID public key to Uint8Array
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
 
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+import { supabase } from '@/integrations/supabase/client';
+const VAPID_PUBLIC_KEY = 'BHOcfClbpLGoR2iejzJBPrBoChOvTmZVrxBJZR4qBJrZ0HoYWcifnM7lJHk9gPp8GypASgIgO9ORV6SXiq-iA-M';
 export async function setupPushNotifications(userId: string) {
   try {
     // Check if service worker is ready
@@ -76,10 +91,27 @@ export async function setupPushNotifications(userId: string) {
       return false;
     }
 
-    // For basic notifications, we don't need push manager subscription
-    // Just return true if notification permission is granted
     if (Notification.permission === 'granted') {
-      console.info('[Notification] Basic notifications enabled without push subscription');
+      // Check if already subscribed
+      const existingSubscription = await registration.pushManager.getSubscription();
+
+      if (existingSubscription) {
+          console.info('[Notification] Already subscribed', existingSubscription);
+          // Optionally, send existing subscription to backend if not already saved
+          return true;
+      }
+
+      const subscribeOptions = {
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      };
+
+      const subscription = await registration.pushManager.subscribe(subscribeOptions);
+
+      console.info('[Notification] Push subscribed:', subscription);
+
+      // Send subscription to your backend
+      await saveSubscriptionToBackend(subscription, userId);
       return true;
     }
 
@@ -89,4 +121,36 @@ export async function setupPushNotifications(userId: string) {
     console.error('[Notification] Error setting up notifications:', error);
     return false;
   }
+}
+
+// Function to save the subscription to your backend (Supabase)
+async function saveSubscriptionToBackend(subscription: PushSubscription, userId: string) {
+    // Convert PushSubscription object to a plain object
+    const subscriptionData = subscription.toJSON();
+
+    try {
+        // Replace 'user_push_subscriptions' with your actual Supabase table name if you used a different one
+        const { data, error } = await supabase
+            .from('user_push_subscriptions')
+            .insert([
+                {
+                    user_id: userId,
+                    endpoint: subscriptionData.endpoint,
+                    p256dh: subscriptionData.keys?.p256dh,
+                    auth: subscriptionData.keys?.auth,
+                },
+            ]);
+
+        if (error) {
+            console.error('[Notification] Error saving subscription to Supabase:', error);
+            return false;
+        }
+
+        console.info('[Notification] Subscription saved to Supabase:', data);
+        return true;
+
+    } catch (error) {
+        console.error('[Notification] Error in saveSubscriptionToBackend:', error);
+        return false;
+    }
 }
