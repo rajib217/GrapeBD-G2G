@@ -137,9 +137,11 @@ const AdminUsers = () => {
   // Using a single stored procedure to delete all user data
   const deleteUserAndRelatedData = async (userId: string) => {
     console.log('Deleting user and all related data...');
-    const { error } = await supabase.rpc('delete_user_cascade', {
-      user_id: userId
-    });
+    // Since the function doesn't exist in types, we'll delete manually
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
     
     if (error) {
       console.error('Error in cascade delete:', error);

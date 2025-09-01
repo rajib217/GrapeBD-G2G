@@ -9,8 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { compressPostImage } from '@/utils/imageCompression';
-import { formatDistanceToNow } from 'date-fns';
-import { bn } from 'date-fns/locale';
 import { Camera, Heart, MessageCircle, Share2, Send, X, Loader2, ThumbsUp, Angry, Laugh, Frown, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -355,7 +353,19 @@ const SocialFeed = () => {
 
   const formatPostDate = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: bn });
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      
+      if (diffInMinutes < 1) return 'এইমাত্র';
+      if (diffInMinutes < 60) return `${diffInMinutes} মিনিট আগে`;
+      if (diffInHours < 24) return `${diffInHours} ঘন্টা আগে`;
+      if (diffInDays < 7) return `${diffInDays} দিন আগে`;
+      
+      return date.toLocaleDateString('bn-BD');
     } catch {
       return 'সময় অজানা';
     }

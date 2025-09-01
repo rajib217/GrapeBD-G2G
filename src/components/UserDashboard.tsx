@@ -16,6 +16,7 @@ import AllMembers from './AllMembers';
 import GiftHistory from './GiftHistory';
 
 import MobileNav from './MobileNav';
+import MobileBottomNav from './MobileBottomNav';
 
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('feed');
@@ -32,6 +33,7 @@ const UserDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'home':
       case 'feed':
         return <SocialFeed />;
       case 'my-gifts':
@@ -45,8 +47,10 @@ const UserDashboard = () => {
       case 'add-seedling':
         return <AddSeedling />;
       case 'seedling-stock':
+      case 'stock':
         return <SeedlingStock />;
       case 'send-gift':
+      case 'send':
         return <SendGift />;
       case 'all-members':
         return <AllMembers />;
@@ -139,6 +143,12 @@ const UserDashboard = () => {
           </main>
         </div>
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      {/* Add bottom padding for mobile bottom nav */}
+      <div className="h-20 md:hidden"></div>
     </div>
   );
 };

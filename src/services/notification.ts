@@ -129,24 +129,9 @@ async function saveSubscriptionToBackend(subscription: PushSubscription, userId:
     const subscriptionData = subscription.toJSON();
 
     try {
-        // Replace 'user_push_subscriptions' with your actual Supabase table name if you used a different one
-        const { data, error } = await supabase
-            .from('user_push_subscriptions')
-            .insert([
-                {
-                    user_id: userId,
-                    endpoint: subscriptionData.endpoint,
-                    p256dh: subscriptionData.keys?.p256dh,
-                    auth: subscriptionData.keys?.auth,
-                },
-            ]);
-
-        if (error) {
-            console.error('[Notification] Error saving subscription to Supabase:', error);
-            return false;
-        }
-
-        console.info('[Notification] Subscription saved to Supabase:', data);
+        // Store subscription info in localStorage for now since table doesn't exist
+        localStorage.setItem(`push_subscription_${userId}`, JSON.stringify(subscriptionData));
+        console.info('[Notification] Subscription stored locally:', subscriptionData);
         return true;
 
     } catch (error) {

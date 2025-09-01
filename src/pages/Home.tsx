@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ImageIcon, Send } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
-import { formatDistanceToNow } from "date-fns";
 
 interface Post {
   id: string;
@@ -278,7 +277,21 @@ export default function Home() {
                     <div>
                       <p className="font-medium">{post.profiles?.full_name || "অজানা ইউজার"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                        {(() => {
+                          const date = new Date(post.created_at);
+                          const now = new Date();
+                          const diffInMs = now.getTime() - date.getTime();
+                          const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+                          const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+                          const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+                          
+                          if (diffInMinutes < 1) return 'এইমাত্র';
+                          if (diffInMinutes < 60) return `${diffInMinutes} মিনিট আগে`;
+                          if (diffInHours < 24) return `${diffInHours} ঘন্টা আগে`;
+                          if (diffInDays < 7) return `${diffInDays} দিন আগে`;
+                          
+                          return date.toLocaleDateString('bn-BD');
+                        })()}
                       </p>
                     </div>
                   </div>
