@@ -19,9 +19,19 @@ import MobileNav from './MobileNav';
 import MobileBottomNav from './MobileBottomNav';
 
 const UserDashboard = () => {
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState('home');
+  const [isAdminView, setIsAdminView] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const handleViewChange = (isAdmin: boolean) => {
+    setIsAdminView(isAdmin);
+    if (isAdmin) {
+      setActiveTab('users'); // Default admin tab
+    } else {
+      setActiveTab('home'); // Default user tab
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -32,32 +42,53 @@ const UserDashboard = () => {
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'home':
-      case 'feed':
-        return <SocialFeed />;
-      case 'my-gifts':
-        return <MyGifts />;
-      case 'notices':
-        return <UserNotices />;
-      case 'messages':
-        return <Messages />;
-      case 'profile':
-        return <ProfileEdit />;
-      case 'add-seedling':
-        return <AddSeedling />;
-      case 'seedling-stock':
-      case 'stock':
-        return <SeedlingStock />;
-      case 'send-gift':
-      case 'send':
-        return <SendGift />;
-      case 'all-members':
-        return <AllMembers />;
-      case 'gift-history':
-        return <GiftHistory />;
-      default:
-        return <SocialFeed />;
+    if (isAdminView) {
+      // Admin view content
+      switch (activeTab) {
+        case 'users':
+          return <div>Admin Users Component</div>; // You can import and use AdminUsers here
+        case 'gifts':
+          return <div>Admin Gifts Component</div>;
+        case 'varieties':
+          return <div>Admin Varieties Component</div>;
+        case 'gift-rounds':
+          return <div>Admin Gift Rounds Component</div>;
+        case 'notices':
+          return <div>Admin Notices Component</div>;
+        case 'all-members':
+          return <AllMembers />;
+        default:
+          return <div>Admin Users Component</div>;
+      }
+    } else {
+      // User view content
+      switch (activeTab) {
+        case 'home':
+        case 'feed':
+          return <SocialFeed />;
+        case 'my-gifts':
+          return <MyGifts />;
+        case 'notices':
+          return <UserNotices />;
+        case 'messages':
+          return <Messages />;
+        case 'profile':
+          return <ProfileEdit />;
+        case 'add-seedling':
+          return <AddSeedling />;
+        case 'seedling-stock':
+        case 'stock':
+          return <SeedlingStock />;
+        case 'send-gift':
+        case 'send':
+          return <SendGift />;
+        case 'all-members':
+          return <AllMembers />;
+        case 'gift-history':
+          return <GiftHistory />;
+        default:
+          return <SocialFeed />;
+      }
     }
   };
 
@@ -126,7 +157,12 @@ const UserDashboard = () => {
         <div className="flex flex-col flex-grow">
           <div className="flex items-center justify-between h-16 px-4 bg-white border-b md:justify-end">
             <div className="md:hidden">
-              <MobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+              <MobileNav 
+                activeTab={activeTab} 
+                onTabChange={setActiveTab}
+                isAdminView={isAdminView}
+                onViewChange={handleViewChange}
+              />
             </div>
             <div className="flex items-center space-x-4">
               <p className="font-medium">{profile?.full_name}</p>

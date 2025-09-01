@@ -34,13 +34,14 @@ interface MenuItem {
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdminView?: boolean;
+  onViewChange?: (isAdmin: boolean) => void;
 }
 
-const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
+const MobileNav = ({ activeTab, onTabChange, isAdminView = false, onViewChange }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [showAdminItems, setShowAdminItems] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -52,8 +53,15 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
   };
 
   const handleAdminClick = () => {
-    if (profile?.role === 'admin') {
-      navigate('/admin');
+    if (profile?.role === 'admin' && onViewChange) {
+      onViewChange(true);
+      setOpen(false);
+    }
+  };
+
+  const handleHomeClick = () => {
+    if (onViewChange) {
+      onViewChange(false);
       setOpen(false);
     }
   };
@@ -63,7 +71,14 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
     setOpen(false);
   };
 
-  const menuItems: MenuItem[] = [
+  const menuItems: MenuItem[] = isAdminView ? [
+    { id: 'users', label: 'ইউজার', icon: Users },
+    { id: 'gifts', label: 'গিফট', icon: Gift },
+    { id: 'varieties', label: 'জাত', icon: Leaf },
+    { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: Clock },
+    { id: 'notices', label: 'নোটিশ', icon: Bell },
+    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
+  ] : [
     { id: 'home', label: 'হোম', icon: Home },
     { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
     { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
@@ -75,19 +90,6 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
     { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
-
-  // Admin-specific menu items (shown for admins)
-  const adminMenuItems: MenuItem[] = profile?.role === 'admin'
-    ? [
-        { id: 'users', label: 'ইউজার', icon: Users },
-        { id: 'gifts', label: 'গিফট', icon: Gift },
-        { id: 'varieties', label: 'জাত', icon: Leaf },
-        { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: Clock },
-        { id: 'notices', label: 'নোটিশ', icon: Bell },
-        { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
-        { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
-      ]
-    : [];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -115,6 +117,30 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
                 )}
               </div>
             </div>
+            
+            {/* View Toggle Buttons for Admin */}
+            {profile?.role === 'admin' && (
+              <div className="flex space-x-2">
+                <Button
+                  variant={!isAdminView ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={handleHomeClick}
+                  className="flex-1"
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  হোম
+                </Button>
+                <Button
+                  variant={isAdminView ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={handleAdminClick}
+                  className="flex-1"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  অ্যাডমিন
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Navigation Menu */}
@@ -138,45 +164,6 @@ const MobileNav = ({ activeTab, onTabChange }: MobileNavProps) => {
                   </button>
                 );
               })}
-
-              {/* Admin toggle for mobile */}
-              {profile?.role === 'admin' && (
-                <div className="pt-2">
-                  <button
-                    onClick={() => setShowAdminItems(s => !s)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-100 text-gray-600"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Shield className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">অ্যাডমিন প্যানেল</span>
-                    </div>
-                    {showAdminItems ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </button>
-
-                  {showAdminItems && (
-                    <div className="mt-2 space-y-1">
-                      {adminMenuItems.map((item) => {
-                        const isActive = activeTab === item.id;
-                        const IconComponent = item.icon;
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => { navigate('/admin'); onTabChange(item.id); setOpen(false); }}
-                            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
-                              isActive
-                                ? 'bg-green-100 text-green-700 border-l-4 border-green-600'
-                                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                            }`}
-                          >
-                            <IconComponent className={`h-5 w-5 ${isActive ? 'text-green-600' : ''}`} />
-                            <span className="font-medium">{item.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </nav>
           </div>
 
