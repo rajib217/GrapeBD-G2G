@@ -94,6 +94,12 @@ const MobileNav = ({
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
 
+  // Debug logging
+  console.log('MobileNav - isAdminView:', isAdminView);
+  console.log('MobileNav - Profile Role:', profile?.role);
+  console.log('MobileNav - Menu Items Count:', menuItems.length);
+  console.log('MobileNav - Menu Items:', menuItems.map(item => item.label));
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -164,6 +170,12 @@ const MobileNav = ({
           {/* Navigation Menu */}
           <div className="flex-1 py-2 overflow-y-auto scroll-container">
             <nav className="px-2" role="navigation">
+              {/* Debug Info */}
+              <div className="mb-2 p-2 bg-muted/20 rounded text-xs">
+                <p>Admin View: {isAdminView ? 'হ্যাঁ' : 'না'}</p>
+                <p>Menu Items: {menuItems.length}</p>
+              </div>
+              
               <div className="space-y-1">
                 {menuItems.map((item) => {
                   const isActive = activeTab === item.id;
