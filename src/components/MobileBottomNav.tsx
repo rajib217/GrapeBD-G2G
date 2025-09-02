@@ -1,12 +1,11 @@
 import { 
   Sprout, 
-  Plus, 
   Gift, 
   MessageSquare, 
   User,
   Home
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,14 +14,23 @@ interface MobileBottomNavProps {
   onTabChange: (tab: string) => void;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<any>;
+  badge?: number;
+}
+
 const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
   const { profile } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchUnreadCount = useCallback(async () => {
     if (!profile?.id) return;
-
-    const fetchUnreadCount = async () => {
+    
+    try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('messages')
         .select('id')
@@ -32,13 +40,21 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
       if (!error && data) {
         setUnreadCount(data.length);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    if (!profile?.id) return;
 
     fetchUnreadCount();
 
     // Real-time subscription for unread messages
     const channel = supabase
-      .channel('messages-unread')
+      .channel('messages-unread-count')
       .on(
         'postgres_changes',
         {
@@ -56,56 +72,84 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.id]);
+  }, [profile?.id, fetchUnreadCount]);
 
-  const quickMenuItems = [
+  const navItems: NavItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
     { id: 'stock', label: 'স্টক', icon: Sprout },
     { id: 'send', label: 'গিফট', icon: Gift },
-    { id: 'messages', label: 'ম্যাসেজ', icon: MessageSquare, badge: unreadCount },
+    { 
+      id: 'messages', 
+      label: 'ম্যাসেজ', 
+      icon: MessageSquare, 
+      badge: unreadCount > 0 ? unreadCount : undefined 
+    },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
 
+  const handleTabClick = useCallback((tabId: string) => {
+    onTabChange(tabId);
+  }, [onTabChange]);
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 md:hidden z-50 shadow-lg">
-      <div className="grid grid-cols-5 safe-area-bottom">
-        {quickMenuItems.map((item) => {
+    <nav 
+      className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border md:hidden z-50 shadow-lg"
+      role="navigation"
+      aria-label="মোবাইল নেভিগেশন"
+    >
+      <div className="grid grid-cols-5 px-2 py-1">
+        {navItems.map((item) => {
           const isActive = activeTab === item.id;
           const IconComponent = item.icon;
           
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`flex flex-col items-center justify-center py-3 px-1 text-xs transition-all duration-200 touch-target relative ${
-                isActive
-                  ? 'text-emerald-600'
-                  : 'text-gray-500 hover:text-gray-700 active:bg-gray-50'
-              }`}
+              onClick={() => handleTabClick(item.id)}
+              className={`
+                relative flex flex-col items-center justify-center 
+                py-2 px-1 rounded-lg text-xs font-medium
+                transition-all duration-200 ease-in-out
+                touch-target min-h-[60px]
+                ${isActive 
+                  ? 'text-primary bg-accent/50' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 active:bg-accent/40'
+                }
+              `}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
             >
+              {/* Active indicator */}
               {isActive && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary rounded-full" />
               )}
-              <div className="relative">
-                <IconComponent className={`h-5 w-5 mb-1.5 transition-all duration-300 ${
-                  isActive ? 'text-emerald-600 scale-110 drop-shadow-sm' : ''
-                }`} />
+              
+              {/* Icon with badge */}
+              <div className="relative mb-1">
+                <IconComponent 
+                  className={`h-5 w-5 transition-transform duration-200 ${
+                    isActive ? 'scale-110' : 'scale-100'
+                  }`}
+                />
                 {item.badge && item.badge > 0 && (
-                  <div className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold text-[10px] leading-none border border-white shadow-md">
-                    {item.badge > 9 ? '9+' : item.badge}
+                  <div className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center border border-background shadow-sm">
+                    {item.badge > 99 ? '99+' : item.badge}
                   </div>
                 )}
               </div>
-              <span className={`font-medium leading-tight text-center ${
-                isActive ? 'text-emerald-700' : ''
-              }`}>
+              
+              {/* Label */}
+              <span className="leading-tight text-center truncate max-w-full">
                 {item.label}
               </span>
             </button>
           );
         })}
       </div>
-    </div>
+      
+      {/* Safe area for devices with home indicator */}
+      <div className="h-safe-area-inset-bottom" />
+    </nav>
   );
 };
 
