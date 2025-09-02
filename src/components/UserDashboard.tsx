@@ -25,10 +25,14 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
   const handleViewChange = (isAdmin: boolean) => {
+    console.log('UserDashboard - handleViewChange called with:', isAdmin);
+    console.log('UserDashboard - Previous isAdminView:', isAdminView);
     setIsAdminView(isAdmin);
     if (isAdmin) {
+      console.log('UserDashboard - Setting activeTab to users');
       setActiveTab('users'); // Default admin tab
     } else {
+      console.log('UserDashboard - Setting activeTab to home');
       setActiveTab('home'); // Default user tab
     }
   };

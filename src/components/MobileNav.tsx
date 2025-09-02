@@ -56,18 +56,26 @@ const MobileNav = ({
   }, [signOut]);
 
   const handleAdminClick = useCallback(() => {
+    console.log('Admin button clicked, current isAdminView:', isAdminView);
     if (profile?.role === 'admin' && onViewChange) {
+      console.log('Calling onViewChange(true)');
       onViewChange(true);
       setOpen(false);
+    } else {
+      console.log('Admin click blocked - Profile Role:', profile?.role, 'onViewChange:', !!onViewChange);
     }
-  }, [profile?.role, onViewChange]);
+  }, [profile?.role, onViewChange, isAdminView]);
 
   const handleHomeClick = useCallback(() => {
+    console.log('Home button clicked, current isAdminView:', isAdminView);
     if (onViewChange) {
+      console.log('Calling onViewChange(false)');
       onViewChange(false);
       setOpen(false);
+    } else {
+      console.log('Home click blocked - onViewChange:', !!onViewChange);
     }
-  }, [onViewChange]);
+  }, [onViewChange, isAdminView]);
 
   const handleTabClick = useCallback((tab: string) => {
     onTabChange(tab);
