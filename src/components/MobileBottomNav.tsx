@@ -24,13 +24,11 @@ interface NavItem {
 const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
   const { profile } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
   const fetchUnreadCount = useCallback(async () => {
     if (!profile?.id) return;
     
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
         .from('messages')
         .select('id')
@@ -42,37 +40,12 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [profile?.id]);
 
   useEffect(() => {
-    if (!profile?.id) return;
-
     fetchUnreadCount();
-
-    // Real-time subscription for unread messages
-    const channel = supabase
-      .channel('messages-unread-count')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${profile.id}`
-        },
-        () => {
-          fetchUnreadCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.id, fetchUnreadCount]);
+  }, [fetchUnreadCount]);
 
   const navItems: NavItem[] = [
     { id: 'home', label: 'হোম', icon: Home },

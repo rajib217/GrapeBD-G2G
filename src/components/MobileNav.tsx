@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,18 +34,15 @@ interface MenuItem {
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  isAdminView?: boolean;
-  onViewChange?: (isAdmin: boolean) => void;
 }
 
 const MobileNav = ({ 
   activeTab, 
-  onTabChange, 
-  isAdminView = false, 
-  onViewChange 
+  onTabChange
 }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -56,57 +54,29 @@ const MobileNav = ({
   }, [signOut]);
 
   const handleAdminClick = useCallback(() => {
-    console.log('Admin button clicked, current isAdminView:', isAdminView);
-    if (profile?.role === 'admin' && onViewChange) {
-      console.log('Calling onViewChange(true)');
-      onViewChange(true);
+    if (profile?.role === 'admin') {
+      navigate('/admin');
       setOpen(false);
-    } else {
-      console.log('Admin click blocked - Profile Role:', profile?.role, 'onViewChange:', !!onViewChange);
     }
-  }, [profile?.role, onViewChange, isAdminView]);
-
-  const handleHomeClick = useCallback(() => {
-    console.log('Home button clicked, current isAdminView:', isAdminView);
-    if (onViewChange) {
-      console.log('Calling onViewChange(false)');
-      onViewChange(false);
-      setOpen(false);
-    } else {
-      console.log('Home click blocked - onViewChange:', !!onViewChange);
-    }
-  }, [onViewChange, isAdminView]);
+  }, [profile?.role, navigate]);
 
   const handleTabClick = useCallback((tab: string) => {
     onTabChange(tab);
     setOpen(false);
   }, [onTabChange]);
 
-  const menuItems: MenuItem[] = isAdminView ? [
-    { id: 'users', label: 'ইউজার', icon: Users },
-    { id: 'gifts', label: 'গিফট', icon: Gift },
-    { id: 'varieties', label: 'জাত', icon: Leaf },
-    { id: 'gift-rounds', label: 'গিফট রাউন্ড', icon: Clock },
-    { id: 'notices', label: 'নোটিশ', icon: Bell },
-    { id: 'all-members', label: 'সকল মেম্বার', icon: UserCheck },
-  ] : [
+  const menuItems: MenuItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
     { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
     { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
-    { id: 'seedling-stock', label: 'চারাগাছের স্টক', icon: Archive },
-    { id: 'send-gift', label: 'উপহার পাঠান', icon: Send },
+    { id: 'stock', label: 'চারাগাছের স্টক', icon: Archive },
+    { id: 'send', label: 'উপহার পাঠান', icon: Send },
     { id: 'all-members', label: 'সকল সদস্য', icon: Users },
     { id: 'gift-history', label: 'উপহারের ইতিহাস', icon: History },
     { id: 'notices', label: 'নোটিশ', icon: Bell },
     { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
-
-  // Debug logging
-  console.log('MobileNav - isAdminView:', isAdminView);
-  console.log('MobileNav - Profile Role:', profile?.role);
-  console.log('MobileNav - Menu Items Count:', menuItems.length);
-  console.log('MobileNav - Menu Items:', menuItems.map(item => item.label));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -147,30 +117,19 @@ const MobileNav = ({
               </div>
             </div>
             
-            {/* View Toggle Buttons for Admin */}
+            {/* Admin Panel Button */}
             {profile?.role === 'admin' && (
               <>
                 <Separator className="my-3 bg-primary-foreground/20" />
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={!isAdminView ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={handleHomeClick}
-                    className="flex items-center justify-center"
-                  >
-                    <Home className="h-4 w-4 mr-1" />
-                    হোম
-                  </Button>
-                  <Button
-                    variant={isAdminView ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={handleAdminClick}
-                    className="flex items-center justify-center"
-                  >
-                    <Shield className="h-4 w-4 mr-1" />
-                    অ্যাডমিন
-                  </Button>
-                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAdminClick}
+                  className="w-full flex items-center justify-center"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  অ্যাডমিন প্যানেল
+                </Button>
               </>
             )}
           </div>
@@ -178,12 +137,6 @@ const MobileNav = ({
           {/* Navigation Menu */}
           <div className="flex-1 py-2 overflow-y-auto scroll-container">
             <nav className="px-2" role="navigation">
-              {/* Debug Info */}
-              <div className="mb-2 p-2 bg-muted/20 rounded text-xs">
-                <p>Admin View: {isAdminView ? 'হ্যাঁ' : 'না'}</p>
-                <p>Menu Items: {menuItems.length}</p>
-              </div>
-              
               <div className="space-y-1">
                 {menuItems.map((item) => {
                   const isActive = activeTab === item.id;
