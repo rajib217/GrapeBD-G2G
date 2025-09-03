@@ -191,62 +191,9 @@ const AdminUsers = () => {
         throw new Error('Only admins can delete users');
       }
 
-      // Delete messages
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+      // Delete in proper order to avoid foreign key constraints
 
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-        throw messagesError;
-      }
-
-      // Delete gifts
-      const { error: giftsError } = await supabase
-        .from('gifts')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},recipient_id.eq.${deletingUser.id}`);
-
-      if (giftsError) {
-        console.error('Error deleting gifts:', giftsError);
-        throw giftsError;
-      }
-
-      // Delete user stocks
-      const { error: stocksError } = await supabase
-        .from('user_stocks')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (stocksError) {
-        console.error('Error deleting stocks:', stocksError);
-        throw stocksError;
-      }
-
-      // Delete posts and related data
-      const { error: postsError } = await supabase
-        .from('posts')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (postsError) {
-        console.error('Error deleting posts:', postsError);
-        throw postsError;
-      }
-
-      // Delete comments
-      const { error: commentsError } = await supabase
-        .from('comments')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (commentsError) {
-        console.error('Error deleting comments:', commentsError);
-        throw commentsError;
-      }
-
-      // Delete reactions
+      // 1. Delete reactions first (depends on posts and user)
       const { error: reactionsError } = await supabase
         .from('reactions')
         .delete()
@@ -257,7 +204,84 @@ const AdminUsers = () => {
         throw reactionsError;
       }
 
-      // Finally delete the profile
+      // 2. Delete comments (depends on posts and user)
+      const { error: commentsError } = await supabase
+        .from('comments')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (commentsError) {
+        console.error('Error deleting comments:', commentsError);
+        throw commentsError;
+      }
+
+      // 3. Delete posts (depends on user)
+      const { error: postsError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (postsError) {
+        console.error('Error deleting posts:', postsError);
+        throw postsError;
+      }
+
+      // 4. Delete messages
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        throw messagesError;
+      }
+
+      // 5. Delete gifts (use correct column name: receiver_id)
+      const { error: giftsError } = await supabase
+        .from('gifts')
+        .delete()
+        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
+
+      if (giftsError) {
+        console.error('Error deleting gifts:', giftsError);
+        throw giftsError;
+      }
+
+      // 6. Delete user stocks
+      const { error: stocksError } = await supabase
+        .from('user_stocks')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (stocksError) {
+        console.error('Error deleting stocks:', stocksError);
+        throw stocksError;
+      }
+
+      // 7. Delete user varieties
+      const { error: varietiesError } = await supabase
+        .from('user_varieties')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (varietiesError) {
+        console.error('Error deleting user varieties:', varietiesError);
+        throw varietiesError;
+      }
+
+      // 8. Delete user notice reads
+      const { error: noticeReadsError } = await supabase
+        .from('user_notice_reads')
+        .delete()
+        .eq('user_id', deletingUser.id);
+
+      if (noticeReadsError) {
+        console.error('Error deleting notice reads:', noticeReadsError);
+        throw noticeReadsError;
+      }
+
+      // 9. Finally delete the profile
       const { error: profileDeleteError } = await supabase
         .from('profiles')
         .delete()
@@ -272,7 +296,7 @@ const AdminUsers = () => {
       
       toast({
         title: "সফল",
-        description: "ইউজার সম্পূর্ণভাবে মুছে ফেলা হয়েছে",
+        description: "ইউজার এবং তার সকল এক্টিভিটি সম্পূর্ণভাবে মুছে ফেলা হয়েছে",
       });
       
       setIsDeleteDialogOpen(false);
@@ -294,7 +318,7 @@ const AdminUsers = () => {
       } else if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
         errorMessage = "অনুমতি নেই। অ্যাডমিন রোল চেক করুন";
       } else if (error.code === '23503' || error.message?.includes('foreign key')) {
-        errorMessage = "এই ইউজারের সাথে সম্পর্কিত ডাটা আগে মুছতে হবে";
+        errorMessage = "ফরেইন কী কনস্ট্রেইন্ট এরর - সব সম্পর্কিত ডাটা মুছতে পারেনি";
       } else if (error.message?.includes('User not found')) {
         errorMessage = "ইউজার পাওয়া যায়নি";
       } else if (error.message?.includes('auth.uid()')) {
