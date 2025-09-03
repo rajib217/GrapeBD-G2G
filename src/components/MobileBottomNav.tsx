@@ -3,7 +3,12 @@ import {
   Gift, 
   MessageSquare, 
   User,
-  Home
+  Home,
+  Users,
+  Leaf,
+  Clock,
+  Bell,
+  UserCheck
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +17,8 @@ import { useAuth } from '@/contexts/AuthContext';
 interface MobileBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdminView?: boolean;
+  onAdminViewToggle?: (isAdmin: boolean) => void;
 }
 
 interface NavItem {
@@ -21,7 +28,7 @@ interface NavItem {
   badge?: number;
 }
 
-const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
+const MobileBottomNav = ({ activeTab, onTabChange, isAdminView = false, onAdminViewToggle }: MobileBottomNavProps) => {
   const { profile } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -47,7 +54,7 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  const navItems: NavItem[] = [
+  const normalNavItems: NavItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
     { id: 'stock', label: 'স্টক', icon: Sprout },
     { id: 'send', label: 'গিফট', icon: Gift },
@@ -59,6 +66,16 @@ const MobileBottomNav = ({ activeTab, onTabChange }: MobileBottomNavProps) => {
     },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
+
+  const adminNavItems: NavItem[] = [
+    { id: 'users', label: 'ইউজার', icon: Users },
+    { id: 'gifts', label: 'গিফট', icon: Gift },
+    { id: 'varieties', label: 'জাত', icon: Leaf },
+    { id: 'notices', label: 'নোটিশ', icon: Bell },
+    { id: 'messages', label: 'ম্যাসেজ', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
+  ];
+
+  const navItems = isAdminView ? adminNavItems : normalNavItems;
 
   const handleTabClick = useCallback((tabId: string) => {
     onTabChange(tabId);

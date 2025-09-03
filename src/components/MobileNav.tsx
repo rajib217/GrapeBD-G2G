@@ -34,11 +34,15 @@ interface MenuItem {
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  isAdminView?: boolean;
+  onAdminViewToggle?: (isAdmin: boolean) => void;
 }
 
 const MobileNav = ({ 
   activeTab, 
-  onTabChange
+  onTabChange,
+  isAdminView = false,
+  onAdminViewToggle
 }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   const { profile, signOut } = useAuth();
@@ -54,18 +58,23 @@ const MobileNav = ({
   }, [signOut]);
 
   const handleAdminClick = useCallback(() => {
-    if (profile?.role === 'admin') {
-      navigate('/admin');
+    if (profile?.role === 'admin' && onAdminViewToggle) {
+      onAdminViewToggle(!isAdminView);
+      if (!isAdminView) {
+        onTabChange('users');
+      } else {
+        onTabChange('home');
+      }
       setOpen(false);
     }
-  }, [profile?.role, navigate]);
+  }, [profile?.role, onAdminViewToggle, isAdminView, onTabChange]);
 
   const handleTabClick = useCallback((tab: string) => {
     onTabChange(tab);
     setOpen(false);
   }, [onTabChange]);
 
-  const menuItems: MenuItem[] = [
+  const normalMenuItems: MenuItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
     { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
     { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
@@ -77,6 +86,18 @@ const MobileNav = ({
     { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
     { id: 'profile', label: 'প্রোফাইল', icon: User },
   ];
+
+  const adminMenuItems: MenuItem[] = [
+    { id: 'users', label: 'ব্যবহারকারীগণ', icon: Users },
+    { id: 'gifts', label: 'উপহার পরিচালনা', icon: Gift },
+    { id: 'varieties', label: 'জাত পরিচালনা', icon: Leaf },
+    { id: 'gift-rounds', label: 'উপহার রাউন্ড', icon: Clock },
+    { id: 'notices', label: 'নোটিশ পরিচালনা', icon: Bell },
+    { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
+    { id: 'all-members', label: 'সকল সদস্য', icon: UserCheck },
+  ];
+
+  const menuItems = isAdminView ? adminMenuItems : normalMenuItems;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -122,13 +143,13 @@ const MobileNav = ({
               <>
                 <Separator className="my-3 bg-primary-foreground/20" />
                 <Button
-                  variant="secondary"
+                  variant={isAdminView ? "default" : "secondary"}
                   size="sm"
                   onClick={handleAdminClick}
                   className="w-full flex items-center justify-center"
                 >
                   <Shield className="h-4 w-4 mr-2" />
-                  অ্যাডমিন প্যানেল
+                  {isAdminView ? 'নরমাল ভিউ' : 'অ্যাডমিন প্যানেল'}
                 </Button>
               </>
             )}

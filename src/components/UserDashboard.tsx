@@ -14,12 +14,18 @@ import SeedlingStock from './SeedlingStock';
 import SendGift from './SendGift';
 import AllMembers from './AllMembers';
 import GiftHistory from './GiftHistory';
+import AdminUsers from './admin/AdminUsers';
+import AdminGifts from './admin/AdminGifts';
+import AdminVarieties from './admin/AdminVarieties';
+import AdminGiftRounds from './admin/AdminGiftRounds';
+import AdminNotices from './admin/AdminNotices';
 
 import MobileNav from './MobileNav';
 import MobileBottomNav from './MobileBottomNav';
 
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [isAdminView, setIsAdminView] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -32,29 +38,52 @@ const UserDashboard = () => {
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'home':
-        return <SocialFeed />;
-      case 'my-gifts':
-        return <MyGifts />;
-      case 'notices':
-        return <UserNotices />;
-      case 'messages':
-        return <Messages />;
-      case 'profile':
-        return <ProfileEdit />;
-      case 'add-seedling':
-        return <AddSeedling />;
-      case 'stock':
-        return <SeedlingStock />;
-      case 'send':
-        return <SendGift />;
-      case 'all-members':
-        return <AllMembers />;
-      case 'gift-history':
-        return <GiftHistory />;
-      default:
-        return <SocialFeed />;
+    if (isAdminView) {
+      // Admin view content
+      switch (activeTab) {
+        case 'users':
+          return <AdminUsers />;
+        case 'gifts':
+          return <AdminGifts />;
+        case 'varieties':
+          return <AdminVarieties />;
+        case 'gift-rounds':
+          return <AdminGiftRounds />;
+        case 'notices':
+          return <AdminNotices />;
+        case 'messages':
+          return <Messages />;
+        case 'all-members':
+          return <AllMembers />;
+        default:
+          return <AdminUsers />;
+      }
+    } else {
+      // Normal user view content
+      switch (activeTab) {
+        case 'home':
+          return <SocialFeed />;
+        case 'my-gifts':
+          return <MyGifts />;
+        case 'notices':
+          return <UserNotices />;
+        case 'messages':
+          return <Messages />;
+        case 'profile':
+          return <ProfileEdit />;
+        case 'add-seedling':
+          return <AddSeedling />;
+        case 'stock':
+          return <SeedlingStock />;
+        case 'send':
+          return <SendGift />;
+        case 'all-members':
+          return <AllMembers />;
+        case 'gift-history':
+          return <GiftHistory />;
+        default:
+          return <SocialFeed />;
+      }
     }
   };
 
@@ -126,6 +155,8 @@ const UserDashboard = () => {
               <MobileNav 
                 activeTab={activeTab} 
                 onTabChange={setActiveTab}
+                isAdminView={isAdminView}
+                onAdminViewToggle={setIsAdminView}
               />
             </div>
             <div className="flex items-center space-x-4">
@@ -145,7 +176,12 @@ const UserDashboard = () => {
       </div>
       
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <MobileBottomNav 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        isAdminView={isAdminView}
+        onAdminViewToggle={setIsAdminView}
+      />
       
       {/* Add bottom padding for mobile bottom nav */}
       <div className="h-20 md:hidden"></div>
