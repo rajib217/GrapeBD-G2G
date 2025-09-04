@@ -129,29 +129,33 @@ export async function setupPushNotifications(userId: string) {
 // Function to save the FCM token to your backend (Supabase)
 async function saveTokenToBackend(token: string, userId: string) {
     try {
-        // Store FCM token in localStorage for now
-        localStorage.setItem(`fcm_token_${userId}`, token);
-        console.info('[Notification] FCM Token stored locally:', token);
-        
-        // TODO: Save to Supabase database when fcm_tokens table is created
-        /*
+        // Save FCM token to Supabase database
         const { error } = await supabase
           .from('fcm_tokens')
           .upsert({ 
             user_id: userId, 
             token: token,
+            device_info: {
+              userAgent: navigator.userAgent,
+              platform: navigator.platform,
+              timestamp: new Date().toISOString()
+            },
             updated_at: new Date().toISOString()
           });
           
         if (error) {
           console.error('[Notification] Error saving token to database:', error);
+          // Fallback to localStorage
+          localStorage.setItem(`fcm_token_${userId}`, token);
           return false;
         }
-        */
         
+        console.info('[Notification] FCM Token saved to database:', token);
         return true;
     } catch (error) {
         console.error('[Notification] Error in saveTokenToBackend:', error);
+        // Fallback to localStorage
+        localStorage.setItem(`fcm_token_${userId}`, token);
         return false;
     }
 }
