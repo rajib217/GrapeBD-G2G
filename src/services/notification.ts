@@ -75,7 +75,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 import { supabase } from '@/integrations/supabase/client';
-const VAPID_PUBLIC_KEY = 'BHOcfClbpLGoR2iejzJBPrBoChOvTmZVrxBJZR4qBJrZ0HoYWcifnM7lJHk9gPp8GypASgIgO9ORV6SXiq-iA-M';
+import { generateFCMToken, onForegroundMessage } from './firebase';
+
 export async function setupPushNotifications(userId: string) {
   try {
     // Check if service worker is ready
@@ -92,27 +93,29 @@ export async function setupPushNotifications(userId: string) {
     }
 
     if (Notification.permission === 'granted') {
-      // Check if already subscribed
-      const existingSubscription = await registration.pushManager.getSubscription();
-
-      if (existingSubscription) {
-          console.info('[Notification] Already subscribed', existingSubscription);
-          // Optionally, send existing subscription to backend if not already saved
-          return true;
+      // Generate FCM token
+      const token = await generateFCMToken();
+      
+      if (token) {
+        console.info('[Notification] FCM Token received:', token);
+        
+        // Send token to your backend
+        await saveTokenToBackend(token, userId);
+        
+        // Set up foreground message listener
+        onForegroundMessage((payload) => {
+          const { notification, data } = payload;
+          if (notification) {
+            showNotification(notification.title, {
+              body: notification.body,
+              tag: data?.tag || 'fcm-message',
+              data: data
+            });
+          }
+        });
+        
+        return true;
       }
-
-      const subscribeOptions = {
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      };
-
-      const subscription = await registration.pushManager.subscribe(subscribeOptions);
-
-      console.info('[Notification] Push subscribed:', subscription);
-
-      // Send subscription to your backend
-      await saveSubscriptionToBackend(subscription, userId);
-      return true;
     }
 
     console.warn('[Notification] Notification permission not granted');
@@ -123,19 +126,32 @@ export async function setupPushNotifications(userId: string) {
   }
 }
 
-// Function to save the subscription to your backend (Supabase)
-async function saveSubscriptionToBackend(subscription: PushSubscription, userId: string) {
-    // Convert PushSubscription object to a plain object
-    const subscriptionData = subscription.toJSON();
-
+// Function to save the FCM token to your backend (Supabase)
+async function saveTokenToBackend(token: string, userId: string) {
     try {
-        // Store subscription info in localStorage for now since table doesn't exist
-        localStorage.setItem(`push_subscription_${userId}`, JSON.stringify(subscriptionData));
-        console.info('[Notification] Subscription stored locally:', subscriptionData);
+        // Store FCM token in localStorage for now
+        localStorage.setItem(`fcm_token_${userId}`, token);
+        console.info('[Notification] FCM Token stored locally:', token);
+        
+        // TODO: Save to Supabase database when fcm_tokens table is created
+        /*
+        const { error } = await supabase
+          .from('fcm_tokens')
+          .upsert({ 
+            user_id: userId, 
+            token: token,
+            updated_at: new Date().toISOString()
+          });
+          
+        if (error) {
+          console.error('[Notification] Error saving token to database:', error);
+          return false;
+        }
+        */
+        
         return true;
-
     } catch (error) {
-        console.error('[Notification] Error in saveSubscriptionToBackend:', error);
+        console.error('[Notification] Error in saveTokenToBackend:', error);
         return false;
     }
 }
