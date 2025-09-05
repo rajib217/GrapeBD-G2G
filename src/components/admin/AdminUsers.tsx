@@ -156,140 +156,16 @@ const AdminUsers = () => {
     }
     
     try {
-      // Check if we have an active session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw new Error('Session expired');
-      }
-      if (!session) {
-        throw new Error('No active session');
-      }
+      console.log('Starting delete process for user:', deletingUser.user_id);
 
-      console.log('Starting delete process for user:', deletingUser.id);
+      // Use the new admin_delete_user function that properly deletes from auth.users
+      const { error } = await supabase.rpc('admin_delete_user', {
+        target_user_id: deletingUser.user_id
+      });
 
-      // Now check user role
-      console.log('Checking current user role...');
-      const { data: currentUser, error: roleError } = await supabase.auth.getUser();
-      if (roleError) {
-        console.error('Error getting current user:', roleError);
-        throw roleError;
-      }
-
-      const { data: userRole, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', currentUser.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error checking user role:', profileError);
-        throw profileError;
-      }
-
-      if (userRole?.role !== 'admin') {
-        throw new Error('Only admins can delete users');
-      }
-
-      // Delete in proper order to avoid foreign key constraints
-
-      // 1. Delete reactions first (depends on posts and user)
-      const { error: reactionsError } = await supabase
-        .from('reactions')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (reactionsError) {
-        console.error('Error deleting reactions:', reactionsError);
-        throw reactionsError;
-      }
-
-      // 2. Delete comments (depends on posts and user)
-      const { error: commentsError } = await supabase
-        .from('comments')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (commentsError) {
-        console.error('Error deleting comments:', commentsError);
-        throw commentsError;
-      }
-
-      // 3. Delete posts (depends on user)
-      const { error: postsError } = await supabase
-        .from('posts')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (postsError) {
-        console.error('Error deleting posts:', postsError);
-        throw postsError;
-      }
-
-      // 4. Delete messages
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
-
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-        throw messagesError;
-      }
-
-      // 5. Delete gifts (use correct column name: receiver_id)
-      const { error: giftsError } = await supabase
-        .from('gifts')
-        .delete()
-        .or(`sender_id.eq.${deletingUser.id},receiver_id.eq.${deletingUser.id}`);
-
-      if (giftsError) {
-        console.error('Error deleting gifts:', giftsError);
-        throw giftsError;
-      }
-
-      // 6. Delete user stocks
-      const { error: stocksError } = await supabase
-        .from('user_stocks')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (stocksError) {
-        console.error('Error deleting stocks:', stocksError);
-        throw stocksError;
-      }
-
-      // 7. Delete user varieties
-      const { error: varietiesError } = await supabase
-        .from('user_varieties')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (varietiesError) {
-        console.error('Error deleting user varieties:', varietiesError);
-        throw varietiesError;
-      }
-
-      // 8. Delete user notice reads
-      const { error: noticeReadsError } = await supabase
-        .from('user_notice_reads')
-        .delete()
-        .eq('user_id', deletingUser.id);
-
-      if (noticeReadsError) {
-        console.error('Error deleting notice reads:', noticeReadsError);
-        throw noticeReadsError;
-      }
-
-      // 9. Finally delete the profile
-      const { error: profileDeleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', deletingUser.id);
-
-      if (profileDeleteError) {
-        console.error('Error deleting profile:', profileDeleteError);
-        throw profileDeleteError;
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
       }
 
       console.log('User and all related data deleted successfully');
