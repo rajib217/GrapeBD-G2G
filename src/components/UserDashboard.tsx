@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '@/hooks/use-notifications';
 import MyGifts from './MyGifts';
 import SocialFeed from './SocialFeed';
 import UserNotices from './UserNotices';
@@ -28,6 +29,9 @@ const UserDashboard = () => {
   const [isAdminView, setIsAdminView] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  
+  // Initialize notifications
+  useNotifications();
 
   const handleSignOut = async () => {
     try {
