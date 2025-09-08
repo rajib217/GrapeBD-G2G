@@ -3,12 +3,13 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAI1JBYRF4hZZOmwdSk5QKraGQ_zxqWPZI",
-  authDomain: "grape-bd-g2g.firebaseapp.com",
-  projectId: "grape-bd-g2g",
-  storageBucket: "grape-bd-g2g.firebasestorage.app",
-  messagingSenderId: "95985049833",
-  appId: "1:95985049833:web:2e1b9b0d993fd04b855078"
+  apiKey: "AIzaSyBrliuKAtFG0fHenlzFDeGKK8cyhEXfr8U",
+  authDomain: "grapebd-g2gv2.firebaseapp.com",
+  projectId: "grapebd-g2gv2",
+  storageBucket: "grapebd-g2gv2.firebasestorage.app",
+  messagingSenderId: "698951709124",
+  appId: "1:698951709124:web:46eaf3ab51d6430148f491",
+  measurementId: "G-ZGP4K7KWYX"
 };
 
 // Initialize Firebase
