@@ -26,8 +26,54 @@ export function useNotifications() {
   };
 
   useEffect(() => {
-    if (!profile?.id || !notificationsEnabled) {
-      console.info('[useNotifications] Skipping subscription: profile or notifications not enabled');
+    // Diagnostic logging to help debug why subscription is skipped
+    console.info('[useNotifications] Check subscription conditions:', {
+      profileId: profile?.id,
+      notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+      notificationsEnabled
+    });
+
+    if (!profile?.id) {
+      console.info('[useNotifications] No profile yet, skipping subscription');
+      return;
+    }
+
+    // If permission already granted, ensure we have a push subscription / FCM token
+    const tryEnableAndSubscribe = async () => {
+      try {
+        if (typeof Notification === 'undefined') {
+          console.warn('[useNotifications] Notifications unsupported in this environment');
+          return;
+        }
+
+        if (Notification.permission === 'granted') {
+          if (!notificationsEnabled) {
+            console.info('[useNotifications] Permission granted — setting up push notifications');
+            const success = await setupPushNotifications(profile.id);
+            setNotificationsEnabled(success);
+          }
+        } else if (Notification.permission === 'default') {
+          // Ask once if the user hasn't previously rejected
+          const previouslyRejected = localStorage.getItem('notificationRejected') === 'true';
+          if (!previouslyRejected) {
+            console.info('[useNotifications] Prompting user for notification permission');
+            await enableNotifications();
+          } else {
+            console.info('[useNotifications] User previously rejected notifications');
+          }
+        } else {
+          console.info('[useNotifications] Notification permission denied');
+        }
+      } catch (err) {
+        console.error('[useNotifications] Error while enabling notifications:', err);
+      }
+    };
+
+    void tryEnableAndSubscribe();
+
+    // Only subscribe to realtime channels when notificationsEnabled becomes true
+    if (!notificationsEnabled) {
+      console.info('[useNotifications] Notifications not enabled yet — skipping realtime channels');
       return;
     }
 

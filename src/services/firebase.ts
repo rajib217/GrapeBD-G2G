@@ -34,10 +34,34 @@ export async function generateFCMToken() {
   }
 
   try {
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY
+    // Prefer an explicit service worker registration for messaging.
+    // This ensures the FCM token is associated with the correct SW (firebase-messaging-sw.js).
+    let swRegistration: ServiceWorkerRegistration | undefined;
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      try {
+        // Try to get the registration for the firebase messaging SW first
+        swRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js') || (await navigator.serviceWorker.ready);
+      } catch (swErr) {
+        // navigator.serviceWorker.getRegistration may throw in some contexts; fall back to ready
+        try {
+          swRegistration = await navigator.serviceWorker.ready;
+        } catch {
+          swRegistration = undefined;
+        }
+      }
+    }
+
+    console.info('[firebase] serviceWorkerRegistration for getToken:', swRegistration && {
+      scope: swRegistration.scope,
+      activeScript: swRegistration.active && swRegistration.active.scriptURL
     });
-    
+
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      // Only pass the registration if available; Firebase will use the default otherwise.
+      serviceWorkerRegistration: swRegistration as any
+    });
+
     if (token) {
       console.log('FCM Token generated:', token);
       return token;
