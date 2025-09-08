@@ -26,7 +26,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 }
 
 // VAPID key from Firebase Console
-const VAPID_KEY = 'BHOcfClbpLGoR2iejzJBPrBoChOvTmZVrxBJZR4qBJrZ0HoYWcifnM7lJHk9gPp8GypASgIgO9ORV6SXiq-iA-M';
+const VAPID_KEY = 'BLOSesp2v-l2UwNR5K_iaGJFL624uDecutcP0gFZdlGYVnXqiq1FzBpYk__dpijATSM1oeuGRj8lyUmZDu5nZmM';
 
 export async function generateFCMToken() {
   if (!messaging) {
