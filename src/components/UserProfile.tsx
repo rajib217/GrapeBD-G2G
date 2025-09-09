@@ -24,24 +24,12 @@ interface UserProfile {
   created_at: string;
 }
 
-interface Post {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  created_at: string;
-  user_id: string;
-  reactions?: any[];
-  comments?: any[];
-}
-
 const UserProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userVarieties, setUserVarieties] = useState<any[]>([]);
   const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<any[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [postsLoading, setPostsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -107,60 +95,7 @@ const UserProfile = () => {
     };
 
     fetchProfile();
-    // fetch posts when profile is loaded
-    // (we'll call fetchUserPosts after profile is set)
   }, [userId, toast]);
-
-  useEffect(() => {
-    // When profile is available load their posts
-    if (!profile) return;
-    const fetchUserPosts = async () => {
-      setPostsLoading(true);
-      try {
-        const { data: userPosts, error: postsError } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            content,
-            image_url,
-            created_at,
-            user_id
-          `)
-          .eq('user_id', profile.id)
-          .order('created_at', { ascending: false })
-          .limit(100);
-
-        if (postsError) throw postsError;
-
-        const postIds = userPosts?.map((p: any) => p.id) || [];
-
-        // fetch reactions and comments for counts
-        const { data: reactions } = await supabase
-          .from('reactions')
-          .select('post_id')
-          .in('post_id', postIds);
-
-        const { data: comments } = await supabase
-          .from('comments')
-          .select('post_id')
-          .in('post_id', postIds);
-
-        const postsWithMeta = (userPosts || []).map((p: any) => ({
-          ...p,
-          reactions: (reactions || []).filter((r: any) => r.post_id === p.id),
-          comments: (comments || []).filter((c: any) => c.post_id === p.id),
-        }));
-
-        setPosts(postsWithMeta);
-      } catch (error) {
-        console.error('Error fetching user posts:', error);
-      } finally {
-        setPostsLoading(false);
-      }
-    };
-
-    fetchUserPosts();
-  }, [profile]);
 
   if (loading) {
     return <div className="text-center py-8">লোড হচ্ছে...</div>;
@@ -215,11 +150,10 @@ const UserProfile = () => {
         </div>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 gap-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic">মূল তথ্য</TabsTrigger>
             <TabsTrigger value="varieties">ব্যক্তিগত জাত</TabsTrigger>
             <TabsTrigger value="gifts">প্রাপ্ত গিফট</TabsTrigger>
-            <TabsTrigger value="statuses">স্ট্যাটাস</TabsTrigger>
           </TabsList>
 
           {/* Basic Information Tab */}
@@ -320,40 +254,6 @@ const UserProfile = () => {
                     day: 'numeric',
                   })}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Statuses Tab */}
-          <TabsContent value="statuses">
-            <Card>
-              <CardHeader>
-                <CardTitle>{profile.full_name} এর স্ট্যাটাসসমূহ</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {postsLoading ? (
-                  <div className="text-center py-8">লোড হচ্ছে...</div>
-                ) : posts.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">এখনও কোন স্ট্যাটাস নেই</div>
-                ) : (
-                  <div className="space-y-4">
-                    {posts.map(post => (
-                      <div key={post.id} className="border rounded-lg p-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-sm text-muted-foreground">{new Date(post.created_at).toLocaleString('bn-BD')}</p>
-                            {post.content && <p className="mt-2 text-gray-900 whitespace-pre-wrap">{post.content}</p>}
-                            {post.image_url && <img src={post.image_url} alt="post" className="w-full max-h-80 object-cover rounded-md mt-3" />}
-                          </div>
-                          <div className="text-sm text-gray-500 text-right ml-4">
-                            <div>{(post.reactions || []).length} প্রতিক্রিয়া</div>
-                            <div>{(post.comments || []).length} মন্তব্য</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
