@@ -90,6 +90,42 @@ try {
     e.waitUntil(self.clients.claim());
   });
 
+  // Fallback: also listen for raw push events (data-only messages)
+  // This helps when server sends data-only payloads that may not trigger
+  // firebase.messaging() handlers depending on payload or SDK mismatch.
+  self.addEventListener('push', function(event) {
+    try {
+      console.log('SW push event received:', event);
+      if (event.data) {
+        let payloadText = event.data.text();
+        console.log('SW push payload text:', payloadText);
+        let payload = null;
+        try {
+          payload = JSON.parse(payloadText);
+        } catch (err) {
+          // Not JSON — show raw text
+        }
+
+        const title = (payload && (payload.notification?.title || payload.title)) || 'নতুন বার্তা';
+        const body = (payload && (payload.notification?.body || payload.body)) || payloadText || 'আপনার জন্য নতুন বার্তা এসেছে';
+
+        const showOptions = {
+          body,
+          icon: '/pwa/manifest-icon-192.png',
+          badge: '/pwa/manifest-icon-192.png',
+          data: payload?.data || payload || null,
+          tag: payload?.data?.tag || (payload && payload.tag) || 'push-message',
+        };
+
+        event.waitUntil(self.registration.showNotification(title, showOptions));
+      } else {
+        console.log('SW push event had no data');
+      }
+    } catch (err) {
+      console.error('Error handling SW push event:', err);
+    }
+  });
+
 } catch (err) {
   console.error('Error initializing firebase in messaging SW:', err);
 }
