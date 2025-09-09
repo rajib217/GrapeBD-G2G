@@ -144,8 +144,13 @@ async function saveTokenToBackend(token: string, userId: string) {
           });
           
         if (error) {
+          // Row-Level Security (RLS) or other permission errors will surface here.
           console.error('[Notification] Error saving token to database:', error);
-          // Fallback to localStorage
+          // PostgREST / Supabase client returns `code` on permission errors (e.g. '42501')
+          if (error.code === '42501' || (typeof error.message === 'string' && error.message.toLowerCase().includes('row-level security'))) {
+            console.warn('[Notification] Likely RLS permission error. Ensure the client is authenticated and the provided user id matches auth.uid().');
+          }
+          // Fallback to localStorage using the provided auth user id
           localStorage.setItem(`fcm_token_${userId}`, token);
           return false;
         }
@@ -154,8 +159,12 @@ async function saveTokenToBackend(token: string, userId: string) {
         return true;
     } catch (error) {
         console.error('[Notification] Error in saveTokenToBackend:', error);
-        // Fallback to localStorage
-        localStorage.setItem(`fcm_token_${userId}`, token);
+        // Fallback to localStorage using the provided auth user id
+        try {
+          localStorage.setItem(`fcm_token_${userId}`, token);
+        } catch (e) {
+          console.warn('[Notification] Could not write fallback token to localStorage:', e);
+        }
         return false;
     }
 }

@@ -1,6 +1,8 @@
 // Firebase messaging service worker
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+// Use a newer compat release to stay compatible with modern Firebase SDKs.
+// If you upgrade the firebase SDK in package.json, consider updating these importScripts versions accordingly.
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
 // Firebase configuration
 const firebaseConfig = {
@@ -13,64 +15,81 @@ const firebaseConfig = {
   measurementId: "G-ZGP4K7KWYX"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase inside a try/catch to surface issues in the worker
+try {
+  firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase Messaging
-const messaging = firebase.messaging();
+  // Initialize Firebase Messaging
+  const messaging = firebase.messaging();
 
-// Handle background messages
-messaging.onBackgroundMessage(function(payload) {
-  console.log('Background message received:', payload);
-  
-  const notificationTitle = payload.notification?.title || 'নতুন বার্তা';
-  const notificationOptions = {
-    body: payload.notification?.body || 'আপনার জন্য নতুন বার্তা এসেছে',
-    icon: '/pwa/manifest-icon-192.png',
-    badge: '/pwa/manifest-icon-192.png',
-    tag: payload.data?.tag || 'default',
-    data: payload.data,
-    requireInteraction: true,
-    actions: [
-      {
-        action: 'open',
-        title: 'খুলুন'
-      },
-      {
-        action: 'close',
-        title: 'বন্ধ করুন'
-      }
-    ]
-  };
+  // Handle background messages
+  messaging.onBackgroundMessage(function(payload) {
+    console.log('Background message received:', payload);
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Handle notification click
-self.addEventListener('notificationclick', function(event) {
-  console.log('Notification clicked:', event);
-  
-  event.notification.close();
-  
-  if (event.action === 'close') {
-    return;
-  }
-  
-  // Open the app when notification is clicked
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // If the app is already open, focus on it
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
+    const notificationTitle = payload.notification?.title || 'নতুন বার্তা';
+    const notificationOptions = {
+      body: payload.notification?.body || 'আপনার জন্য নতুন বার্তা এসেছে',
+      icon: '/pwa/manifest-icon-192.png',
+      badge: '/pwa/manifest-icon-192.png',
+      tag: payload.data?.tag || 'default',
+      data: payload.data,
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'open',
+          title: 'খুলুন'
+        },
+        {
+          action: 'close',
+          title: 'বন্ধ করুন'
         }
-      }
-      
-      // If the app is not open, open it
-      if (clients.openWindow) {
-        return clients.openWindow('/');
-      }
-    })
-  );
-});
+      ]
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+
+  // Handle notification click
+  self.addEventListener('notificationclick', function(event) {
+    console.log('Notification clicked:', event);
+
+    event.notification.close();
+
+    if (event.action === 'close') {
+      return;
+    }
+
+    // Open the app when notification is clicked
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+        // If the app is already open, focus on it
+        for (let i = 0; i < clientList.length; i++) {
+          const client = clientList[i];
+          try {
+            if (client.url.includes(self.location.origin) && 'focus' in client) {
+              return client.focus();
+            }
+          } catch (err) {
+            // ignore cross-origin clients
+          }
+        }
+
+        // If the app is not open, open it
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
+  });
+
+  // Ensure the messaging SW activates promptly
+  self.addEventListener('install', (e) => {
+    self.skipWaiting();
+  });
+  self.addEventListener('activate', (e) => {
+    e.waitUntil(self.clients.claim());
+  });
+
+} catch (err) {
+  console.error('Error initializing firebase in messaging SW:', err);
+}

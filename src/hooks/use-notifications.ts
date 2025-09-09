@@ -19,8 +19,10 @@ export function useNotifications() {
 
   const enableNotifications = async () => {
     const granted = await requestNotificationPermission();
-    if (granted && profile?.id) {
-      const success = await setupPushNotifications(profile.id);
+    // Pass the auth user's id (profile.user_id) — the fcm_tokens RLS policy expects auth.uid() = user_id
+    const authUserId = profile?.user_id ?? profile?.id;
+    if (granted && authUserId) {
+      const success = await setupPushNotifications(authUserId);
       setNotificationsEnabled(success);
     }
   };
@@ -49,7 +51,9 @@ export function useNotifications() {
         if (Notification.permission === 'granted') {
           if (!notificationsEnabled) {
             console.info('[useNotifications] Permission granted — setting up push notifications');
-            const success = await setupPushNotifications(profile.id);
+            // Use the auth user id (profile.user_id) for backend upsert to satisfy RLS policies
+            const authUserId = profile.user_id ?? profile.id;
+            const success = await setupPushNotifications(authUserId);
             setNotificationsEnabled(success);
           }
         } else if (Notification.permission === 'default') {
