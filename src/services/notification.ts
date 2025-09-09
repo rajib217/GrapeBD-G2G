@@ -130,6 +130,7 @@ export async function setupPushNotifications(userId: string) {
 async function saveTokenToBackend(token: string, userId: string) {
     try {
         // Save FCM token to Supabase database
+        // Use onConflict for the composite unique constraint (user_id, token)
         const { error } = await supabase
           .from('fcm_tokens')
           .upsert({ 
@@ -141,15 +142,21 @@ async function saveTokenToBackend(token: string, userId: string) {
               timestamp: new Date().toISOString()
             },
             updated_at: new Date().toISOString()
-          });
-          
+          }, { onConflict: 'user_id,token' });
+
         if (error) {
-          // Row-Level Security (RLS) or other permission errors will surface here.
+          // Handle duplicate key (token already present) as a success case
           console.error('[Notification] Error saving token to database:', error);
+          if (error.code === '23505') {
+            console.warn('[Notification] Token already exists in database (duplicate). Treating as success.');
+            return true;
+          }
+
           // PostgREST / Supabase client returns `code` on permission errors (e.g. '42501')
           if (error.code === '42501' || (typeof error.message === 'string' && error.message.toLowerCase().includes('row-level security'))) {
             console.warn('[Notification] Likely RLS permission error. Ensure the client is authenticated and the provided user id matches auth.uid().');
           }
+
           // Fallback to localStorage using the provided auth user id
           localStorage.setItem(`fcm_token_${userId}`, token);
           return false;
