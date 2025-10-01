@@ -31,14 +31,42 @@ serve(async (req) => {
 
     const { user_id, title, body, data }: NotificationPayload = await req.json()
 
-    // Get user's FCM tokens
-    const { data: tokens, error: tokenError } = await supabaseClient
+    // Resolve auth user_id if a profile id was provided
+    let targetUserId = user_id
+    let tokens: { token: string }[] | null = null
+
+    // Try direct lookup first (assumes auth.user id)
+    let { data: directTokens, error: directErr } = await supabaseClient
       .from('fcm_tokens')
       .select('token')
-      .eq('user_id', user_id)
+      .eq('user_id', targetUserId)
 
-    if (tokenError) {
-      throw tokenError
+    if (directErr) {
+      throw directErr
+    }
+
+    tokens = directTokens
+
+    // If none found, treat provided id as profile.id and resolve to auth uid
+    if (!tokens || tokens.length === 0) {
+      const { data: profile, error: profileErr } = await supabaseClient
+        .from('profiles')
+        .select('user_id')
+        .eq('id', targetUserId)
+        .single()
+
+      if (profileErr) {
+        // proceed; will return 404 below
+        console.log('Profile lookup failed or not found:', profileErr?.message)
+      } else if (profile?.user_id) {
+        targetUserId = profile.user_id
+        const { data: fallbackTokens, error: tokenError } = await supabaseClient
+          .from('fcm_tokens')
+          .select('token')
+          .eq('user_id', targetUserId)
+        if (tokenError) throw tokenError
+        tokens = fallbackTokens
+      }
     }
 
     if (!tokens || tokens.length === 0) {

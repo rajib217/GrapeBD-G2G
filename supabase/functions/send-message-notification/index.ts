@@ -31,18 +31,28 @@ serve(async (req) => {
       throw new Error('Sender not found')
     }
 
-    // Get receiver's FCM tokens
+    // Resolve receiver's auth user_id from profiles.id then get FCM tokens
+    const { data: receiverProfile, error: receiverErr } = await supabaseClient
+      .from('profiles')
+      .select('user_id')
+      .eq('id', receiver_id)
+      .single()
+
+    if (receiverErr || !receiverProfile?.user_id) {
+      throw new Error('Receiver profile not found or missing user_id')
+    }
+
     const { data: tokens, error: tokenError } = await supabaseClient
       .from('fcm_tokens')
       .select('token')
-      .eq('user_id', receiver_id)
+      .eq('user_id', receiverProfile.user_id)
 
     if (tokenError) {
       throw tokenError
     }
 
     if (!tokens || tokens.length === 0) {
-      console.log('No FCM tokens found for user:', receiver_id)
+      console.log('No FCM tokens found for user:', receiverProfile.user_id)
       return new Response(
         JSON.stringify({ message: 'No FCM tokens found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
