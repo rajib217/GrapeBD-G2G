@@ -96,6 +96,12 @@ serve(async (req) => {
         }),
       })
 
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('FCM API error:', response.status, errorText)
+        return { error: errorText, status: response.status }
+      }
+
       return response.json()
     })
 
