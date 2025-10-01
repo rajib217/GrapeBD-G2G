@@ -173,6 +173,21 @@ const Messages = () => {
 
       if (error) throw error;
 
+      // Invoke edge function to send push notification
+      try {
+        await supabase.functions.invoke('send-message-notification', {
+          body: {
+            record: {
+              receiver_id: selectedUser.id,
+              sender_id: profile.id,
+              content: newMessage.trim(),
+            },
+          },
+        });
+      } catch (notifyErr) {
+        console.warn('Notification invoke failed:', notifyErr);
+      }
+
       setNewMessage('');
       await fetchMessages(selectedUser.id);
       
