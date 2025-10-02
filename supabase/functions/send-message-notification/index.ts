@@ -6,6 +6,89 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper to get OAuth2 access token from service account
+async function getAccessToken() {
+  const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT')
+  if (!serviceAccountJson) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT not configured')
+  }
+
+  const serviceAccount = JSON.parse(serviceAccountJson)
+  const now = Math.floor(Date.now() / 1000)
+  
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  }
+  
+  const payload = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  }
+  
+  const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  
+  const signatureInput = `${encodedHeader}.${encodedPayload}`
+  
+  // Import private key
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(serviceAccount.private_key),
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256',
+    },
+    false,
+    ['sign']
+  )
+  
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    new TextEncoder().encode(signatureInput)
+  )
+  
+  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  
+  const jwt = `${signatureInput}.${encodedSignature}`
+  
+  // Exchange JWT for access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt
+    })
+  })
+  
+  if (!tokenResponse.ok) {
+    const error = await tokenResponse.text()
+    throw new Error(`Failed to get access token: ${error}`)
+  }
+  
+  const tokenData = await tokenResponse.json()
+  return tokenData.access_token
+}
+
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const b64 = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '')
+  const binary = atob(b64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes.buffer
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -20,14 +103,17 @@ serve(async (req) => {
     const { record } = await req.json()
     const { receiver_id, sender_id, content } = record
 
+    console.log('Processing message notification:', { receiver_id, sender_id })
+
     // Get sender name
-    const { data: sender } = await supabaseClient
+    const { data: sender, error: senderError } = await supabaseClient
       .from('profiles')
       .select('full_name')
       .eq('id', sender_id)
       .single()
 
-    if (!sender) {
+    if (senderError || !sender) {
+      console.error('Sender not found:', senderError)
       throw new Error('Sender not found')
     }
 
@@ -39,8 +125,11 @@ serve(async (req) => {
       .single()
 
     if (receiverErr || !receiverProfile?.user_id) {
+      console.error('Receiver profile not found:', receiverErr)
       throw new Error('Receiver profile not found or missing user_id')
     }
+
+    console.log('Looking up FCM tokens for user_id:', receiverProfile.user_id)
 
     const { data: tokens, error: tokenError } = await supabaseClient
       .from('fcm_tokens')
@@ -48,6 +137,7 @@ serve(async (req) => {
       .eq('user_id', receiverProfile.user_id)
 
     if (tokenError) {
+      console.error('Error fetching FCM tokens:', tokenError)
       throw tokenError
     }
 
@@ -59,42 +149,52 @@ serve(async (req) => {
       )
     }
 
-    // Firebase server key
-    const serverKey = Deno.env.get('FIREBASE_SERVER_KEY')
-    if (!serverKey) {
-      throw new Error('Firebase server key not configured')
-    }
+    console.log(`Found ${tokens.length} FCM tokens`)
 
-    // Send notification to each token
+    // Get access token for FCM v1 API
+    const accessToken = await getAccessToken()
+    
+    // Get project ID from service account
+    const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? '{}')
+    const projectId = serviceAccount.project_id
+
+    // Send notification to each token using FCM v1 API
     const notifications = tokens.map(async ({ token }) => {
-      const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `key=${serverKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: token,
-          notification: {
-            title: 'নতুন মেসেজ',
-            body: `${sender.full_name}: ${content}`,
-            icon: '/pwa/manifest-icon-192.png',
-            badge: '/pwa/manifest-icon-192.png',
+      const response = await fetch(
+        `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
           },
-          data: {
-            type: 'message',
-            sender_id,
-            sender_name: sender.full_name,
-            content,
-            click_action: '/messages',
-          },
-          webpush: {
-            fcm_options: {
-              link: '/messages'
+          body: JSON.stringify({
+            message: {
+              token: token,
+              notification: {
+                title: 'নতুন মেসেজ',
+                body: `${sender.full_name}: ${content}`,
+              },
+              data: {
+                type: 'message',
+                sender_id,
+                sender_name: sender.full_name,
+                content,
+                click_action: '/messages',
+              },
+              webpush: {
+                fcm_options: {
+                  link: '/messages'
+                },
+                notification: {
+                  icon: '/pwa/manifest-icon-192.png',
+                  badge: '/pwa/manifest-icon-192.png',
+                }
+              }
             }
-          }
-        }),
-      })
+          }),
+        }
+      )
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -106,6 +206,7 @@ serve(async (req) => {
     })
 
     const results = await Promise.all(notifications)
+    console.log('Notification results:', results)
     
     return new Response(
       JSON.stringify({ 
