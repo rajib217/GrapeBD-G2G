@@ -215,7 +215,31 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('FCM API error:', response.status, errorText)
+        let errorJson: any = null
+        try {
+          errorJson = JSON.parse(errorText)
+        } catch (_) {
+          // ignore JSON parse error
+        }
+
+        const isUnregistered =
+          response.status === 404 &&
+          !!(errorJson?.error?.details || []).find((d: any) => d?.errorCode === 'UNREGISTERED')
+
+        if (isUnregistered) {
+          console.warn('Pruning UNREGISTERED FCM token:', token)
+          const { error: delErr } = await supabaseClient
+            .from('fcm_tokens')
+            .delete()
+            .eq('user_id', targetUserId)
+            .eq('token', token)
+          if (delErr) {
+            console.error('Failed to delete invalid FCM token:', delErr)
+          }
+        } else {
+          console.error('FCM API error:', response.status, errorText)
+        }
+
         return { error: errorText, status: response.status }
       }
 
