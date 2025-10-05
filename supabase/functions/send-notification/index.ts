@@ -140,7 +140,7 @@ serve(async (req) => {
         .from('profiles')
         .select('user_id')
         .eq('id', targetUserId)
-        .single()
+        .maybeSingle()
 
       if (profileErr) {
         console.log('Profile lookup failed:', profileErr?.message)
