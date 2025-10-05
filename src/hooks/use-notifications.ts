@@ -75,11 +75,9 @@ export function useNotifications() {
 
     void tryEnableAndSubscribe();
 
-    // Only subscribe to realtime channels when notificationsEnabled becomes true
-    if (!notificationsEnabled) {
-      console.info('[useNotifications] Notifications not enabled yet — skipping realtime channels');
-      return;
-    }
+    // Subscribe to realtime channels regardless of push setup; showNotification will no-op if permission is denied
+    // This ensures in-app notifications work even if FCM token isn’t ready yet.
+
 
     // Subscribe to real-time notifications
     const messagesChannel = supabase
