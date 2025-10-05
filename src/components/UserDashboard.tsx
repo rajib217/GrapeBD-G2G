@@ -1,12 +1,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield, TestTube } from 'lucide-react';
+import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/use-notifications';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import MyGifts from './MyGifts';
 import SocialFeed from './SocialFeed';
 import UserNotices from './UserNotices';
@@ -29,62 +27,17 @@ import MobileBottomNav from './MobileBottomNav';
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [isAdminView, setIsAdminView] = useState(false);
-  const [isSendingTest, setIsSendingTest] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   // Initialize notifications
-  const { notificationsEnabled, enableNotifications } = useNotifications();
+  useNotifications();
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
-    }
-  };
-
-  const handleTestNotification = async () => {
-    if (!notificationsEnabled) {
-      toast({
-        title: "নোটিফিকেশন চালু নেই",
-        description: "প্রথমে নোটিফিকেশন চালু করুন",
-        variant: "destructive",
-      });
-      await enableNotifications();
-      return;
-    }
-
-    setIsSendingTest(true);
-    try {
-      const { error } = await supabase.functions.invoke('send-notification', {
-        body: {
-          user_id: profile?.user_id,
-          title: 'টেস্ট নোটিফিকেশন',
-          body: 'এটি একটি টেস্ট পুশ নোটিফিকেশন!',
-          data: {
-            type: 'test',
-            timestamp: new Date().toISOString()
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "সফল!",
-        description: "টেস্ট নোটিফিকেশন পাঠানো হয়েছে",
-      });
-    } catch (error) {
-      console.error('Test notification error:', error);
-      toast({
-        title: "ত্রুটি",
-        description: "নোটিফিকেশন পাঠাতে সমস্যা হয়েছে",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSendingTest(false);
     }
   };
 
@@ -212,16 +165,6 @@ const UserDashboard = () => {
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <p className="font-medium hidden md:block">{profile?.full_name}</p>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleTestNotification}
-                disabled={isSendingTest}
-                className="hidden md:flex"
-              >
-                <TestTube className="w-4 h-4 mr-2" />
-                {isSendingTest ? 'পাঠানো হচ্ছে...' : 'টেস্ট'}
-              </Button>
               <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
