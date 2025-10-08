@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, User, ArrowLeft, Search, X } from 'lucide-react';
+import { MessageCircle, Send, User, ArrowLeft, Search, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +50,8 @@ const Messages = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [directMessaging, setDirectMessaging] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearingMessages, setClearingMessages] = useState(false);
   const { profile } = useAuth();
   const { toast } = useToast();
 
@@ -206,6 +209,40 @@ const Messages = () => {
     }
   };
 
+  const clearMessages = async () => {
+    if (!profile?.id || !selectedUser) return;
+
+    setClearingMessages(true);
+    try {
+      // Delete all messages between current user and selected user
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${selectedUser.id}),and(sender_id.eq.${selectedUser.id},receiver_id.eq.${profile.id})`);
+
+      if (error) throw error;
+
+      setMessages([]);
+      setClearDialogOpen(false);
+      
+      // Refresh users list
+      await fetchUsers();
+      
+      toast({
+        title: 'সফল',
+        description: 'সকল মেসেজ ডিলেট করা হয়েছে',
+      });
+    } catch (error) {
+      toast({
+        title: 'ত্রুটি',
+        description: 'মেসেজ ডিলেট করতে সমস্যা হয়েছে',
+        variant: 'destructive',
+      });
+    } finally {
+      setClearingMessages(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('bn-BD', {
@@ -310,6 +347,15 @@ const Messages = () => {
                 <p className="text-xs text-muted-foreground">অনলাইন</p>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setClearDialogOpen(true)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              ক্লিয়ার
+            </Button>
           </div>
 
           {/* Messages Area */}
@@ -496,17 +542,27 @@ const Messages = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md p-0 bg-white dark:bg-gray-800">
           <DialogHeader className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-700">
-            <DialogTitle className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={selectedUser?.profile_image} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  {selectedUser?.full_name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <span className="font-medium">{selectedUser?.full_name}</span>
-                <p className="text-xs text-muted-foreground">অনলাইন</p>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={selectedUser?.profile_image} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {selectedUser?.full_name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <span className="font-medium">{selectedUser?.full_name}</span>
+                  <p className="text-xs text-muted-foreground">অনলাইন</p>
+                </div>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setClearDialogOpen(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </DialogTitle>
           </DialogHeader>
             
@@ -574,6 +630,28 @@ const Messages = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Clear Messages Confirmation Dialog */}
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>মেসেজ ডিলেট করবেন?</AlertDialogTitle>
+            <AlertDialogDescription>
+              আপনি কি নিশ্চিত যে {selectedUser?.full_name} এর সাথে সকল মেসেজ ডিলেট করতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearingMessages}>বাতিল</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={clearMessages}
+              disabled={clearingMessages}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {clearingMessages ? 'ডিলেট হচ্ছে...' : 'ডিলেট করুন'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
