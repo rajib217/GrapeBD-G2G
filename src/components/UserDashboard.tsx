@@ -92,14 +92,14 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-subtle">
       <div className="flex">
         {/* Sidebar */}
-        <div className="hidden md:flex flex-col w-64 bg-white border-r">
-          <div className="flex items-center justify-center h-20 border-b p-2">
+        <div className="hidden md:flex flex-col w-64 bg-card shadow-elegant border-r border-border">
+          <div className="flex items-center justify-center h-20 border-b border-border bg-gradient-primary p-2">
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Grape BD G2G Logo" className="h-12 w-auto" />
-              <h1 className="text-2xl font-bold text-blue-600">Grape BD G2G</h1>
+              <img src="/logo.png" alt="Grape BD G2G Logo" className="h-12 w-auto drop-shadow-lg" />
+              <h1 className="text-2xl font-bold text-white drop-shadow-md">Grape BD G2G</h1>
             </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2">
@@ -154,7 +154,7 @@ const UserDashboard = () => {
 
         {/* Main Content */}
         <div className="flex flex-col flex-grow">
-          <div className="flex items-center justify-between h-16 px-4 bg-white border-b md:justify-end">
+          <div className="flex items-center justify-between h-16 px-4 bg-card shadow-sm border-b border-border md:justify-end">
             <div className="md:hidden">
               <MobileNav 
                 activeTab={activeTab} 
@@ -173,8 +173,10 @@ const UserDashboard = () => {
               </Button>
             </div>
           </div>
-          <main className="p-4 md:p-6">
-            {renderContent()}
+          <main className="p-4 md:p-6 bg-gradient-subtle">
+            <div className="max-w-7xl mx-auto">
+              {renderContent()}
+            </div>
           </main>
         </div>
       </div>
