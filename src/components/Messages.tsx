@@ -222,17 +222,17 @@ const Messages = () => {
 
       if (error) throw error;
 
+      // Refresh messages and users list
       setMessages([]);
-      setClearDialogOpen(false);
-      
-      // Refresh users list
       await fetchUsers();
+      setClearDialogOpen(false);
       
       toast({
         title: 'সফল',
-        description: 'সকল মেসেজ ডিলেট করা হয়েছে',
+        description: 'সমস্ত মেসেজ ডিলেট হয়েছে',
       });
     } catch (error) {
+      console.error('Clear messages error:', error);
       toast({
         title: 'ত্রুটি',
         description: 'মেসেজ ডিলেট করতে সমস্যা হয়েছে',
