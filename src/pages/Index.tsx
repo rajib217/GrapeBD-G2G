@@ -24,10 +24,9 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
     if (tab === 'home') {
       navigate('/');
-    } else {
-      setActiveTab(tab);
     }
   };
 
@@ -111,7 +110,7 @@ const Index = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop Tabs */}
           <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-10 mb-8 h-auto gap-2 bg-transparent">
             <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
