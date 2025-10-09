@@ -323,7 +323,7 @@ const Messages = () => {
       <div className="max-w-4xl mx-auto p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between px-6 py-4 border-b">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -332,9 +332,10 @@ const Messages = () => {
                   setSelectedUser(null);
                   navigate(`/user/${targetUserId}`);
                 }}
+                className="touch-target min-h-[44px]"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                ফিরে যান
+                <ArrowLeft className="h-4 w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">ফিরে যান</span>
               </Button>
               <Avatar className="h-10 w-10">
                 <AvatarImage src={selectedUser.profile_image} />
@@ -351,10 +352,11 @@ const Messages = () => {
               variant="ghost"
               size="sm"
               onClick={() => setClearDialogOpen(true)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 touch-target min-h-[44px]"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              ক্লিয়ার
+              <Trash2 className="h-4 w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">ক্লিয়ার</span>
+              <span className="sm:hidden">ডিলিট</span>
             </Button>
           </div>
 
@@ -557,11 +559,11 @@ const Messages = () => {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setClearDialogOpen(true)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 touch-target min-h-[44px] min-w-[44px]"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-5 w-5" />
               </Button>
             </DialogTitle>
           </DialogHeader>
