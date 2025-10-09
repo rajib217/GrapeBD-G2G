@@ -112,46 +112,46 @@ const Index = () => {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-10 mb-8 h-auto gap-2 bg-transparent">
-            <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Home className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">হোম</span>
+          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-10 mb-8 h-auto gap-2 bg-transparent pointer-events-auto">
+            <TabsTrigger value="home" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Home className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">হোম</span>
             </TabsTrigger>
-            <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Sprout className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">স্টক</span>
+            <TabsTrigger value="stock" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Sprout className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">স্টক</span>
             </TabsTrigger>
-            <TabsTrigger value="add" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Plus className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">যোগ করুন</span>
+            <TabsTrigger value="add" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Plus className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">যোগ করুন</span>
             </TabsTrigger>
-            <TabsTrigger value="send" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">গিফট পাঠান</span>
+            <TabsTrigger value="send" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Gift className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">গিফট পাঠান</span>
             </TabsTrigger>
-            <TabsTrigger value="my-gifts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Gift className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">আমার গিফট</span>
+            <TabsTrigger value="my-gifts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Gift className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">আমার গিফট</span>
             </TabsTrigger>
-            <TabsTrigger value="gift-history" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <History className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">গিফট হিস্টোরি</span>
+            <TabsTrigger value="gift-history" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <History className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">গিফট হিস্টোরি</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">মেসেজ</span>
+            <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <MessageCircle className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">মেসেজ</span>
             </TabsTrigger>
-            <TabsTrigger value="notices" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <Bell className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">নোটিশ</span>
+            <TabsTrigger value="notices" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <Bell className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">নোটিশ</span>
             </TabsTrigger>
-            <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <UserCheck className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">সকল মেম্বার</span>
+            <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <UserCheck className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">সকল মেম্বার</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg">
-              <User className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">প্রোফাইল</span>
+            <TabsTrigger value="profile" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 transition-all duration-200 hover:bg-emerald-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white rounded-lg cursor-pointer">
+              <User className="h-4 w-4 pointer-events-none" />
+              <span className="text-xs md:text-sm font-medium pointer-events-none">প্রোফাইল</span>
             </TabsTrigger>
           </TabsList>
 
