@@ -74,7 +74,7 @@ function urlBase64ToUint8Array(base64String: string) {
   }
   return outputArray;
 }
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { generateFCMToken, onForegroundMessage } from './firebase';
 
 export async function setupPushNotifications(userId: string) {
@@ -155,6 +155,33 @@ async function saveTokenToBackend(token: string, userId: string) {
           // PostgREST / Supabase client returns `code` on permission errors (e.g. '42501')
           if (error.code === '42501' || (typeof error.message === 'string' && error.message.toLowerCase().includes('row-level security'))) {
             console.warn('[Notification] Likely RLS permission error. Ensure the client is authenticated and the provided user id matches auth.uid().');
+          }
+
+          // If it's an RLS/permission error, try server-side upsert via Edge Function
+          if (error.code === '42501' || (typeof error.message === 'string' && error.message.toLowerCase().includes('row-level security'))) {
+            try {
+              const session = await supabase.auth.getSession();
+              const accessToken = session.data?.session?.access_token;
+              const endpoint = `${SUPABASE_URL}/functions/v1/save-fcm-token`;
+              const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+                },
+                body: JSON.stringify({ token, user_id: userId })
+              });
+
+              if (resp.ok) {
+                console.info('[Notification] Fallback save to Edge Function succeeded');
+                return true;
+              } else {
+                const errText = await resp.text();
+                console.error('[Notification] Edge Function save failed:', resp.status, errText);
+              }
+            } catch (fnErr) {
+              console.error('[Notification] Edge Function fallback error:', fnErr);
+            }
           }
 
           // Fallback to localStorage using the provided auth user id
