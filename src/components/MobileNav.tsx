@@ -70,14 +70,16 @@ const MobileNav = ({
   }, [profile?.role, onAdminViewToggle, isAdminView, onTabChange]);
 
   const handleTabClick = useCallback((tab: string) => {
+  console.info('[MobileNav] handleTabClick:', tab);
     onTabChange(tab);
     setOpen(false);
   }, [onTabChange]);
 
   const normalMenuItems: MenuItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
-    { id: 'my-gifts', label: 'আমার উপহার', icon: Gift },
-    { id: 'add-seedling', label: 'চারাগাছ যোগ করুন', icon: PlusSquare },
+    { id: 'my-gifts', label: 'আমার গিফট', icon: Gift },
+    // Use 'add' to match desktop Tabs value
+    { id: 'add', label: 'যোগ করুন', icon: PlusSquare },
     { id: 'stock', label: 'চারাগাছের স্টক', icon: Archive },
     { id: 'send', label: 'উপহার পাঠান', icon: Send },
     { id: 'all-members', label: 'সকল সদস্য', icon: Users },

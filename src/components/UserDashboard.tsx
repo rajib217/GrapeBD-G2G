@@ -75,7 +75,7 @@ const UserDashboard = () => {
           return <Messages />;
         case 'profile':
           return <ProfileEdit />;
-        case 'add-seedling':
+        case 'add':
           return <AddSeedling />;
         case 'stock':
           return <SeedlingStock />;
@@ -103,7 +103,7 @@ const UserDashboard = () => {
             </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2">
-            <Button variant={activeTab === 'feed' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('feed')} className="justify-start">
+            <Button variant={activeTab === 'home' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('home')} className="justify-start">
               <Home className="w-5 h-5 mr-3" />
               ফিড
             </Button>
@@ -111,15 +111,15 @@ const UserDashboard = () => {
               <Gift className="w-5 h-5 mr-3" />
               আমার উপহার
             </Button>
-            <Button variant={activeTab === 'add-seedling' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('add-seedling')} className="justify-start">
+            <Button variant={activeTab === 'add' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('add')} className="justify-start">
               <PlusSquare className="w-5 h-5 mr-3" />
               চারাগাছ যোগ করুন
             </Button>
-            <Button variant={activeTab === 'seedling-stock' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('seedling-stock')} className="justify-start">
+            <Button variant={activeTab === 'stock' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('stock')} className="justify-start">
               <Archive className="w-5 h-5 mr-3" />
               চারাগাছের স্টক
             </Button>
-            <Button variant={activeTab === 'send-gift' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('send-gift')} className="justify-start">
+            <Button variant={activeTab === 'send' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('send')} className="justify-start">
               <Send className="w-5 h-5 mr-3" />
               উপহার পাঠান
             </Button>

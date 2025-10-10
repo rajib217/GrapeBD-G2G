@@ -24,6 +24,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   const handleTabChange = (tab: string) => {
+  console.info('[Index] handleTabChange:', tab);
     setActiveTab(tab);
     if (tab === 'home') {
       navigate('/');
