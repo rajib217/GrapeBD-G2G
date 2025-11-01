@@ -441,7 +441,7 @@ const UserProfile = () => {
                 {userVarieties.length > 0 && (
                   <div className="pt-4 border-t">
                     <h3 className="font-semibold mb-3">ব্যক্তিগত জাত সমূহ</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {userVarieties.map((userVariety) => (
                         <div key={userVariety.id} className="border rounded-lg p-3">
                           <div className="flex items-center gap-3">
@@ -469,7 +469,7 @@ const UserProfile = () => {
                 {receivedGiftVarieties.length > 0 && (
                   <div className="pt-4 border-t">
                     <h3 className="font-semibold mb-3">G2G থেকে প্রাপ্ত জাত</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {receivedGiftVarieties.map((giftVariety) => (
                         <div key={giftVariety.variety_id} className="border rounded-lg p-3">
                           <div className="flex items-center gap-3">
