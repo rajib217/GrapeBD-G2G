@@ -239,14 +239,14 @@ const UserProfile = () => {
 
             <div className="flex gap-2">
               {profile.phone && (
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="secondary" size="sm" asChild>
                   <a href={`tel:${profile.phone}`}>
                     <Phone className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">কল করুন</span>
                   </a>
                 </Button>
               )}
-              <Button size="sm" onClick={() => navigate(`/messages?userId=${profile.id}`)}>
+              <Button variant="default" size="sm" onClick={() => navigate(`/messages?userId=${profile.id}`)}>
                 <MessageCircle className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">মেসেজ</span>
               </Button>
