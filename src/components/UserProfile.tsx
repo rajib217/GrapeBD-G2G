@@ -36,11 +36,31 @@ interface Post {
   };
 }
 
+interface UserVariety {
+  id: string;
+  variety_id: string;
+  notes: string | null;
+  varieties: {
+    name: string;
+    thumbnail_image: string | null;
+  };
+}
+
+interface ReceivedGiftVariety {
+  variety_id: string;
+  variety_name: string;
+  variety_thumbnail: string | null;
+  gift_count: number;
+  latest_gift_date: string;
+}
+
 const UserProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [userVarieties, setUserVarieties] = useState<UserVariety[]>([]);
+  const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<ReceivedGiftVariety[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -78,8 +98,12 @@ const UserProfile = () => {
         if (error) throw error;
         setProfile(data);
         
-        // Fetch user's posts
-        await fetchUserPosts(data.id);
+        // Fetch all user data
+        await Promise.all([
+          fetchUserPosts(data.id),
+          fetchUserVarieties(data.id),
+          fetchReceivedGiftVarieties(data.id)
+        ]);
       } catch (error) {
         toast({
           title: 'ত্রুটি',
@@ -113,6 +137,37 @@ const UserProfile = () => {
         setPosts(data || []);
       } catch (error) {
         console.error('Error fetching user posts:', error);
+      }
+    };
+
+    const fetchUserVarieties = async (profileId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('user_varieties')
+          .select(`
+            id,
+            variety_id,
+            notes,
+            varieties(name, thumbnail_image)
+          `)
+          .eq('user_id', profileId);
+        
+        if (error) throw error;
+        setUserVarieties(data || []);
+      } catch (error) {
+        console.error('Error fetching user varieties:', error);
+      }
+    };
+
+    const fetchReceivedGiftVarieties = async (profileId: string) => {
+      try {
+        const { data, error } = await supabase
+          .rpc('get_user_received_gift_varieties', { profile_id: profileId });
+        
+        if (error) throw error;
+        setReceivedGiftVarieties(data || []);
+      } catch (error) {
+        console.error('Error fetching received gift varieties:', error);
       }
     };
 
@@ -377,6 +432,69 @@ const UserProfile = () => {
                         <Badge key={index} variant="outline">
                           {round}
                         </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* User Varieties Section */}
+                {userVarieties.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <h3 className="font-semibold mb-3">ব্যক্তিগত জাত সমূহ</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {userVarieties.map((userVariety) => (
+                        <div key={userVariety.id} className="border rounded-lg p-3">
+                          <div className="flex items-center gap-3">
+                            {userVariety.varieties?.thumbnail_image && (
+                              <img 
+                                src={userVariety.varieties.thumbnail_image} 
+                                alt={userVariety.varieties?.name}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{userVariety.varieties?.name}</h4>
+                              {userVariety.notes && (
+                                <p className="text-xs text-muted-foreground mt-1">{userVariety.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Received Gift Varieties Section */}
+                {receivedGiftVarieties.length > 0 && (
+                  <div className="pt-4 border-t">
+                    <h3 className="font-semibold mb-3">G2G থেকে প্রাপ্ত জাত</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {receivedGiftVarieties.map((giftVariety) => (
+                        <div key={giftVariety.variety_id} className="border rounded-lg p-3">
+                          <div className="flex items-center gap-3">
+                            {giftVariety.variety_thumbnail && (
+                              <img 
+                                src={giftVariety.variety_thumbnail} 
+                                alt={giftVariety.variety_name}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{giftVariety.variety_name}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {giftVariety.gift_count}টি গিফট
+                                </Badge>
+                              </div>
+                              {giftVariety.latest_gift_date && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  সর্বশেষ: {new Date(giftVariety.latest_gift_date).toLocaleDateString('bn-BD')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
