@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageCircle, Send, User, ArrowLeft, Search, X, Trash2 } from 'lucide-react';
@@ -565,6 +565,7 @@ const Messages = () => {
                 <Trash2 className="h-5 w-5" />
               </Button>
             </DialogTitle>
+            <DialogDescription className="sr-only">মেসেজ ডায়ালগ</DialogDescription>
           </DialogHeader>
             
           {/* Messages Area */}

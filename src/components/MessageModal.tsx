@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Send, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -96,6 +96,9 @@ const MessageModal = ({ isOpen, onClose, recipient }: MessageModalProps) => {
             </Avatar>
             <span>{recipient.full_name} কে মেসেজ পাঠান</span>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            ব‍্যক্তিকে মেসেজ পাঠানোর ডায়ালগ
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
