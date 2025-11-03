@@ -352,11 +352,10 @@ const Messages = () => {
               variant="ghost"
               size="sm"
               onClick={() => setClearDialogOpen(true)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 touch-target min-h-[44px]"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 min-h-[44px] min-w-[44px] px-3"
             >
-              <Trash2 className="h-4 w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">ক্লিয়ার</span>
-              <span className="sm:hidden">ডিলিট</span>
+              <Trash2 className="h-5 w-5 md:mr-2" />
+              <span className="hidden md:inline">ক্লিয়ার</span>
             </Button>
           </div>
 
@@ -561,7 +560,7 @@ const Messages = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setClearDialogOpen(true)}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 touch-target min-h-[44px] min-w-[44px]"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 min-h-[44px] min-w-[44px] rounded-full"
               >
                 <Trash2 className="h-5 w-5" />
               </Button>
