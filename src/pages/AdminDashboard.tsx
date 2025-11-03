@@ -14,6 +14,7 @@ import AdminGiftRounds from '@/components/admin/AdminGiftRounds';
 import AdminNotices from '@/components/admin/AdminNotices';
 import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
+import NotificationDebug from '@/components/NotificationDebug';
 import MobileNav from '@/components/MobileNav';
 
 const AdminDashboard = () => {
@@ -100,7 +101,7 @@ const AdminDashboard = () => {
         <AdminStats />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-3 lg:grid-cols-7 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
+          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-8 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
             <TabsTrigger value="users" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <Users className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">ইউজার</span>
@@ -128,6 +129,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <UserCheck className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">সকল মেম্বার</span>
+            </TabsTrigger>
+            <TabsTrigger value="notification-debug" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
+              <Bell className="h-4 w-4" />
+              <span className="text-xs md:text-sm font-medium">নোটিফিকেশন ডিবাগ</span>
             </TabsTrigger>
           </TabsList>
 
@@ -157,6 +162,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="all-members">
             <AllMembers />
+          </TabsContent>
+
+          <TabsContent value="notification-debug">
+            <NotificationDebug />
           </TabsContent>
         </Tabs>
       </div>

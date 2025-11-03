@@ -20,6 +20,7 @@ import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
 import AdminGiftRounds from './admin/AdminGiftRounds';
 import AdminNotices from './admin/AdminNotices';
+import NotificationDebug from './NotificationDebug';
 
 import MobileNav from './MobileNav';
 import MobileBottomNav from './MobileBottomNav';
@@ -59,6 +60,8 @@ const UserDashboard = () => {
           return <Messages />;
         case 'all-members':
           return <AllMembers />;
+        case 'notification-debug':
+          return <NotificationDebug />;
         default:
           return <AdminUsers />;
       }
