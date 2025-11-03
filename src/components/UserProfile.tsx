@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Mail, Phone, MapPin, MessageCircle, MoreHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import MessageModal from '@/components/MessageModal';
 
 interface UserProfile {
   id: string;
@@ -62,6 +63,7 @@ const UserProfile = () => {
   const [userVarieties, setUserVarieties] = useState<UserVariety[]>([]);
   const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<ReceivedGiftVariety[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const { toast } = useToast();
 
   const formatPostDate = (dateString: string) => {
@@ -246,7 +248,7 @@ const UserProfile = () => {
                   </a>
                 </Button>
               )}
-              <Button variant="default" size="sm" onClick={() => navigate(`/messages?userId=${profile.id}`)}>
+              <Button variant="default" size="sm" onClick={() => setIsMessageModalOpen(true)}>
                 <MessageCircle className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">মেসেজ</span>
               </Button>
@@ -504,6 +506,18 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {profile && (
+        <MessageModal
+          isOpen={isMessageModalOpen}
+          onClose={() => setIsMessageModalOpen(false)}
+          recipient={{
+            id: profile.id,
+            full_name: profile.full_name,
+            profile_image: profile.profile_image || undefined,
+          }}
+        />
+      )}
     </div>
   );
 };
