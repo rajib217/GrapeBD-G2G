@@ -87,15 +87,39 @@ const AdminNotices = () => {
         if (!profile) throw new Error('Profile not found');
 
         // Create new notice
-        const { error } = await supabase
+        const { data: newNotice, error } = await supabase
           .from('notices')
-          .insert([{ ...formData, created_by: profile.id }]);
+          .insert([{ ...formData, created_by: profile.id }])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Send notification to all users
+        if (newNotice && formData.is_active) {
+          try {
+            console.log('[AdminNotices] Sending notification for new notice:', newNotice.id);
+            const { error: notifError } = await supabase.functions.invoke('send-notice-notification', {
+              body: {
+                title: formData.title,
+                body: formData.content.substring(0, 100) + (formData.content.length > 100 ? '...' : ''),
+                noticeId: newNotice.id,
+              }
+            });
+
+            if (notifError) {
+              console.error('[AdminNotices] Notification error:', notifError);
+            } else {
+              console.log('[AdminNotices] Notifications sent successfully');
+            }
+          } catch (notifError) {
+            console.error('[AdminNotices] Error sending notifications:', notifError);
+          }
+        }
         
         toast({
           title: "সফল",
-          description: "নতুন নোটিশ তৈরি করা হয়েছে",
+          description: "নতুন নোটিশ তৈরি করা হয়েছে এবং সবাইকে নোটিফিকেশন পাঠানো হয়েছে",
         });
       }
 
