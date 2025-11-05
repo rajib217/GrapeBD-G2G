@@ -12,6 +12,7 @@ import AdminGifts from '@/components/admin/AdminGifts';
 import AdminVarieties from '@/components/admin/AdminVarieties';
 import AdminGiftRounds from '@/components/admin/AdminGiftRounds';
 import AdminNotices from '@/components/admin/AdminNotices';
+import { AdminPosts } from '@/components/admin/AdminPosts';
 import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
 import NotificationDebug from '@/components/NotificationDebug';
@@ -122,6 +123,10 @@ const AdminDashboard = () => {
               <Bell className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">নোটিশ</span>
             </TabsTrigger>
+            <TabsTrigger value="posts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-xs md:text-sm font-medium">পোস্ট ও কমেন্ট</span>
+            </TabsTrigger>
             <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <MessageCircle className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">মেসেজ</span>
@@ -154,6 +159,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="notices">
             <AdminNotices />
+          </TabsContent>
+
+          <TabsContent value="posts">
+            <AdminPosts />
           </TabsContent>
 
           <TabsContent value="messages">

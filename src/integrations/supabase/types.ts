@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          edited_by_admin: boolean | null
           id: string
           post_id: string
           updated_at: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          edited_by_admin?: boolean | null
           id?: string
           post_id: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          edited_by_admin?: boolean | null
           id?: string
           post_id?: string
           updated_at?: string
@@ -277,6 +280,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          edited_by_admin: boolean | null
           id: string
           image_url: string | null
           updated_at: string
@@ -285,6 +289,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          edited_by_admin?: boolean | null
           id?: string
           image_url?: string | null
           updated_at?: string
@@ -293,6 +298,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          edited_by_admin?: boolean | null
           id?: string
           image_url?: string | null
           updated_at?: string
@@ -598,7 +604,7 @@ export type Database = {
         Returns: undefined
       }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_received_gift_varieties: {

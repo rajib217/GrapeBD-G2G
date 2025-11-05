@@ -38,6 +38,7 @@ interface Post {
   image_url: string | null;
   created_at: string;
   user_id: string;
+  edited_by_admin?: boolean;
   profiles: {
     full_name: string;
     profile_image: string | null;
@@ -103,6 +104,7 @@ const SocialFeed = () => {
           image_url,
           created_at,
           user_id,
+          edited_by_admin,
           profiles ( full_name, profile_image )
         `)
         .order('created_at', { ascending: false })
@@ -636,7 +638,14 @@ const SocialFeed = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {post.content && <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{post.content}</p>}
+                    {post.content && (
+                      <div>
+                        <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+                        {post.edited_by_admin && (
+                          <p className="text-xs text-muted-foreground mt-2">Edited By Admin</p>
+                        )}
+                      </div>
+                    )}
                     {post.image_url && <div className="rounded-lg overflow-hidden border"><img src={post.image_url} alt="Post image" className="w-full max-h-96 object-cover" /></div>}
                   </CardContent>
                   <CardFooter className="flex flex-col items-start">
