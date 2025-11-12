@@ -78,32 +78,44 @@ import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { generateFCMToken, onForegroundMessage } from './firebase';
 
 export async function setupPushNotifications(userId: string) {
+  console.log('[Notification] 🚀 setupPushNotifications called for user:', userId);
+  
   try {
     // Check if service worker is ready
     if (!('serviceWorker' in navigator)) {
-      console.error('[Notification] Service Worker not supported');
+      console.error('[Notification] ❌ Service Worker not supported');
       return false;
     }
+
+    console.log('[Notification] ✅ Service Worker supported, waiting for registration...');
 
     // Wait for service worker registration
     const registration = await navigator.serviceWorker.ready;
     if (!registration) {
-      console.error('[Notification] Service worker registration not found');
+      console.error('[Notification] ❌ Service worker registration not found');
       return false;
     }
 
+    console.log('[Notification] ✅ Service worker ready:', registration.scope);
+    console.log('[Notification] Current permission:', Notification.permission);
+
     if (Notification.permission === 'granted') {
+      console.log('[Notification] ✅ Permission granted, generating FCM token...');
+      
       // Generate FCM token
       const token = await generateFCMToken();
       
       if (token) {
-        console.info('[Notification] FCM Token received:', token);
+        console.info('[Notification] ✅ FCM Token received:', token.substring(0, 20) + '...');
         
         // Send token to your backend
+        console.log('[Notification] 💾 Saving token to backend...');
         await saveTokenToBackend(token, userId);
         
         // Set up foreground message listener
+        console.log('[Notification] 📱 Setting up foreground message listener...');
         onForegroundMessage((payload) => {
+          console.log('[Notification] 📨 Foreground message received:', payload);
           const { notification, data } = payload;
           if (notification) {
             showNotification(notification.title, {
@@ -114,11 +126,15 @@ export async function setupPushNotifications(userId: string) {
           }
         });
         
+        console.log('[Notification] ✅ Push notifications setup complete!');
         return true;
+      } else {
+        console.error('[Notification] ❌ Failed to generate FCM token');
+        return false;
       }
     }
 
-    console.warn('[Notification] Notification permission not granted');
+    console.warn('[Notification] ⚠️ Notification permission not granted. Current:', Notification.permission);
     return false;
   } catch (error) {
     console.error('[Notification] Error setting up notifications:', error);
