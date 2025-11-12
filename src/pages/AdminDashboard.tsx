@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,12 +16,13 @@ import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
 import NotificationDebug from '@/components/NotificationDebug';
 import MobileNav from '@/components/MobileNav';
-
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
-  const { profile, signOut } = useAuth();
+  const {
+    profile,
+    signOut
+  } = useAuth();
   const navigate = useNavigate();
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -30,11 +30,9 @@ const AdminDashboard = () => {
       console.error('Sign out error:', error);
     }
   };
-
   const handleHomeClick = () => {
     navigate('/dashboard');
   };
-
   const handleTabChange = (tab: string) => {
     if (tab === 'home') {
       navigate('/');
@@ -44,19 +42,14 @@ const AdminDashboard = () => {
       setActiveTab(tab);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-subtle">
+  return <div className="min-h-screen bg-gradient-subtle">
       {/* Mobile Header */}
       <div className="bg-gradient-primary shadow-lg border-b border-primary/20">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Mobile Menu */}
             <div className="md:hidden">
-              <MobileNav 
-                activeTab={activeTab} 
-                onTabChange={handleTabChange}
-              />
+              <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
             </div>
             
             {/* Logo and Title */}
@@ -92,10 +85,8 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         <div className="mb-4 md:mb-8 bg-card rounded-2xl p-6 shadow-elegant hover-scale">
-          <h2 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-            স্বাগতম, {profile?.full_name}!
-          </h2>
-          <p className="text-muted-foreground text-sm md:text-base">সিস্টেমের সকল কার্যক্রম পরিচালনা করুন</p>
+          
+          <p className="text-sm font-extrabold text-green-500 text-center md:text-3xl">সিস্টেমের সকল কার্যক্রম পরিচালনা করুন</p>
         </div>
 
         {/* Admin Tabs */}
@@ -178,8 +169,6 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default AdminDashboard;
