@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Trash2, Edit, X, Check } from "lucide-react";
+import { Trash2, Edit, X, Check, Filter } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -31,6 +35,11 @@ interface Comment {
   };
 }
 
+interface Profile {
+  id: string;
+  full_name: string;
+}
+
 export const AdminPosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -38,14 +47,39 @@ export const AdminPosts = () => {
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   useEffect(() => {
+    fetchUsers();
     fetchPosts();
     fetchComments();
   }, []);
 
-  const fetchPosts = async () => {
+  useEffect(() => {
+    fetchPosts();
+    fetchComments();
+  }, [selectedUserId, startDate, endDate]);
+
+  const fetchUsers = async () => {
     const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("status", "active")
+      .order("full_name");
+
+    if (error) {
+      toast.error("ইউজার লোড করতে সমস্যা হয়েছে");
+      return;
+    }
+
+    setUsers(data || []);
+  };
+
+  const fetchPosts = async () => {
+    let query = supabase
       .from("posts")
       .select(`
         *,
@@ -53,8 +87,23 @@ export const AdminPosts = () => {
           full_name,
           profile_image
         )
-      `)
-      .order("created_at", { ascending: false });
+      `);
+
+    if (selectedUserId !== "all") {
+      query = query.eq("user_id", selectedUserId);
+    }
+
+    if (startDate) {
+      query = query.gte("created_at", startDate.toISOString());
+    }
+
+    if (endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.lte("created_at", endOfDay.toISOString());
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       toast.error("পোস্ট লোড করতে সমস্যা হয়েছে");
@@ -66,7 +115,7 @@ export const AdminPosts = () => {
   };
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("comments")
       .select(`
         id,
@@ -79,8 +128,23 @@ export const AdminPosts = () => {
           full_name,
           profile_image
         )
-      `)
-      .order("created_at", { ascending: false });
+      `);
+
+    if (selectedUserId !== "all") {
+      query = query.eq("user_id", selectedUserId);
+    }
+
+    if (startDate) {
+      query = query.gte("created_at", startDate.toISOString());
+    }
+
+    if (endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.lte("created_at", endOfDay.toISOString());
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       toast.error("কমেন্ট লোড করতে সমস্যা হয়েছে");
@@ -188,6 +252,100 @@ export const AdminPosts = () => {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            ফিল্টার
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ইউজার</label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="সব ইউজার" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">সব ইউজার</SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">শুরুর তারিখ</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    {startDate ? startDate.toLocaleDateString('bn-BD') : "তারিখ নির্বাচন করুন"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">শেষ তারিখ</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    {endDate ? endDate.toLocaleDateString('bn-BD') : "তারিখ নির্বাচন করুন"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedUserId("all");
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+            >
+              ফিল্টার রিসেট করুন
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>সকল পোস্ট ম্যানেজমেন্ট</CardTitle>
