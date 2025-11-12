@@ -51,6 +51,9 @@ export const AdminPosts = () => {
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [commentSelectedUserId, setCommentSelectedUserId] = useState<string>("all");
+  const [commentStartDate, setCommentStartDate] = useState<Date | undefined>();
+  const [commentEndDate, setCommentEndDate] = useState<Date | undefined>();
 
   useEffect(() => {
     fetchUsers();
@@ -60,8 +63,11 @@ export const AdminPosts = () => {
 
   useEffect(() => {
     fetchPosts();
-    fetchComments();
   }, [selectedUserId, startDate, endDate]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [commentSelectedUserId, commentStartDate, commentEndDate]);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
@@ -126,16 +132,16 @@ export const AdminPosts = () => {
         user_id
       `);
 
-    if (selectedUserId !== "all") {
-      query = query.eq("user_id", selectedUserId);
+    if (commentSelectedUserId !== "all") {
+      query = query.eq("user_id", commentSelectedUserId);
     }
 
-    if (startDate) {
-      query = query.gte("created_at", startDate.toISOString());
+    if (commentStartDate) {
+      query = query.gte("created_at", commentStartDate.toISOString());
     }
 
-    if (endDate) {
-      const endOfDay = new Date(endDate);
+    if (commentEndDate) {
+      const endOfDay = new Date(commentEndDate);
       endOfDay.setHours(23, 59, 59, 999);
       query = query.lte("created_at", endOfDay.toISOString());
     }
@@ -448,6 +454,96 @@ export const AdminPosts = () => {
           <CardTitle>সকল কমেন্ট ম্যানেজমেন্ট</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-5 w-5" />
+              <span className="font-medium">কমেন্ট ফিল্টার</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">ইউজার</label>
+                <Select value={commentSelectedUserId} onValueChange={setCommentSelectedUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="সব ইউজার" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">সব ইউজার</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">শুরুর তারিখ</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !commentStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      {commentStartDate ? commentStartDate.toLocaleDateString('bn-BD') : "তারিখ নির্বাচন করুন"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={commentStartDate}
+                      onSelect={setCommentStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">শেষ তারিখ</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !commentEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      {commentEndDate ? commentEndDate.toLocaleDateString('bn-BD') : "তারিখ নির্বাচন করুন"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={commentEndDate}
+                      onSelect={setCommentEndDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCommentSelectedUserId("all");
+                  setCommentStartDate(undefined);
+                  setCommentEndDate(undefined);
+                }}
+              >
+                ফিল্টার রিসেট করুন
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-4">
             {comments.map((comment) => (
               <Card key={comment.id}>
