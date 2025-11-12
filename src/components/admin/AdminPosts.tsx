@@ -123,11 +123,7 @@ export const AdminPosts = () => {
         created_at,
         edited_by_admin,
         post_id,
-        user_id,
-        profiles!comments_user_id_fkey (
-          full_name,
-          profile_image
-        )
+        user_id
       `);
 
     if (selectedUserId !== "all") {
@@ -144,14 +140,33 @@ export const AdminPosts = () => {
       query = query.lte("created_at", endOfDay.toISOString());
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data: commentsData, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       toast.error("কমেন্ট লোড করতে সমস্যা হয়েছে");
       return;
     }
 
-    setComments(data as any || []);
+    if (!commentsData) {
+      setComments([]);
+      return;
+    }
+
+    // Fetch user profiles for comments
+    const userIds = [...new Set(commentsData.map(c => c.user_id))];
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("id, full_name, profile_image")
+      .in("id", userIds);
+
+    const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+
+    const commentsWithProfiles = commentsData.map(comment => ({
+      ...comment,
+      profiles: profilesMap.get(comment.user_id) || { full_name: "Unknown", profile_image: null }
+    }));
+
+    setComments(commentsWithProfiles);
   };
 
   const handleDeletePost = async (postId: string) => {
