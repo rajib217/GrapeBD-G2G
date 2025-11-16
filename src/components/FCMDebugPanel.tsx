@@ -1,0 +1,215 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { generateFCMToken } from '@/services/firebase';
+import { setupPushNotifications } from '@/services/notification';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function FCMDebugPanel() {
+  const { profile } = useAuth();
+  const [status, setStatus] = useState({
+    notificationPermission: 'checking...',
+    serviceWorkerReady: false,
+    firebaseInitialized: false,
+    fcmToken: null as string | null,
+    error: null as string | null,
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const checkStatus = async () => {
+    console.log('[FCM Debug] 🔍 Starting status check...');
+    
+    const newStatus = {
+      notificationPermission: 'Notification' in window ? Notification.permission : 'not-supported',
+      serviceWorkerReady: false,
+      firebaseInitialized: false,
+      fcmToken: null as string | null,
+      error: null as string | null,
+    };
+
+    try {
+      // Check service worker
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        newStatus.serviceWorkerReady = !!registration;
+        console.log('[FCM Debug] ✅ Service worker ready:', registration.scope);
+      }
+
+      // Check if Firebase is initialized
+      try {
+        const { messaging } = await import('@/services/firebase');
+        newStatus.firebaseInitialized = !!messaging;
+        console.log('[FCM Debug] Firebase messaging initialized:', !!messaging);
+      } catch (err) {
+        console.error('[FCM Debug] ❌ Firebase import error:', err);
+        newStatus.error = 'Firebase initialization failed';
+      }
+
+      // Check for existing FCM token in localStorage
+      if (profile?.id) {
+        const storedToken = localStorage.getItem(`fcm_token_${profile.id}`);
+        if (storedToken) {
+          newStatus.fcmToken = storedToken;
+          console.log('[FCM Debug] 📦 Found stored token');
+        }
+      }
+    } catch (err) {
+      console.error('[FCM Debug] ❌ Status check error:', err);
+      newStatus.error = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    setStatus(newStatus);
+  };
+
+  useEffect(() => {
+    checkStatus();
+  }, [profile?.id]);
+
+  const handleGenerateToken = async () => {
+    if (!profile?.id) {
+      alert('User profile not loaded');
+      return;
+    }
+
+    setIsGenerating(true);
+    console.log('[FCM Debug] 🚀 Manual token generation started...');
+
+    try {
+      // First check permission
+      if (Notification.permission !== 'granted') {
+        console.log('[FCM Debug] ⚠️ Requesting notification permission...');
+        const permission = await Notification.requestPermission();
+        console.log('[FCM Debug] Permission result:', permission);
+        
+        if (permission !== 'granted') {
+          throw new Error('Notification permission denied');
+        }
+      }
+
+      // Generate token
+      console.log('[FCM Debug] 📝 Generating FCM token...');
+      const token = await generateFCMToken();
+      
+      if (token) {
+        console.log('[FCM Debug] ✅ Token generated:', token.substring(0, 30) + '...');
+        
+        // Setup push notifications
+        console.log('[FCM Debug] 📲 Setting up push notifications...');
+        await setupPushNotifications(profile.id);
+        
+        // Refresh status
+        await checkStatus();
+        alert('FCM Token তৈরি সফল হয়েছে! ✅');
+      } else {
+        throw new Error('Token generation returned null');
+      }
+    } catch (err) {
+      console.error('[FCM Debug] ❌ Error:', err);
+      setStatus(prev => ({
+        ...prev,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      }));
+      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const getStatusIcon = (value: boolean | string) => {
+    if (value === true || value === 'granted') {
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    } else if (value === false || value === 'denied') {
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    }
+    return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+  };
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>FCM Token ডিবাগ প্যানেল</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={checkStatus}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            রিফ্রেশ
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <span className="font-medium">Notification Permission:</span>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(status.notificationPermission)}
+              <Badge variant={status.notificationPermission === 'granted' ? 'default' : 'destructive'}>
+                {status.notificationPermission}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <span className="font-medium">Service Worker:</span>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(status.serviceWorkerReady)}
+              <Badge variant={status.serviceWorkerReady ? 'default' : 'destructive'}>
+                {status.serviceWorkerReady ? 'Ready' : 'Not Ready'}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <span className="font-medium">Firebase Initialized:</span>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(status.firebaseInitialized)}
+              <Badge variant={status.firebaseInitialized ? 'default' : 'destructive'}>
+                {status.firebaseInitialized ? 'Yes' : 'No'}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <span className="font-medium">FCM Token:</span>
+            <div className="flex items-center gap-2">
+              {getStatusIcon(!!status.fcmToken)}
+              <Badge variant={status.fcmToken ? 'default' : 'secondary'}>
+                {status.fcmToken ? 'Generated' : 'Not Generated'}
+              </Badge>
+            </div>
+          </div>
+
+          {status.fcmToken && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-xs font-mono break-all">{status.fcmToken}</p>
+            </div>
+          )}
+        </div>
+
+        {status.error && (
+          <Alert variant="destructive">
+            <AlertDescription>{status.error}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button 
+          className="w-full" 
+          onClick={handleGenerateToken}
+          disabled={isGenerating || !profile?.id}
+        >
+          {isGenerating ? 'তৈরি হচ্ছে...' : 'FCM Token তৈরি করুন'}
+        </Button>
+
+        <div className="text-sm text-muted-foreground space-y-1">
+          <p>📌 Console logs দেখুন `[FCM Debug]` prefix সহ</p>
+          <p>📌 Browser DevTools Console খুলুন (F12)</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
