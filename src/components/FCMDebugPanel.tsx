@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, RefreshCw, Send } from 'lucide-react';
 import { generateFCMToken } from '@/services/firebase';
 import { setupPushNotifications } from '@/services/notification';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FCMDebugPanel() {
   const { profile } = useAuth();
@@ -69,7 +70,7 @@ export default function FCMDebugPanel() {
   }, [profile?.id]);
 
   const handleGenerateToken = async () => {
-    if (!profile?.id) {
+    if (!profile?.user_id) {
       alert('User profile not loaded');
       return;
     }
@@ -96,9 +97,9 @@ export default function FCMDebugPanel() {
       if (token) {
         console.log('[FCM Debug] ✅ Token generated:', token.substring(0, 30) + '...');
         
-        // Setup push notifications
-        console.log('[FCM Debug] 📲 Setting up push notifications...');
-        await setupPushNotifications(profile.id);
+        // Setup push notifications - Use profile.user_id (auth user id) instead of profile.id
+        console.log('[FCM Debug] 📲 Setting up push notifications with user_id:', profile.user_id);
+        await setupPushNotifications(profile.user_id);
         
         // Refresh status
         await checkStatus();
@@ -115,6 +116,40 @@ export default function FCMDebugPanel() {
       alert('Error: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    if (!profile?.user_id) {
+      alert('User profile not loaded');
+      return;
+    }
+
+    try {
+      console.log('[FCM Debug] 📤 Sending test notification...');
+      
+      const { data, error } = await supabase.functions.invoke('send-notification', {
+        body: {
+          user_id: profile.user_id,
+          title: 'টেস্ট নোটিফিকেশন 🔔',
+          body: 'এটি একটি টেস্ট নোটিফিকেশন। যদি আপনি এটি দেখতে পান তাহলে আপনার FCM টোকেন সঠিকভাবে কাজ করছে!',
+          data: {
+            type: 'test',
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+
+      if (error) {
+        console.error('[FCM Debug] ❌ Test notification error:', error);
+        alert('Error: ' + error.message);
+      } else {
+        console.log('[FCM Debug] ✅ Test notification sent:', data);
+        alert('টেস্ট নোটিফিকেশন পাঠানো হয়েছে! ✅\nআপনার ডিভাইসে notification চেক করুন।');
+      }
+    } catch (err) {
+      console.error('[FCM Debug] ❌ Error sending test notification:', err);
+      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -197,17 +232,30 @@ export default function FCMDebugPanel() {
           </Alert>
         )}
 
-        <Button 
-          className="w-full" 
-          onClick={handleGenerateToken}
-          disabled={isGenerating || !profile?.id}
-        >
-          {isGenerating ? 'তৈরি হচ্ছে...' : 'FCM Token তৈরি করুন'}
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            className="w-full" 
+            onClick={handleGenerateToken}
+            disabled={isGenerating || !profile?.user_id}
+          >
+            {isGenerating ? 'তৈরি হচ্ছে...' : 'FCM Token তৈরি করুন'}
+          </Button>
+
+          <Button 
+            className="w-full" 
+            variant="secondary"
+            onClick={handleSendTestNotification}
+            disabled={!status.fcmToken || !profile?.user_id}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            টেস্ট নোটিফিকেশন পাঠান
+          </Button>
+        </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
           <p>📌 Console logs দেখুন `[FCM Debug]` prefix সহ</p>
           <p>📌 Browser DevTools Console খুলুন (F12)</p>
+          <p>📌 টোকেন তৈরির পর টেস্ট নোটিফিকেশন পাঠিয়ে যাচাই করুন</p>
         </div>
       </CardContent>
     </Card>
