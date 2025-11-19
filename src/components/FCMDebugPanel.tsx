@@ -119,6 +119,43 @@ export default function FCMDebugPanel() {
     }
   };
 
+  const handleResetAllTokens = async () => {
+    if (!profile?.user_id) {
+      alert('User profile not loaded');
+      return;
+    }
+
+    if (!confirm('⚠️ সব পুরোনো FCM টোকেন মুছে ফেলতে চান? এরপর নতুন টোকেন তৈরি করতে হবে।')) {
+      return;
+    }
+
+    try {
+      console.log('[FCM Debug] 🗑️ Deleting all FCM tokens for user...');
+      
+      const { error } = await supabase
+        .from('fcm_tokens')
+        .delete()
+        .eq('user_id', profile.user_id);
+
+      if (error) {
+        console.error('[FCM Debug] ❌ Delete error:', error);
+        alert('Error: ' + error.message);
+      } else {
+        console.log('[FCM Debug] ✅ All tokens deleted');
+        
+        // Clear localStorage
+        localStorage.removeItem(`fcm_token_${profile.user_id}`);
+        
+        // Refresh status
+        await checkStatus();
+        alert('✅ সব টোকেন মুছে ফেলা হয়েছে!\nএখন "FCM Token তৈরি করুন" বাটনে ক্লিক করুন।');
+      }
+    } catch (err) {
+      console.error('[FCM Debug] ❌ Error deleting tokens:', err);
+      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
+  };
+
   const handleSendTestNotification = async () => {
     if (!profile?.user_id) {
       alert('User profile not loaded');
@@ -233,6 +270,15 @@ export default function FCMDebugPanel() {
         )}
 
         <div className="space-y-2">
+          <Button 
+            className="w-full" 
+            variant="destructive"
+            onClick={handleResetAllTokens}
+            disabled={!profile?.user_id}
+          >
+            🗑️ সব টোকেন রিসেট করুন
+          </Button>
+
           <Button 
             className="w-full" 
             onClick={handleGenerateToken}
