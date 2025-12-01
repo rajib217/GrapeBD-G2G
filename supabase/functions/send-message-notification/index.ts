@@ -100,8 +100,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { record } = await req.json()
-    const { receiver_id, sender_id, content } = record
+    const body = await req.json()
+    const { receiver_id, sender_id, content } = body.record || body
 
     console.log('Processing message notification:', { receiver_id, sender_id })
 
