@@ -62,30 +62,8 @@ registerRoute(
   })
 );
 
-// Handle push notifications
-self.addEventListener('push', (event) => {
-  const data = event.data?.json();
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/pwa/manifest-icon-192.png',
-      badge: '/pwa/manifest-icon-192.png',
-      data: data.url
-    })
-  );
-});
-
-// Handle notification click
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.notification.data) {
-    event.waitUntil(
-      self.clients.openWindow(event.notification.data)
-    );
-  }
-});
+// NOTE: Push notification handling is done by firebase-messaging-sw.js
+// Do NOT add push/notificationclick handlers here to avoid conflicts
 
 // Handle offline fallback
 const FALLBACK_HTML = `
