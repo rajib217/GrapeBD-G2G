@@ -97,13 +97,20 @@ export async function generateFCMToken() {
 export function onForegroundMessage(callback: (payload: any) => void) {
   if (!messaging) {
     console.error('[FCM] Firebase messaging not initialized');
-    return;
+    return () => {};
   }
 
-  onMessage(messaging, (payload) => {
+  console.log('[FCM] 📱 Setting up onMessage listener...');
+  
+  const unsubscribe = onMessage(messaging, (payload) => {
     console.log('[FCM] 📨 Foreground message received:', payload);
+    console.log('[FCM] Notification data:', payload.notification);
+    console.log('[FCM] Custom data:', payload.data);
     callback(payload);
   });
+
+  console.log('[FCM] ✅ onMessage listener attached');
+  return unsubscribe;
 }
 
 export { messaging };
