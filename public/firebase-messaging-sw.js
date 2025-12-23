@@ -4,6 +4,8 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
+console.log('[Firebase SW] 🚀 Service worker script loaded');
+
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBrliuKAtFG0fHenlzFDeGKK8cyhEXfr8U",
@@ -18,20 +20,24 @@ const firebaseConfig = {
 // Initialize Firebase inside a try/catch to surface issues in the worker
 try {
   firebase.initializeApp(firebaseConfig);
+  console.log('[Firebase SW] ✅ Firebase initialized');
 
   // Initialize Firebase Messaging
   const messaging = firebase.messaging();
+  console.log('[Firebase SW] ✅ Messaging initialized');
 
   // Handle background messages
   messaging.onBackgroundMessage(function(payload) {
-    console.log('Background message received:', payload);
+    console.log('[Firebase SW] 📨 Background message received:', payload);
+    console.log('[Firebase SW] Notification:', payload.notification);
+    console.log('[Firebase SW] Data:', payload.data);
 
     const notificationTitle = payload.notification?.title || 'নতুন বার্তা';
     const notificationOptions = {
       body: payload.notification?.body || 'আপনার জন্য নতুন বার্তা এসেছে',
       icon: '/pwa/manifest-icon-192.png',
       badge: '/pwa/manifest-icon-192.png',
-      tag: payload.data?.tag || 'default',
+      tag: payload.data?.tag || 'fcm-' + Date.now(),
       data: payload.data,
       requireInteraction: true,
       actions: [
@@ -46,6 +52,7 @@ try {
       ]
     };
 
+    console.log('[Firebase SW] Showing notification:', notificationTitle, notificationOptions);
     return self.registration.showNotification(notificationTitle, notificationOptions);
   });
 

@@ -117,8 +117,21 @@ export async function setupPushNotifications(userId: string) {
         onForegroundMessage((payload) => {
           console.log('[Notification] 📨 Foreground message received:', payload);
           const { notification, data } = payload;
+          
+          // Show in-app toast notification for foreground messages
           if (notification) {
-            showNotification(notification.title, {
+            // Dispatch a custom event for the app to show a toast
+            const event = new CustomEvent('fcm-foreground-message', {
+              detail: {
+                title: notification.title,
+                body: notification.body,
+                data: data
+              }
+            });
+            window.dispatchEvent(event);
+            
+            // Also show browser notification if user allows
+            showNotification(notification.title || 'নতুন নোটিফিকেশন', {
               body: notification.body,
               tag: data?.tag || 'fcm-message',
               data: data
