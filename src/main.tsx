@@ -13,22 +13,25 @@ const queryClient = new QueryClient();
 
 // Register service workers for PWA and Firebase messaging
 if ('serviceWorker' in navigator) {
-  // Register the main service worker
-  navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  // Register Firebase messaging service worker FIRST with root scope
+  navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
     .then((registration) => {
-      console.log('Main SW registered:', registration);
+      console.log('[SW] Firebase messaging SW registered:', registration);
+      console.log('[SW] Firebase SW scope:', registration.scope);
     })
     .catch((error) => {
-      console.error('Main SW registration failed:', error);
+      console.error('[SW] Firebase messaging SW registration failed:', error);
     });
     
-  // Register Firebase messaging service worker
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  // Register the main/PWA service worker with a different scope
+  // or let it share the root scope (Firebase will handle push)
+  navigator.serviceWorker.register('/sw.js', { scope: '/app/' })
     .then((registration) => {
-      console.log('Firebase messaging SW registered:', registration);
+      console.log('[SW] Main/PWA SW registered:', registration);
     })
     .catch((error) => {
-      console.error('Firebase messaging SW registration failed:', error);
+      // It's okay if this fails - Firebase SW handles push
+      console.warn('[SW] Main SW registration failed (optional):', error);
     });
 }
 
