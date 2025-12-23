@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertCircle, RefreshCw, Send } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, RefreshCw, Send, Bell } from 'lucide-react';
 import { generateFCMToken } from '@/services/firebase';
 import { setupPushNotifications } from '@/services/notification';
 import { useAuth } from '@/contexts/AuthContext';
@@ -156,22 +156,32 @@ export default function FCMDebugPanel() {
     }
   };
 
-  const handleSendTestNotification = async () => {
+  const handleSendTestNotification = async (isBackground = false) => {
     if (!profile?.user_id) {
       alert('User profile not loaded');
       return;
     }
 
     try {
-      console.log('[FCM Debug] 📤 Sending test notification...');
+      if (isBackground) {
+        alert('⚠️ ব্যাকগ্রাউন্ড টেস্টের জন্য:\n1. এই alert বন্ধ করুন\n2. দ্রুত ব্রাউজার minimize করুন বা অন্য tab এ যান\n3. ৩ সেকেন্ড পর notification আসবে');
+        
+        // Delay to give user time to switch
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+      
+      console.log('[FCM Debug] 📤 Sending test notification (background:', isBackground, ')...');
       
       const { data, error } = await supabase.functions.invoke('send-notification', {
         body: {
           user_id: profile.user_id,
-          title: 'টেস্ট নোটিফিকেশন 🔔',
-          body: 'এটি একটি টেস্ট নোটিফিকেশন। যদি আপনি এটি দেখতে পান তাহলে আপনার FCM টোকেন সঠিকভাবে কাজ করছে!',
+          title: isBackground ? '🔔 ব্যাকগ্রাউন্ড টেস্ট' : '🔔 টেস্ট নোটিফিকেশন',
+          body: isBackground 
+            ? 'ব্যাকগ্রাউন্ড নোটিফিকেশন সফলভাবে কাজ করছে!' 
+            : 'Foreground নোটিফিকেশন - Toast দেখতে পাচ্ছেন?',
           data: {
             type: 'test',
+            click_action: '/admin',
             timestamp: new Date().toISOString()
           }
         }
@@ -182,7 +192,10 @@ export default function FCMDebugPanel() {
         alert('Error: ' + error.message);
       } else {
         console.log('[FCM Debug] ✅ Test notification sent:', data);
-        alert('টেস্ট নোটিফিকেশন পাঠানো হয়েছে! ✅\nআপনার ডিভাইসে notification চেক করুন।');
+        if (!isBackground) {
+          // For foreground, expect toast to appear
+          console.log('[FCM Debug] Expecting toast notification...');
+        }
       }
     } catch (err) {
       console.error('[FCM Debug] ❌ Error sending test notification:', err);
@@ -290,11 +303,21 @@ export default function FCMDebugPanel() {
           <Button 
             className="w-full" 
             variant="secondary"
-            onClick={handleSendTestNotification}
+            onClick={() => handleSendTestNotification(false)}
             disabled={!status.fcmToken || !profile?.user_id}
           >
             <Send className="h-4 w-4 mr-2" />
-            টেস্ট নোটিফিকেশন পাঠান
+            Foreground টেস্ট (Toast দেখুন)
+          </Button>
+
+          <Button 
+            className="w-full" 
+            variant="outline"
+            onClick={() => handleSendTestNotification(true)}
+            disabled={!status.fcmToken || !profile?.user_id}
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            Background টেস্ট (ব্রাউজার minimize করুন)
           </Button>
         </div>
 
