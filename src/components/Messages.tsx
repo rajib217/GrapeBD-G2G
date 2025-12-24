@@ -12,6 +12,7 @@ import { MessageCircle, Send, User, ArrowLeft, Search, X, Trash2 } from 'lucide-
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { playMessageSentSound, playMessageReceivedSound, initializeAudio } from '@/hooks/use-message-sounds';
 
 interface Profile {
   id: string;
@@ -176,6 +177,9 @@ const Messages = () => {
 
       if (error) throw error;
 
+      // Play sent sound
+      playMessageSentSound();
+
       // Invoke edge function to send push notification
       try {
         await supabase.functions.invoke('send-message-notification', {
@@ -193,11 +197,6 @@ const Messages = () => {
 
       setNewMessage('');
       await fetchMessages(selectedUser.id);
-      
-      toast({
-        title: 'সফল',
-        description: 'মেসেজ পাঠানো হয়েছে',
-      });
     } catch (error) {
       toast({
         title: 'ত্রুটি',
@@ -297,6 +296,11 @@ const Messages = () => {
     }
   }, [selectedUser]);
 
+  // Initialize audio on component mount
+  useEffect(() => {
+    initializeAudio();
+  }, []);
+
   // Real-time subscription for new messages
   useEffect(() => {
     if (!profile?.id) return;
@@ -314,6 +318,9 @@ const Messages = () => {
         (payload) => {
           console.log('[Messages] New message received:', payload);
           
+          // Play received notification sound (Facebook-like ding)
+          playMessageReceivedSound();
+          
           // Refresh users list to update unread counts
           fetchUsers();
           
@@ -324,7 +331,7 @@ const Messages = () => {
           
           // Show toast notification for new message
           toast({
-            title: 'নতুন মেসেজ',
+            title: 'নতুন মেসেজ 💬',
             description: 'আপনার একটি নতুন মেসেজ এসেছে',
           });
         }
