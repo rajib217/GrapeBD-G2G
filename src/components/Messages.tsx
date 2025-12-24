@@ -297,6 +297,45 @@ const Messages = () => {
     }
   }, [selectedUser]);
 
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const channel = supabase
+      .channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${profile.id}`
+        },
+        (payload) => {
+          console.log('[Messages] New message received:', payload);
+          
+          // Refresh users list to update unread counts
+          fetchUsers();
+          
+          // If we're viewing messages from the sender, refresh the conversation
+          if (selectedUser && payload.new.sender_id === selectedUser.id) {
+            fetchMessages(selectedUser.id);
+          }
+          
+          // Show toast notification for new message
+          toast({
+            title: 'নতুন মেসেজ',
+            description: 'আপনার একটি নতুন মেসেজ এসেছে',
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, selectedUser]);
+
   // Handle direct messaging via URL parameter
   useEffect(() => {
     if (targetUserId && users.length > 0) {
