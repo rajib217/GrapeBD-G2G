@@ -165,10 +165,10 @@ const UserDashboard = () => {
 
         {/* Main Content */}
         <div className="flex flex-col flex-grow">
-          <div className="flex items-center justify-between h-16 px-4 shadow-sm border-b border-border" style={{ background: 'linear-gradient(135deg, #1a5e2a 0%, #2d7a3e 50%, #1b6b2e 100%)' }}>
+          <div className="flex items-center justify-between h-16 px-4 shadow-sm border-b border-border bg-card">
             <div className="flex items-center space-x-2">
-              <img src="/images/grapebd-logo.png" alt="GrapeBD G2G" className="h-10 w-10 object-contain md:hidden drop-shadow-md" />
-              <span className="font-bold text-white text-lg md:hidden drop-shadow-sm">GrapeBD G2G</span>
+              <img src="/images/grapebd-logo.png" alt="GrapeBD G2G" className="h-10 w-10 object-contain md:hidden" />
+              <span className="font-bold text-primary text-lg md:hidden">GrapeBD G2G</span>
               <div className="md:hidden ml-1">
                 <MobileNav 
                   activeTab={activeTab} 
