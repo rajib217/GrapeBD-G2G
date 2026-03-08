@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import grapeLogoImage from "@/assets/grapebd-logo.png";
+const grapeLogoImage = "/images/grapebd-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
