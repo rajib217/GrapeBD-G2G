@@ -179,11 +179,11 @@ const UserDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
-              <p className="font-medium hidden md:block text-white">{profile?.full_name}</p>
-              <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/20" onClick={() => navigate('/profile')}>
+              <p className="font-medium hidden md:block text-foreground">{profile?.full_name}</p>
+              <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/20" onClick={handleSignOut}>
+              <Button variant="outline" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
             </div>
