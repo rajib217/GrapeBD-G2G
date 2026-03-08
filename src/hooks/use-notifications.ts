@@ -98,7 +98,7 @@ export function useNotifications() {
     return () => {
       giftsChannel.unsubscribe();
     };
-  }, [profile?.id, notificationsEnabled]);
+  }, [profile?.id, profile?.user_id]);
 
   return {
     notificationsEnabled,
