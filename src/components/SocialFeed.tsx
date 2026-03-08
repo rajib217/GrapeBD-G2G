@@ -486,12 +486,6 @@ const SocialFeed = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Logo Header */}
-      <div className="text-center py-4">
-        <div className="flex justify-center mb-2">
-          <img src="/images/grapebd-logo.png" alt="GrapeBD G2G Logo" className="h-20 w-20 object-contain" />
-        </div>
-      </div>
       {/* Create Post */}
       <Card>
         <CardHeader className="pb-3">
