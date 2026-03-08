@@ -153,13 +153,12 @@ serve(async (req) => {
         const message = {
           message: {
             token: tokenData.token,
-            notification: {
-              title: payload.title,
-              body: payload.body,
-            },
             data: {
               type: 'notice',
+              title: payload.title,
+              body: payload.body,
               notice_id: payload.noticeId,
+              icon: '/pwa/manifest-icon-192.png',
             },
             webpush: {
               fcm_options: {
