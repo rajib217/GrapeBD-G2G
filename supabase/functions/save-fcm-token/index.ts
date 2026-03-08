@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 serve(async (req) => {
@@ -14,7 +14,7 @@ serve(async (req) => {
     if (!token || !user_id) return new Response(JSON.stringify({ error: 'missing token or user_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE') ?? ''
+    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
     if (!SUPABASE_URL || !SERVICE_ROLE) {
       return new Response(JSON.stringify({ error: 'server not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })

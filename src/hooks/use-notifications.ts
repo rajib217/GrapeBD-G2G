@@ -75,46 +75,10 @@ export function useNotifications() {
 
     void tryEnableAndSubscribe();
 
-    // Subscribe to realtime channels regardless of push setup; showNotification will no-op if permission is denied
-    // This ensures in-app notifications work even if FCM token isn’t ready yet.
-
-
-    // Subscribe to real-time notifications
-    const messagesChannel = supabase
-      .channel('messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${profile.id}`,
-        },
-        async (payload) => {
-          const { sender_id, content } = payload.new;
-          console.info('[useNotifications] New message payload:', payload);
-          // Fetch sender details
-          const { data: sender } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', sender_id)
-            .single();
-
-          if (sender) {
-            console.info('[useNotifications] Triggering showNotification for message:', sender.full_name, content);
-            showNotification('নতুন মেসেজ', {
-              body: `${sender.full_name}: ${content}`,
-              tag: 'new-message'
-            });
-          } else {
-            console.warn('[useNotifications] Sender not found for notification');
-          }
-        }
-      )
-      .subscribe();
-
+    // Subscribe to real-time notifications for gifts only
+    // Note: Message notifications are handled by Messages.tsx component to avoid duplicates
     const giftsChannel = supabase
-      .channel('gifts')
+      .channel('gifts-notifications')
       .on(
         'postgres_changes',
         {
@@ -124,10 +88,9 @@ export function useNotifications() {
           filter: `receiver_id=eq.${profile.id}`,
         },
         async (payload) => {
-          const { gift_name } = payload.new;
           console.info('[useNotifications] New gift payload:', payload);
           showNotification('নতুন গিফট!', {
-            body: `আপনি গিফট পেয়েছেন!`,
+            body: 'আপনি গিফট পেয়েছেন!',
             tag: 'new-gift'
           });
         }
@@ -135,7 +98,6 @@ export function useNotifications() {
       .subscribe();
 
     return () => {
-      messagesChannel.unsubscribe();
       giftsChannel.unsubscribe();
     };
   }, [profile?.id, notificationsEnabled]);

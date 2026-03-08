@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.send-notice-notification]
 verify_jwt = false
+
+[functions.save-fcm-token]
+verify_jwt = false
