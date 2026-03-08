@@ -186,21 +186,16 @@ serve(async (req) => {
           body: JSON.stringify({
             message: {
               token: token,
-              notification: {
-                title,
-                body,
-              },
               data: {
                 ...data,
+                title,
+                body,
                 click_action: '/',
+                icon: '/pwa/manifest-icon-192.png',
               },
               webpush: {
                 fcm_options: {
                   link: '/'
-                },
-                notification: {
-                  icon: '/pwa/manifest-icon-192.png',
-                  badge: '/pwa/manifest-icon-192.png',
                 }
               }
             }

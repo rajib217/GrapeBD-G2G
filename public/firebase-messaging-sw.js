@@ -26,19 +26,20 @@ try {
   const messaging = firebase.messaging();
   console.log('[Firebase SW] ✅ Messaging initialized');
 
-  // Handle background messages
+  // Handle background messages (data-only messages)
   messaging.onBackgroundMessage(function(payload) {
     console.log('[Firebase SW] 📨 Background message received:', payload);
-    console.log('[Firebase SW] Notification:', payload.notification);
     console.log('[Firebase SW] Data:', payload.data);
 
-    const notificationTitle = payload.notification?.title || 'নতুন বার্তা';
+    // Data-only messages: title/body are in payload.data
+    const data = payload.data || {};
+    const notificationTitle = data.title || 'নতুন বার্তা';
     const notificationOptions = {
-      body: payload.notification?.body || 'আপনার জন্য নতুন বার্তা এসেছে',
-      icon: '/pwa/manifest-icon-192.png',
+      body: data.body || 'আপনার জন্য নতুন বার্তা এসেছে',
+      icon: data.icon || '/pwa/manifest-icon-192.png',
       badge: '/pwa/manifest-icon-192.png',
-      tag: payload.data?.tag || 'fcm-' + Date.now(),
-      data: payload.data,
+      tag: data.type || 'fcm-' + Date.now(),
+      data: data,
       requireInteraction: true,
       actions: [
         {

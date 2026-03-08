@@ -171,24 +171,19 @@ serve(async (req) => {
           body: JSON.stringify({
             message: {
               token: token,
-              notification: {
-                title: 'নতুন মেসেজ',
-                body: `${sender.full_name}: ${content}`,
-              },
               data: {
                 type: 'message',
+                title: 'নতুন মেসেজ',
+                body: `${sender.full_name}: ${content}`,
                 sender_id,
                 sender_name: sender.full_name,
                 content,
                 click_action: '/messages',
+                icon: '/pwa/manifest-icon-192.png',
               },
               webpush: {
                 fcm_options: {
                   link: '/messages'
-                },
-                notification: {
-                  icon: '/pwa/manifest-icon-192.png',
-                  badge: '/pwa/manifest-icon-192.png',
                 }
               }
             }
