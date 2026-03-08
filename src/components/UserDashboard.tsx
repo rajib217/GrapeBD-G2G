@@ -58,6 +58,8 @@ const UserDashboard = () => {
           return <AdminGiftRounds />;
         case 'notices':
           return <AdminNotices />;
+        case 'posts':
+          return <AdminPosts />;
         case 'messages':
           return <Messages />;
         case 'all-members':
