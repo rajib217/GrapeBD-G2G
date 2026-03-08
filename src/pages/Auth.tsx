@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import grapeLogoImage from "@/assets/grapebd-logo.png";
+const grapeLogoImage = "/images/grapebd-logo.png";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
