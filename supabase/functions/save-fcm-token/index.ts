@@ -14,7 +14,7 @@ serve(async (req) => {
     if (!token || !user_id) return new Response(JSON.stringify({ error: 'missing token or user_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
-    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE') ?? ''
+    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
     if (!SUPABASE_URL || !SERVICE_ROLE) {
       return new Response(JSON.stringify({ error: 'server not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
