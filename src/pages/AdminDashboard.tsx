@@ -50,7 +50,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             {/* Mobile Menu */}
             <div className="md:hidden">
-              <MobileNav activeTab={activeTab} onTabChange={handleTabChange} />
+              <MobileNav activeTab={activeTab} onTabChange={handleTabChange} isAdminView={true} />
             </div>
             
             {/* Logo and Title */}

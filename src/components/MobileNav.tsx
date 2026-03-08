@@ -95,6 +95,7 @@ const MobileNav = ({
     { id: 'varieties', label: 'জাত পরিচালনা', icon: Leaf },
     { id: 'gift-rounds', label: 'উপহার রাউন্ড', icon: Clock },
     { id: 'notices', label: 'নোটিশ পরিচালনা', icon: Bell },
+    { id: 'posts', label: 'পোস্ট ও কমেন্ট', icon: MessageSquare },
     { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
     { id: 'all-members', label: 'সকল সদস্য', icon: UserCheck },
   ];
