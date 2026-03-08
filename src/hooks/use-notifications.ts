@@ -49,13 +49,11 @@ export function useNotifications() {
         }
 
         if (Notification.permission === 'granted') {
-          if (!notificationsEnabled) {
-            console.info('[useNotifications] Permission granted — setting up push notifications');
-            // Use the auth user id (profile.user_id) for backend upsert to satisfy RLS policies
-            const authUserId = profile.user_id ?? profile.id;
-            const success = await setupPushNotifications(authUserId);
-            setNotificationsEnabled(success);
-          }
+          // Always re-setup push notifications on load to ensure token is fresh
+          console.info('[useNotifications] Permission granted — setting up push notifications (force refresh)');
+          const authUserId = profile.user_id ?? profile.id;
+          const success = await setupPushNotifications(authUserId);
+          setNotificationsEnabled(success);
         } else if (Notification.permission === 'default') {
           // Ask once if the user hasn't previously rejected
           const previouslyRejected = localStorage.getItem('notificationRejected') === 'true';
@@ -100,7 +98,7 @@ export function useNotifications() {
     return () => {
       giftsChannel.unsubscribe();
     };
-  }, [profile?.id, notificationsEnabled]);
+  }, [profile?.id, profile?.user_id]);
 
   return {
     notificationsEnabled,
