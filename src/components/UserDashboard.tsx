@@ -107,10 +107,10 @@ const UserDashboard = () => {
       <div className="flex">
         {/* Sidebar */}
         <div className="hidden md:flex flex-col w-64 bg-card shadow-elegant border-r border-border">
-          <div className="flex items-center justify-center h-20 border-b border-border p-2" style={{ background: 'linear-gradient(135deg, #1a5e2a 0%, #2d7a3e 50%, #1b6b2e 100%)' }}>
+          <div className="flex items-center justify-center h-20 border-b border-border p-2 bg-card">
             <div className="flex items-center space-x-2">
-              <img src="/images/grapebd-logo.png" alt="Grape BD G2G Logo" className="h-14 w-14 object-contain drop-shadow-lg" />
-              <h1 className="text-xl font-bold text-white drop-shadow-md">Grape BD G2G</h1>
+              <img src="/images/grapebd-logo.png" alt="Grape BD G2G Logo" className="h-14 w-14 object-contain" />
+              <h1 className="text-2xl font-bold text-primary">Grape BD G2G</h1>
             </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2">
