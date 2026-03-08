@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { AdminPosts } from './admin/AdminPosts';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +58,8 @@ const UserDashboard = () => {
           return <AdminGiftRounds />;
         case 'notices':
           return <AdminNotices />;
+        case 'posts':
+          return <AdminPosts />;
         case 'messages':
           return <Messages />;
         case 'all-members':
