@@ -107,10 +107,10 @@ const UserDashboard = () => {
       <div className="flex">
         {/* Sidebar */}
         <div className="hidden md:flex flex-col w-64 bg-card shadow-elegant border-r border-border">
-          <div className="flex items-center justify-center h-20 border-b border-border bg-gradient-primary p-2">
+          <div className="flex items-center justify-center h-20 border-b border-border p-2" style={{ background: 'linear-gradient(135deg, #1a5e2a 0%, #2d7a3e 50%, #1b6b2e 100%)' }}>
             <div className="flex items-center space-x-2">
-              <img src="/images/grapebd-logo.png" alt="Grape BD G2G Logo" className="h-12 w-12 object-contain drop-shadow-lg" />
-              <h1 className="text-2xl font-bold text-white drop-shadow-md">Grape BD G2G</h1>
+              <img src="/images/grapebd-logo.png" alt="Grape BD G2G Logo" className="h-14 w-14 object-contain drop-shadow-lg" />
+              <h1 className="text-xl font-bold text-white drop-shadow-md">Grape BD G2G</h1>
             </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2">
@@ -165,10 +165,10 @@ const UserDashboard = () => {
 
         {/* Main Content */}
         <div className="flex flex-col flex-grow">
-          <div className="flex items-center justify-between h-16 px-4 bg-card shadow-sm border-b border-border">
+          <div className="flex items-center justify-between h-16 px-4 shadow-sm border-b border-border" style={{ background: 'linear-gradient(135deg, #1a5e2a 0%, #2d7a3e 50%, #1b6b2e 100%)' }}>
             <div className="flex items-center space-x-2">
-              <img src="/images/grapebd-logo.png" alt="GrapeBD G2G" className="h-9 w-9 object-contain md:hidden" />
-              <span className="font-bold text-foreground md:hidden">GrapeBD G2G</span>
+              <img src="/images/grapebd-logo.png" alt="GrapeBD G2G" className="h-10 w-10 object-contain md:hidden drop-shadow-md" />
+              <span className="font-bold text-white text-lg md:hidden drop-shadow-sm">GrapeBD G2G</span>
               <div className="md:hidden ml-1">
                 <MobileNav 
                   activeTab={activeTab} 
@@ -179,11 +179,11 @@ const UserDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
-              <p className="font-medium hidden md:block">{profile?.full_name}</p>
-              <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
+              <p className="font-medium hidden md:block text-white">{profile?.full_name}</p>
+              <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/20" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" onClick={handleSignOut}>
+              <Button variant="outline" size="icon" className="border-white/30 text-white hover:bg-white/20" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
             </div>
