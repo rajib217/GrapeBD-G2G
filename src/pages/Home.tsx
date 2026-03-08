@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import grapeLogoImage from "@/assets/grapebd-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -189,6 +190,9 @@ export default function Home() {
       <div className="container mx-auto max-w-2xl space-y-6">
         {/* Header */}
         <div className="text-center py-8">
+          <div className="flex justify-center mb-3">
+            <img src={grapeLogoImage} alt="GrapeBD G2G Logo" className="h-20 w-20 object-contain" />
+          </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">হোম</h1>
           <p className="text-muted-foreground">সবার সাথে আপনার চিন্তা ভাগ করুন</p>
         </div>
