@@ -50,11 +50,29 @@ export default function FCMDebugPanel() {
       }
 
       // Check for existing FCM token in localStorage
-      if (profile?.id) {
-        const storedToken = localStorage.getItem(`fcm_token_${profile.id}`);
+      // Use profile.user_id (auth user id) which matches the key used when saving
+      if (profile?.user_id) {
+        const storedToken = localStorage.getItem(`fcm_token_${profile.user_id}`);
         if (storedToken) {
           newStatus.fcmToken = storedToken;
           console.log('[FCM Debug] 📦 Found stored token');
+        }
+      }
+
+      // Also check DB for tokens
+      if (profile?.user_id) {
+        try {
+          const { data, error } = await supabase
+            .from('fcm_tokens')
+            .select('token')
+            .eq('user_id', profile.user_id)
+            .limit(1);
+          if (!error && data && data.length > 0) {
+            newStatus.fcmToken = data[0].token;
+            console.log('[FCM Debug] 📦 Found DB token');
+          }
+        } catch (e) {
+          console.warn('[FCM Debug] DB token check failed:', e);
         }
       }
     } catch (err) {
