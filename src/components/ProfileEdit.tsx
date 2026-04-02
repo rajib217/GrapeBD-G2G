@@ -331,10 +331,11 @@ const ProfileEdit = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic">মূল তথ্য</TabsTrigger>
           <TabsTrigger value="varieties">আমার জাত</TabsTrigger>
           <TabsTrigger value="gifts">প্রাপ্ত গিফট</TabsTrigger>
+          <TabsTrigger value="qr">QR কোড</TabsTrigger>
         </TabsList>
 
         {/* Basic Information Tab */}
