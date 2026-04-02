@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { AdminPosts } from './admin/AdminPosts';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield } from 'lucide-react';
+import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield, BarChart3, Trophy, HandHeart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/use-notifications';
@@ -16,6 +15,10 @@ import SeedlingStock from './SeedlingStock';
 import SendGift from './SendGift';
 import AllMembers from './AllMembers';
 import GiftHistory from './GiftHistory';
+import DashboardAnalytics from './DashboardAnalytics';
+import Leaderboard from './Leaderboard';
+import GiftRequests from './GiftRequests';
+import DarkModeToggle from './DarkModeToggle';
 import AdminUsers from './admin/AdminUsers';
 import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
