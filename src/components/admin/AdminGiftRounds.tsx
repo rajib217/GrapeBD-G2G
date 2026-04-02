@@ -158,7 +158,7 @@ const AdminGiftRounds = () => {
 
       setIsDialogOpen(false);
       setEditingRound(null);
-      setFormData({ title: '', description: '', is_active: true });
+      setFormData({ title: '', description: '', is_active: true, whatsapp_link: '', messenger_link: '' });
       setSelectedVarieties([]);
       setSelectedVarietyId('');
       setSelectedQuantity('');
