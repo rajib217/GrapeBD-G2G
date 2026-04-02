@@ -80,12 +80,14 @@ const MobileNav = ({
 
   const normalMenuItems: MenuItem[] = [
     { id: 'home', label: 'হোম', icon: Home },
+    { id: 'analytics', label: 'ড্যাশবোর্ড', icon: BarChart3 },
     { id: 'my-gifts', label: 'আমার গিফট', icon: Gift },
-    // Use 'add' to match desktop Tabs value
     { id: 'add', label: 'যোগ করুন', icon: PlusSquare },
     { id: 'stock', label: 'চারাগাছের স্টক', icon: Archive },
     { id: 'send', label: 'উপহার পাঠান', icon: Send },
+    { id: 'gift-requests', label: 'চারা রিকোয়েস্ট', icon: HandHeart },
     { id: 'all-members', label: 'সকল সদস্য', icon: Users },
+    { id: 'leaderboard', label: 'লিডারবোর্ড', icon: Trophy },
     { id: 'gift-history', label: 'উপহারের ইতিহাস', icon: History },
     { id: 'notices', label: 'নোটিশ', icon: Bell },
     { id: 'messages', label: 'মেসেজ', icon: MessageSquare },
