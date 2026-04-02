@@ -65,6 +65,7 @@ const SocialFeed = () => {
   const [editingImage, setEditingImage] = useState<File | null>(null);
   const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
