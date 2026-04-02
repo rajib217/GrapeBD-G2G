@@ -277,30 +277,22 @@ const GiftHistory = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
+                  {/* Gift Timeline */}
+                  <GiftTimeline 
+                    status={gift.status} 
+                    createdAt={gift.created_at}
+                    approvedAt={gift.approved_at}
+                    sentAt={gift.sent_at}
+                    receivedAt={gift.received_at}
+                  />
+                  <div className="space-y-2 text-sm mt-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 font-medium">পরিমাণ:</span>
-                      <span className="font-semibold text-green-700">{gift.quantity} টি</span>
+                      <span className="text-muted-foreground font-medium">পরিমাণ:</span>
+                      <span className="font-semibold text-accent">{gift.quantity} টি</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 font-medium">তারিখ:</span>
-                      <span className="text-right">{formatDate(gift.created_at)}</span>
-                    </div>
-                    {gift.sent_at && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">পাঠানোর তারিখ:</span>
-                        <span>{formatDate(gift.sent_at)}</span>
-                      </div>
-                    )}
-                    {gift.received_at && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">প্রাপ্তির তারিখ:</span>
-                        <span>{formatDate(gift.received_at)}</span>
-                      </div>
-                    )}
                     {gift.admin_notes && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded">
-                        <p className="text-sm text-gray-600">অ্যাডমিনের নোট:</p>
+                      <div className="mt-3 p-3 bg-muted rounded">
+                        <p className="text-sm text-muted-foreground">অ্যাডমিনের নোট:</p>
                         <p className="text-sm">{gift.admin_notes}</p>
                       </div>
                     )}
