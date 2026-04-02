@@ -647,7 +647,18 @@ const SocialFeed = () => {
                         )}
                       </div>
                     )}
-                    {post.image_url && <div className="rounded-lg overflow-hidden border"><img src={post.image_url} alt="Post image" className="w-full max-h-96 object-cover" /></div>}
+                    {post.image_url && (
+                      <>
+                        <div className="rounded-lg overflow-hidden border cursor-pointer" onClick={() => setFullscreenImage(post.image_url)}>
+                          <img src={post.image_url} alt="Post image" className="w-full max-h-96 object-cover hover:opacity-90 transition-opacity" />
+                        </div>
+                        <FullscreenImageViewer 
+                          src={fullscreenImage || ''} 
+                          isOpen={fullscreenImage === post.image_url} 
+                          onClose={() => setFullscreenImage(null)} 
+                        />
+                      </>
+                    )}
                   </CardContent>
                   <CardFooter className="flex flex-col items-start">
                     <div className="flex items-center justify-between w-full py-2">
