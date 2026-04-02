@@ -58,6 +58,19 @@ const AdminVarieties = () => {
 
       if (varietiesError) throw varietiesError;
 
+      // Get creator profiles for member-added varieties
+      const creatorIds = [...new Set((varietiesData || []).map(v => v.created_by).filter(Boolean))];
+      let creatorsMap: Record<string, string> = {};
+      if (creatorIds.length > 0) {
+        const { data: creators } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', creatorIds);
+        if (creators) {
+          creatorsMap = Object.fromEntries(creators.map(c => [c.id, c.full_name]));
+        }
+      }
+
       // Then get total quantities for each variety
       const varietiesWithQuantities = await Promise.all(
         (varietiesData || []).map(async (variety) => {
@@ -68,11 +81,11 @@ const AdminVarieties = () => {
 
           if (stockError) {
             console.error('Error fetching stock for variety:', variety.name, stockError);
-            return { ...variety, total_quantity: 0 };
+            return { ...variety, total_quantity: 0, creator_name: variety.created_by ? creatorsMap[variety.created_by] : undefined };
           }
 
           const totalQuantity = stockData?.reduce((sum, stock) => sum + stock.quantity, 0) || 0;
-          return { ...variety, total_quantity: totalQuantity };
+          return { ...variety, total_quantity: totalQuantity, creator_name: variety.created_by ? creatorsMap[variety.created_by] : undefined };
         })
       );
 
