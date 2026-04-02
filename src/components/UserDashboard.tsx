@@ -79,6 +79,12 @@ const UserDashboard = () => {
       switch (activeTab) {
         case 'home':
           return <SocialFeed />;
+        case 'analytics':
+          return <DashboardAnalytics />;
+        case 'leaderboard':
+          return <Leaderboard />;
+        case 'gift-requests':
+          return <GiftRequests />;
         case 'my-gifts':
           return <MyGifts />;
         case 'notices':
