@@ -490,9 +490,16 @@ const AdminVarieties = () => {
                       {new Date(variety.created_at).toLocaleDateString('bn-BD')}
                     </p>
                   </div>
-                  <Badge variant={variety.is_active ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
-                    {variety.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <Badge variant={variety.is_active ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                      {variety.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                    </Badge>
+                    {variety.creator_name && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 border-orange-300 text-orange-600">
+                        মেম্বার: {variety.creator_name}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 {variety.description && (
