@@ -96,6 +96,7 @@ const GiftHistory = () => {
           quantity,
           status,
           created_at,
+          approved_at,
           sent_at,
           received_at,
           admin_notes,
