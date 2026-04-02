@@ -527,24 +527,50 @@ const ProfileEdit = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Add New Variety */}
-              <div className="flex space-x-2">
-                <Select value={selectedVarietyId} onValueChange={setSelectedVarietyId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="জাত নির্বাচন করুন" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {varieties.filter(v => !userVarieties.some(uv => uv.variety_id === v.id)).map((variety) => (
-                      <SelectItem key={variety.id} value={variety.id}>
-                        {variety.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={addUserVariety} disabled={!selectedVarietyId}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  যোগ করুন
-                </Button>
+              {/* Add from existing varieties */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">তালিকা থেকে জাত নির্বাচন করুন</Label>
+                <div className="flex space-x-2">
+                  <Select value={selectedVarietyId} onValueChange={setSelectedVarietyId}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="জাত নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {varieties.filter(v => !userVarieties.some(uv => uv.variety_id === v.id)).map((variety) => (
+                        <SelectItem key={variety.id} value={variety.id}>
+                          {variety.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={addUserVariety} disabled={!selectedVarietyId}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    যোগ করুন
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add custom variety */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">অথবা নতুন জাত যোগ করুন (তালিকায় না থাকলে)</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    value={customVarietyName}
+                    onChange={(e) => setCustomVarietyName(e.target.value)}
+                    placeholder="নতুন জাতের নাম লিখুন..."
+                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomVariety();
+                      }
+                    }}
+                  />
+                  <Button onClick={addCustomVariety} disabled={!customVarietyName.trim() || addingCustom}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {addingCustom ? 'যোগ হচ্ছে...' : 'যোগ করুন'}
+                  </Button>
+                </div>
               </div>
 
               {/* User Varieties List */}
