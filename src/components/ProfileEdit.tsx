@@ -31,6 +31,8 @@ const ProfileEdit = () => {
   const [userVarieties, setUserVarieties] = useState<any[]>([]);
   const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<any[]>([]);
   const [selectedVarietyId, setSelectedVarietyId] = useState('');
+  const [customVarietyName, setCustomVarietyName] = useState('');
+  const [addingCustom, setAddingCustom] = useState(false);
   const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
 
