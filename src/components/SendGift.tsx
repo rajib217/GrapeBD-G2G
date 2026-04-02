@@ -30,6 +30,8 @@ interface GiftRound {
   id: string;
   title: string;
   description: string | null;
+  whatsapp_link: string | null;
+  messenger_link: string | null;
 }
 
 interface AssignedGift {
