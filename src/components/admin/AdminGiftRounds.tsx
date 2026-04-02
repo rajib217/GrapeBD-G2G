@@ -476,6 +476,25 @@ const AdminGiftRounds = () => {
                 </p>
               )}
               
+              {(round.whatsapp_link || round.messenger_link) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {round.whatsapp_link && (
+                    <a href={round.whatsapp_link} target="_blank" rel="noopener noreferrer">
+                      <Badge variant="outline" className="border-green-500 text-green-600 cursor-pointer">
+                        WhatsApp গ্রুপ
+                      </Badge>
+                    </a>
+                  )}
+                  {round.messenger_link && (
+                    <a href={round.messenger_link} target="_blank" rel="noopener noreferrer">
+                      <Badge variant="outline" className="border-blue-500 text-blue-600 cursor-pointer">
+                        Messenger গ্রুপ
+                      </Badge>
+                    </a>
+                  )}
+                </div>
+              )}
+              
               <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
                   <Button
