@@ -38,6 +38,7 @@ interface ReceivedGift {
   quantity: number;
   status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
   created_at: string;
+  approved_at: string | null;
   sent_at: string | null;
   received_at: string | null;
   admin_notes: string | null;
