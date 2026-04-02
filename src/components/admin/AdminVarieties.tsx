@@ -22,6 +22,7 @@ interface Variety {
   created_at: string;
   created_by?: string;
   total_quantity?: number;
+  creator_name?: string;
 }
 
 const AdminVarieties = () => {
