@@ -178,7 +178,9 @@ const AdminGiftRounds = () => {
     setFormData({
       title: round.title,
       description: round.description || '',
-      is_active: round.is_active
+      is_active: round.is_active,
+      whatsapp_link: round.whatsapp_link || '',
+      messenger_link: round.messenger_link || ''
     });
     setSelectedVarieties([]);
     setSelectedVarietyId('');
