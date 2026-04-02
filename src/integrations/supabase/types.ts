@@ -78,8 +78,10 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          messenger_link: string | null
           title: string
           updated_at: string
+          whatsapp_link: string | null
         }
         Insert: {
           created_at?: string
@@ -87,8 +89,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          messenger_link?: string | null
           title: string
           updated_at?: string
+          whatsapp_link?: string | null
         }
         Update: {
           created_at?: string
@@ -96,8 +100,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          messenger_link?: string | null
           title?: string
           updated_at?: string
+          whatsapp_link?: string | null
         }
         Relationships: [
           {
