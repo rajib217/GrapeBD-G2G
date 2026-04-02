@@ -1,0 +1,1 @@
+CREATE POLICY "Members can insert varieties" ON public.varieties FOR INSERT TO authenticated WITH CHECK (created_by = (SELECT id FROM profiles WHERE user_id = auth.uid()));
