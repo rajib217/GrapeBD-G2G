@@ -93,7 +93,7 @@ const SendGift = () => {
       // Fetch active gift rounds
       const { data: roundsData, error: roundsError } = await supabase
         .from('gift_rounds')
-        .select('id, title, description')
+        .select('id, title, description, whatsapp_link, messenger_link')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
