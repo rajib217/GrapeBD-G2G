@@ -46,7 +46,9 @@ const AdminGiftRounds = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    is_active: true
+    is_active: true,
+    whatsapp_link: '',
+    messenger_link: ''
   });
   const [selectedVarieties, setSelectedVarieties] = useState<GiftRoundVariety[]>([]);
   const [selectedVarietyId, setSelectedVarietyId] = useState('');
