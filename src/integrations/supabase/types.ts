@@ -71,6 +71,67 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_requests: {
+        Row: {
+          created_at: string
+          fulfilled_by: string | null
+          id: string
+          note: string | null
+          quantity: number
+          requester_id: string
+          status: string
+          updated_at: string
+          variety_id: string | null
+          variety_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_by?: string | null
+          id?: string
+          note?: string | null
+          quantity?: number
+          requester_id: string
+          status?: string
+          updated_at?: string
+          variety_id?: string | null
+          variety_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          fulfilled_by?: string | null
+          id?: string
+          note?: string | null
+          quantity?: number
+          requester_id?: string
+          status?: string
+          updated_at?: string
+          variety_id?: string | null
+          variety_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_requests_fulfilled_by_fkey"
+            columns: ["fulfilled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_requests_variety_id_fkey"
+            columns: ["variety_id"]
+            isOneToOne: false
+            referencedRelation: "varieties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_rounds: {
         Row: {
           created_at: string
@@ -207,6 +268,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean
           receiver_id: string
           sender_id: string
@@ -215,6 +277,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
           receiver_id: string
           sender_id: string
@@ -223,6 +286,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
           receiver_id?: string
           sender_id?: string

@@ -8,11 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { User, Save, Upload, Plus, X, Package } from 'lucide-react';
+import { User, Save, Upload, Plus, X, Package, QrCode } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { compressImage } from '@/utils/imageCompression';
+import ProfileQRCode from './ProfileQRCode';
 
 const ProfileEdit = () => {
   const [loading, setLoading] = useState(false);
@@ -330,10 +331,11 @@ const ProfileEdit = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic">মূল তথ্য</TabsTrigger>
           <TabsTrigger value="varieties">আমার জাত</TabsTrigger>
           <TabsTrigger value="gifts">প্রাপ্ত গিফট</TabsTrigger>
+          <TabsTrigger value="qr">QR কোড</TabsTrigger>
         </TabsList>
 
         {/* Basic Information Tab */}
@@ -661,6 +663,22 @@ const ProfileEdit = () => {
                   এখনো কোন গিফট পাননি
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* QR Code Tab */}
+        <TabsContent value="qr">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <QrCode className="h-5 w-5" />
+                <span>প্রোফাইল QR কোড</span>
+              </CardTitle>
+              <CardDescription>এই QR কোড স্ক্যান করে যেকেউ আপনার প্রোফাইল দেখতে পারবে</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center py-8">
+              {profile?.id && <ProfileQRCode profileId={profile.id} size={200} />}
             </CardContent>
           </Card>
         </TabsContent>

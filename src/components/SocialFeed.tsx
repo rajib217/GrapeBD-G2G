@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import FullscreenImageViewer from './FullscreenImageViewer';
 
 interface Reaction {
   id: string;
@@ -64,6 +65,7 @@ const SocialFeed = () => {
   const [editingImage, setEditingImage] = useState<File | null>(null);
   const [editingImagePreview, setEditingImagePreview] = useState<string | null>(null);
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -646,7 +648,18 @@ const SocialFeed = () => {
                         )}
                       </div>
                     )}
-                    {post.image_url && <div className="rounded-lg overflow-hidden border"><img src={post.image_url} alt="Post image" className="w-full max-h-96 object-cover" /></div>}
+                    {post.image_url && (
+                      <>
+                        <div className="rounded-lg overflow-hidden border cursor-pointer" onClick={() => setFullscreenImage(post.image_url)}>
+                          <img src={post.image_url} alt="Post image" className="w-full max-h-96 object-cover hover:opacity-90 transition-opacity" />
+                        </div>
+                        <FullscreenImageViewer 
+                          src={fullscreenImage || ''} 
+                          isOpen={fullscreenImage === post.image_url} 
+                          onClose={() => setFullscreenImage(null)} 
+                        />
+                      </>
+                    )}
                   </CardContent>
                   <CardFooter className="flex flex-col items-start">
                     <div className="flex items-center justify-between w-full py-2">
