@@ -330,6 +330,24 @@ const AdminGiftRounds = () => {
                   placeholder="এই রাউন্ড সম্পর্কে বিস্তারিত তথ্য..."
                 />
               </div>
+              <div>
+                <Label htmlFor="whatsapp_link">WhatsApp গ্রুপ লিংক</Label>
+                <Input
+                  id="whatsapp_link"
+                  value={formData.whatsapp_link}
+                  onChange={(e) => setFormData({ ...formData, whatsapp_link: e.target.value })}
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="messenger_link">Messenger গ্রুপ লিংক</Label>
+                <Input
+                  id="messenger_link"
+                  value={formData.messenger_link}
+                  onChange={(e) => setFormData({ ...formData, messenger_link: e.target.value })}
+                  placeholder="https://m.me/..."
+                />
+              </div>
               <div className="flex items-center space-x-2">
                 <Switch
                   id="is_active"
