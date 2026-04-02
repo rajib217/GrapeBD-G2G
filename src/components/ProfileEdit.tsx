@@ -666,6 +666,22 @@ const ProfileEdit = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* QR Code Tab */}
+        <TabsContent value="qr">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <QrCode className="h-5 w-5" />
+                <span>প্রোফাইল QR কোড</span>
+              </CardTitle>
+              <CardDescription>এই QR কোড স্ক্যান করে যেকেউ আপনার প্রোফাইল দেখতে পারবে</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center py-8">
+              {profile?.id && <ProfileQRCode profileId={profile.id} size={200} />}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
