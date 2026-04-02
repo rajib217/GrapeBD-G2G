@@ -122,10 +122,14 @@ const UserDashboard = () => {
               <h1 className="text-2xl font-bold text-primary">Grape BD G2G</h1>
             </div>
           </div>
-          <div className="flex flex-col flex-grow p-4 space-y-2">
+          <div className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto">
             <Button variant={activeTab === 'home' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('home')} className="justify-start">
               <Home className="w-5 h-5 mr-3" />
               ফিড
+            </Button>
+            <Button variant={activeTab === 'analytics' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('analytics')} className="justify-start">
+              <BarChart3 className="w-5 h-5 mr-3" />
+              ড্যাশবোর্ড
             </Button>
             <Button variant={activeTab === 'my-gifts' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('my-gifts')} className="justify-start">
               <Gift className="w-5 h-5 mr-3" />
@@ -143,9 +147,17 @@ const UserDashboard = () => {
               <Send className="w-5 h-5 mr-3" />
               উপহার পাঠান
             </Button>
+            <Button variant={activeTab === 'gift-requests' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('gift-requests')} className="justify-start">
+              <HandHeart className="w-5 h-5 mr-3" />
+              চারা রিকোয়েস্ট
+            </Button>
             <Button variant={activeTab === 'all-members' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('all-members')} className="justify-start">
               <Users className="w-5 h-5 mr-3" />
               সকল সদস্য
+            </Button>
+            <Button variant={activeTab === 'leaderboard' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('leaderboard')} className="justify-start">
+              <Trophy className="w-5 h-5 mr-3" />
+              লিডারবোর্ড
             </Button>
             <Button variant={activeTab === 'gift-history' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('gift-history')} className="justify-start">
               <History className="w-5 h-5 mr-3" />
