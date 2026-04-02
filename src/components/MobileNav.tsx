@@ -21,7 +21,10 @@ import {
   Shield,
   Leaf, 
   Clock, 
-  UserCheck
+  UserCheck,
+  BarChart3,
+  Trophy,
+  HandHeart
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
