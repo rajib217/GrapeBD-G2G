@@ -20,6 +20,8 @@ interface GiftRound {
   created_at: string;
   updated_at: string;
   created_by: string;
+  whatsapp_link?: string;
+  messenger_link?: string;
 }
 
 interface Variety {
