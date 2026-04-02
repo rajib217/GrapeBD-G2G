@@ -20,6 +20,8 @@ interface GiftRound {
   created_at: string;
   updated_at: string;
   created_by: string;
+  whatsapp_link?: string;
+  messenger_link?: string;
 }
 
 interface Variety {
@@ -44,7 +46,9 @@ const AdminGiftRounds = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    is_active: true
+    is_active: true,
+    whatsapp_link: '',
+    messenger_link: ''
   });
   const [selectedVarieties, setSelectedVarieties] = useState<GiftRoundVariety[]>([]);
   const [selectedVarietyId, setSelectedVarietyId] = useState('');
@@ -154,7 +158,7 @@ const AdminGiftRounds = () => {
 
       setIsDialogOpen(false);
       setEditingRound(null);
-      setFormData({ title: '', description: '', is_active: true });
+      setFormData({ title: '', description: '', is_active: true, whatsapp_link: '', messenger_link: '' });
       setSelectedVarieties([]);
       setSelectedVarietyId('');
       setSelectedQuantity('');
@@ -174,7 +178,9 @@ const AdminGiftRounds = () => {
     setFormData({
       title: round.title,
       description: round.description || '',
-      is_active: round.is_active
+      is_active: round.is_active,
+      whatsapp_link: round.whatsapp_link || '',
+      messenger_link: round.messenger_link || ''
     });
     setSelectedVarieties([]);
     setSelectedVarietyId('');
@@ -288,7 +294,7 @@ const AdminGiftRounds = () => {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingRound(null);
-              setFormData({ title: '', description: '', is_active: true });
+              setFormData({ title: '', description: '', is_active: true, whatsapp_link: '', messenger_link: '' });
               setSelectedVarieties([]);
               setSelectedVarietyId('');
               setSelectedQuantity('');
@@ -322,6 +328,24 @@ const AdminGiftRounds = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="এই রাউন্ড সম্পর্কে বিস্তারিত তথ্য..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="whatsapp_link">WhatsApp গ্রুপ লিংক</Label>
+                <Input
+                  id="whatsapp_link"
+                  value={formData.whatsapp_link}
+                  onChange={(e) => setFormData({ ...formData, whatsapp_link: e.target.value })}
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="messenger_link">Messenger গ্রুপ লিংক</Label>
+                <Input
+                  id="messenger_link"
+                  value={formData.messenger_link}
+                  onChange={(e) => setFormData({ ...formData, messenger_link: e.target.value })}
+                  placeholder="https://m.me/..."
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -450,6 +474,25 @@ const AdminGiftRounds = () => {
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                   {round.description}
                 </p>
+              )}
+              
+              {(round.whatsapp_link || round.messenger_link) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {round.whatsapp_link && (
+                    <a href={round.whatsapp_link} target="_blank" rel="noopener noreferrer">
+                      <Badge variant="outline" className="border-green-500 text-green-600 cursor-pointer">
+                        WhatsApp গ্রুপ
+                      </Badge>
+                    </a>
+                  )}
+                  {round.messenger_link && (
+                    <a href={round.messenger_link} target="_blank" rel="noopener noreferrer">
+                      <Badge variant="outline" className="border-blue-500 text-blue-600 cursor-pointer">
+                        Messenger গ্রুপ
+                      </Badge>
+                    </a>
+                  )}
+                </div>
               )}
               
               <div className="flex justify-between items-center">

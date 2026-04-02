@@ -30,6 +30,8 @@ interface GiftRound {
   id: string;
   title: string;
   description: string | null;
+  whatsapp_link: string | null;
+  messenger_link: string | null;
 }
 
 interface AssignedGift {
@@ -91,7 +93,7 @@ const SendGift = () => {
       // Fetch active gift rounds
       const { data: roundsData, error: roundsError } = await supabase
         .from('gift_rounds')
-        .select('id, title, description')
+        .select('id, title, description, whatsapp_link, messenger_link')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -364,6 +366,32 @@ const SendGift = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Group Links for selected round */}
+            {selectedGiftRound && (() => {
+              const round = giftRounds.find(r => r.id === selectedGiftRound);
+              if (!round || (!round.whatsapp_link && !round.messenger_link)) return null;
+              return (
+                <div className="flex flex-wrap gap-3">
+                  {round.whatsapp_link && (
+                    <a href={round.whatsapp_link} target="_blank" rel="noopener noreferrer">
+                      <Button type="button" variant="outline" size="sm" className="border-green-500 text-green-600 hover:bg-green-50">
+                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.37 0-4.567-.7-6.414-1.9l-.45-.29-2.633.883.883-2.633-.29-.45A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                        WhatsApp গ্রুপে জয়েন করুন
+                      </Button>
+                    </a>
+                  )}
+                  {round.messenger_link && (
+                    <a href={round.messenger_link} target="_blank" rel="noopener noreferrer">
+                      <Button type="button" variant="outline" size="sm" className="border-blue-500 text-blue-600 hover:bg-blue-50">
+                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.2l3.131 3.26 5.887-3.26-6.559 6.763z"/></svg>
+                        Messenger গ্রুপে জয়েন করুন
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
 
             <div>
               <Label htmlFor="receiver">গ্রহীতা নির্বাচন করুন *</Label>
