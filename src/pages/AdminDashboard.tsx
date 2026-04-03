@@ -118,7 +118,11 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="posts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <MessageCircle className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">পোস্ট ও কমেন্ট</span>
+              <span className="text-xs md:text-sm font-medium">পোস্ট</span>
+            </TabsTrigger>
+            <TabsTrigger value="comments" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
+              <MessageSquare className="h-4 w-4" />
+              <span className="text-xs md:text-sm font-medium">কমেন্ট</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <MessageCircle className="h-4 w-4" />
