@@ -166,6 +166,10 @@ const AdminDashboard = () => {
             <AdminPosts />
           </TabsContent>
 
+          <TabsContent value="comments">
+            <AdminComments />
+          </TabsContent>
+
           <TabsContent value="messages">
             <Messages />
           </TabsContent>
