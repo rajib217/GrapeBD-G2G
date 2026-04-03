@@ -18,7 +18,7 @@ import GiftHistory from './GiftHistory';
 import DashboardAnalytics from './DashboardAnalytics';
 import Leaderboard from './Leaderboard';
 import GiftRequests from './GiftRequests';
-import DarkModeToggle from './DarkModeToggle';
+
 import AdminUsers from './admin/AdminUsers';
 import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
@@ -201,7 +201,7 @@ const UserDashboard = () => {
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <p className="font-medium hidden md:block text-foreground">{profile?.full_name}</p>
-              <DarkModeToggle />
+              
               <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
