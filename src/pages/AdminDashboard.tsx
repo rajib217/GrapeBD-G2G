@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield } from 'lucide-react';
+import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminStats from '@/components/admin/AdminStats';
 import AdminUsers from '@/components/admin/AdminUsers';
@@ -12,6 +12,7 @@ import AdminVarieties from '@/components/admin/AdminVarieties';
 import AdminGiftRounds from '@/components/admin/AdminGiftRounds';
 import AdminNotices from '@/components/admin/AdminNotices';
 import { AdminPosts } from '@/components/admin/AdminPosts';
+import AdminComments from '@/components/admin/AdminComments';
 import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
 import NotificationDebug from '@/components/NotificationDebug';
@@ -94,7 +95,7 @@ const AdminDashboard = () => {
         <AdminStats />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-8 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
+          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-11 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
             <TabsTrigger value="users" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <Users className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">ইউজার</span>
@@ -117,7 +118,11 @@ const AdminDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="posts" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <MessageCircle className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">পোস্ট ও কমেন্ট</span>
+              <span className="text-xs md:text-sm font-medium">পোস্ট</span>
+            </TabsTrigger>
+            <TabsTrigger value="comments" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
+              <MessageSquare className="h-4 w-4" />
+              <span className="text-xs md:text-sm font-medium">কমেন্ট</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <MessageCircle className="h-4 w-4" />
@@ -159,6 +164,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="posts">
             <AdminPosts />
+          </TabsContent>
+
+          <TabsContent value="comments">
+            <AdminComments />
           </TabsContent>
 
           <TabsContent value="messages">
