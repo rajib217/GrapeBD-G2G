@@ -18,7 +18,7 @@ import GiftHistory from './GiftHistory';
 import DashboardAnalytics from './DashboardAnalytics';
 import Leaderboard from './Leaderboard';
 import GiftRequests from './GiftRequests';
-import DarkModeToggle from './DarkModeToggle';
+
 import AdminUsers from './admin/AdminUsers';
 import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
