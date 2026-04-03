@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield } from 'lucide-react';
+import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminStats from '@/components/admin/AdminStats';
 import AdminUsers from '@/components/admin/AdminUsers';
