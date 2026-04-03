@@ -202,7 +202,8 @@ const ProfileEdit = () => {
         .from('profile-pictures')
         .getPublicUrl(filePath);
 
-      handleInputChange('profile_image', data.publicUrl);
+      const cacheBustedUrl = `${data.publicUrl}?t=${Date.now()}`;
+      handleInputChange('profile_image', cacheBustedUrl);
 
       toast({
         title: 'সফল',
