@@ -11,12 +11,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-interface Post {
+interface Comment {
   id: string;
   content: string;
-  image_url: string | null;
   created_at: string;
   edited_by_admin: boolean;
+  post_id: string;
   profiles: {
     full_name: string;
     profile_image: string | null;
@@ -28,9 +28,9 @@ interface Profile {
   full_name: string;
 }
 
-export const AdminPosts = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+const AdminComments = () => {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<Profile[]>([]);
@@ -40,11 +40,11 @@ export const AdminPosts = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchPosts();
+    fetchComments();
   }, []);
 
   useEffect(() => {
-    fetchPosts();
+    fetchComments();
   }, [selectedUserId, startDate, endDate]);
 
   const fetchUsers = async () => {
@@ -61,10 +61,10 @@ export const AdminPosts = () => {
     setUsers(data || []);
   };
 
-  const fetchPosts = async () => {
+  const fetchComments = async () => {
     let query = supabase
-      .from("posts")
-      .select(`*, profiles:user_id (full_name, profile_image)`);
+      .from("comments")
+      .select(`id, content, created_at, edited_by_admin, post_id, user_id`);
 
     if (selectedUserId !== "all") {
       query = query.eq("user_id", selectedUserId);
@@ -78,57 +78,77 @@ export const AdminPosts = () => {
       query = query.lte("created_at", endOfDay.toISOString());
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data: commentsData, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
-      toast.error("পোস্ট লোড করতে সমস্যা হয়েছে");
+      toast.error("কমেন্ট লোড করতে সমস্যা হয়েছে");
+      setLoading(false);
       return;
     }
 
-    setPosts(data || []);
+    if (!commentsData || commentsData.length === 0) {
+      setComments([]);
+      setLoading(false);
+      return;
+    }
+
+    const userIds = [...new Set(commentsData.map(c => c.user_id))];
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("id, full_name, profile_image")
+      .in("id", userIds);
+
+    const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+
+    const commentsWithProfiles = commentsData.map(comment => ({
+      ...comment,
+      profiles: profilesMap.get(comment.user_id) || { full_name: "Unknown", profile_image: null }
+    }));
+
+    setComments(commentsWithProfiles);
     setLoading(false);
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm("আপনি কি এই পোস্টটি মুছে ফেলতে চান?")) return;
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("আপনি কি এই কমেন্টটি মুছে ফেলতে চান?")) return;
 
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
 
     if (error) {
-      toast.error("পোস্ট মুছতে সমস্যা হয়েছে");
+      toast.error("কমেন্ট মুছতে সমস্যা হয়েছে");
       return;
     }
 
-    toast.success("পোস্ট মুছে ফেলা হয়েছে");
-    fetchPosts();
+    toast.success("কমেন্ট মুছে ফেলা হয়েছে");
+    fetchComments();
   };
 
-  const startEditPost = (post: Post) => {
-    setEditingPostId(post.id);
-    setEditContent(post.content || "");
+  const startEditComment = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditContent(comment.content);
   };
 
   const cancelEdit = () => {
-    setEditingPostId(null);
+    setEditingCommentId(null);
     setEditContent("");
   };
 
-  const savePostEdit = async () => {
-    if (!editingPostId) return;
+  const saveCommentEdit = async () => {
+    if (!editingCommentId) return;
 
     const { error } = await supabase
-      .from("posts")
+      .from("comments")
       .update({ content: editContent, edited_by_admin: true })
-      .eq("id", editingPostId);
+      .eq("id", editingCommentId);
 
     if (error) {
-      toast.error("পোস্ট আপডেট করতে সমস্যা হয়েছে");
+      toast.error("কমেন্ট আপডেট করতে সমস্যা হয়েছে");
       return;
     }
 
-    toast.success("পোস্ট আপডেট হয়েছে");
+    toast.success("কমেন্ট আপডেট হয়েছে");
     cancelEdit();
-    fetchPosts();
+    fetchComments();
   };
 
   if (loading) {
@@ -141,7 +161,7 @@ export const AdminPosts = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            পোস্ট ফিল্টার
+            কমেন্ট ফিল্টার
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -221,42 +241,42 @@ export const AdminPosts = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>সকল পোস্ট ম্যানেজমেন্ট ({posts.length})</CardTitle>
+          <CardTitle>সকল কমেন্ট ম্যানেজমেন্ট ({comments.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {posts.length === 0 && (
-              <p className="text-muted-foreground text-center py-8">কোনো পোস্ট পাওয়া যায়নি</p>
+            {comments.length === 0 && (
+              <p className="text-muted-foreground text-center py-8">কোনো কমেন্ট পাওয়া যায়নি</p>
             )}
-            {posts.map((post) => (
-              <Card key={post.id}>
+            {comments.map((comment) => (
+              <Card key={comment.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3 mb-3">
-                    <Avatar>
-                      <AvatarImage src={post.profiles.profile_image || ""} />
-                      <AvatarFallback>{post.profiles.full_name.charAt(0)}</AvatarFallback>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={comment.profiles.profile_image || ""} />
+                      <AvatarFallback>{comment.profiles.full_name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="font-semibold">{post.profiles.full_name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(post.created_at).toLocaleString('bn-BD')}
+                      <div className="font-semibold text-sm">{comment.profiles.full_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(comment.created_at).toLocaleString('bn-BD')}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => startEditPost(post)}>
+                      <Button variant="ghost" size="sm" onClick={() => startEditComment(comment)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteComment(comment.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  {editingPostId === post.id ? (
+                  {editingCommentId === comment.id ? (
                     <div className="space-y-2">
-                      <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={3} />
+                      <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={2} />
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={savePostEdit}>
+                        <Button size="sm" onClick={saveCommentEdit}>
                           <Check className="h-4 w-4 mr-1" />
                           সেভ করুন
                         </Button>
@@ -268,12 +288,9 @@ export const AdminPosts = () => {
                     </div>
                   ) : (
                     <div>
-                      <p className="whitespace-pre-wrap">{post.content}</p>
-                      {post.edited_by_admin && (
-                        <p className="text-xs text-muted-foreground mt-2">Edited By Admin</p>
-                      )}
-                      {post.image_url && (
-                        <img src={post.image_url} alt="Post" className="mt-3 rounded-lg max-h-96 object-cover" />
+                      <p className="text-sm">{comment.content}</p>
+                      {comment.edited_by_admin && (
+                        <p className="text-xs text-muted-foreground mt-1">Edited By Admin</p>
                       )}
                     </div>
                   )}
@@ -286,3 +303,5 @@ export const AdminPosts = () => {
     </div>
   );
 };
+
+export default AdminComments;

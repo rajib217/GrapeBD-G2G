@@ -12,6 +12,7 @@ import AdminVarieties from '@/components/admin/AdminVarieties';
 import AdminGiftRounds from '@/components/admin/AdminGiftRounds';
 import AdminNotices from '@/components/admin/AdminNotices';
 import { AdminPosts } from '@/components/admin/AdminPosts';
+import AdminComments from '@/components/admin/AdminComments';
 import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
 import NotificationDebug from '@/components/NotificationDebug';
