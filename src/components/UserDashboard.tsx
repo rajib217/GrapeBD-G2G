@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AdminPosts } from './admin/AdminPosts';
+import AdminComments from './admin/AdminComments';
 import { Button } from '@/components/ui/button';
 import { LogOut, User, Gift, MessageSquare, Bell, Settings, Home, PlusSquare, Archive, Send, Users, History, Shield, BarChart3, Trophy, HandHeart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +64,8 @@ const UserDashboard = () => {
           return <AdminNotices />;
         case 'posts':
           return <AdminPosts />;
+        case 'comments':
+          return <AdminComments />;
         case 'messages':
           return <Messages />;
         case 'all-members':
