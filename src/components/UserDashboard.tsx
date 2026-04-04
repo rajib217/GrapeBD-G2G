@@ -64,6 +64,8 @@ const UserDashboard = () => {
           return <AdminNotices />;
         case 'posts':
           return <AdminPosts />;
+        case 'comments':
+          return <AdminComments />;
         case 'messages':
           return <Messages />;
         case 'all-members':
