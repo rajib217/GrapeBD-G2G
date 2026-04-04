@@ -14,13 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
           created_at: string
           edited_by_admin: boolean | null
           id: string
+          parent_comment_id: string | null
           post_id: string
+          reply_to_user_name: string | null
           updated_at: string
           user_id: string
         }
@@ -29,7 +63,9 @@ export type Database = {
           created_at?: string
           edited_by_admin?: boolean | null
           id?: string
+          parent_comment_id?: string | null
           post_id: string
+          reply_to_user_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -38,11 +74,21 @@ export type Database = {
           created_at?: string
           edited_by_admin?: boolean | null
           id?: string
+          parent_comment_id?: string | null
           post_id?: string
+          reply_to_user_name?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fcm_tokens: {
         Row: {
