@@ -119,11 +119,17 @@ const AllMembers = () => {
     setMessageModalOpen(true);
   };
 
-  const filteredMembers = members.filter(member =>
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.phone?.includes(searchTerm)
-  );
+  const filteredMembers = members
+    .filter(member =>
+      member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.phone?.includes(searchTerm)
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">লোড হচ্ছে...</div>;
