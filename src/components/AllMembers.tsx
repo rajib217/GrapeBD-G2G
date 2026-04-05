@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall } from 'lucide-react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
