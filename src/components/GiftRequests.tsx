@@ -374,6 +374,51 @@ const GiftRequests = () => {
           ))}
         </div>
       )}
+
+      {/* Fulfill Dialog */}
+      <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>চারা সেন্ড করুন</DialogTitle>
+          </DialogHeader>
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-sm"><strong>রিকোয়েস্টকারী:</strong> {selectedRequest.requester?.full_name}</p>
+                <p className="text-sm"><strong>জাত:</strong> {selectedRequest.variety?.name || selectedRequest.variety_name}</p>
+                <p className="text-sm"><strong>চাহিদা:</strong> {selectedRequest.quantity} টি</p>
+                {selectedRequest.note && <p className="text-xs text-muted-foreground">{selectedRequest.note}</p>}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">গিফট রাউন্ড নির্বাচন করুন</label>
+                <Select value={selectedRoundId} onValueChange={setSelectedRoundId}>
+                  <SelectTrigger><SelectValue placeholder="রাউন্ড বেছে নিন" /></SelectTrigger>
+                  <SelectContent>
+                    {giftRounds.map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">পরিমাণ</label>
+                <Input 
+                  type="number" min={1}
+                  value={fulfillQuantity}
+                  onChange={e => setFulfillQuantity(parseInt(e.target.value) || 1)}
+                />
+              </div>
+
+              <Button onClick={handleFulfill} disabled={fulfilling || !selectedRoundId} className="w-full gap-2">
+                {fulfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <HandHeart className="w-4 h-4" />}
+                গিফট সেন্ড করুন
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
