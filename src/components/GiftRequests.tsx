@@ -60,9 +60,10 @@ const GiftRequests = () => {
 
   const fetchData = async () => {
     try {
-      const [reqRes, varRes] = await Promise.all([
+      const [reqRes, varRes, roundRes] = await Promise.all([
         supabase.from('gift_requests').select('*').order('created_at', { ascending: false }),
         supabase.from('varieties').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('gift_rounds').select('id, title').eq('is_active', true).order('created_at', { ascending: false }),
       ]);
 
       const reqs = reqRes.data || [];
