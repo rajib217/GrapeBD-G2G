@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall } from 'lucide-react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ const AllMembers = () => {
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -118,11 +119,17 @@ const AllMembers = () => {
     setMessageModalOpen(true);
   };
 
-  const filteredMembers = members.filter(member =>
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.phone?.includes(searchTerm)
-  );
+  const filteredMembers = members
+    .filter(member =>
+      member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.phone?.includes(searchTerm)
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">লোড হচ্ছে...</div>;
@@ -156,6 +163,25 @@ const AllMembers = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
         />
+      </div>
+
+      {/* Sort */}
+      <div className="flex items-center gap-2">
+        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+        <Button
+          variant={sortOrder === 'newest' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortOrder('newest')}
+        >
+          New to Old
+        </Button>
+        <Button
+          variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortOrder('oldest')}
+        >
+          Old to New
+        </Button>
       </div>
 
       {/* Members List */}
