@@ -41,6 +41,12 @@ const GiftRequests = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
+  const [giftRounds, setGiftRounds] = useState<{ id: string; title: string }[]>([]);
+  const [selectedRoundId, setSelectedRoundId] = useState('');
+  const [fulfillQuantity, setFulfillQuantity] = useState(1);
+  const [fulfilling, setFulfilling] = useState(false);
   const [formData, setFormData] = useState({
     variety_id: '',
     custom_name: '',
