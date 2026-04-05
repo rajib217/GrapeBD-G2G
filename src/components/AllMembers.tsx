@@ -165,6 +165,25 @@ const AllMembers = () => {
         />
       </div>
 
+      {/* Sort */}
+      <div className="flex items-center gap-2">
+        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+        <Button
+          variant={sortOrder === 'newest' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortOrder('newest')}
+        >
+          New to Old
+        </Button>
+        <Button
+          variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortOrder('oldest')}
+        >
+          Old to New
+        </Button>
+      </div>
+
       {/* Members List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredMembers.map((member) => (
