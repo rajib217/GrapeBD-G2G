@@ -41,6 +41,12 @@ const GiftRequests = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [fulfillDialogOpen, setFulfillDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<GiftRequest | null>(null);
+  const [giftRounds, setGiftRounds] = useState<{ id: string; title: string }[]>([]);
+  const [selectedRoundId, setSelectedRoundId] = useState('');
+  const [fulfillQuantity, setFulfillQuantity] = useState(1);
+  const [fulfilling, setFulfilling] = useState(false);
   const [formData, setFormData] = useState({
     variety_id: '',
     custom_name: '',
@@ -54,9 +60,10 @@ const GiftRequests = () => {
 
   const fetchData = async () => {
     try {
-      const [reqRes, varRes] = await Promise.all([
+      const [reqRes, varRes, roundRes] = await Promise.all([
         supabase.from('gift_requests').select('*').order('created_at', { ascending: false }),
         supabase.from('varieties').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('gift_rounds').select('id, title').eq('is_active', true).order('created_at', { ascending: false }),
       ]);
 
       const reqs = reqRes.data || [];
@@ -79,6 +86,7 @@ const GiftRequests = () => {
 
       setRequests(enriched);
       setVarieties(varRes.data || []);
+      setGiftRounds(roundRes.data || []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -118,15 +126,79 @@ const GiftRequests = () => {
     fetchData();
   };
 
-  const handleFulfill = async (requestId: string) => {
-    if (!profile?.id) return;
-    const { error } = await supabase.from('gift_requests')
-      .update({ status: 'fulfilled', fulfilled_by: profile.id, updated_at: new Date().toISOString() })
-      .eq('id', requestId);
-    
-    if (error) { toast.error('আপডেট করা যায়নি'); return; }
-    toast.success('ধন্যবাদ! রিকোয়েস্ট পূরণ হয়েছে 🎉');
-    fetchData();
+  const openFulfillDialog = (req: GiftRequest) => {
+    if (giftRounds.length === 0) {
+      toast.error('কোনো সক্রিয় গিফট রাউন্ড নেই। অ্যাডমিনকে জানান।');
+      return;
+    }
+    setSelectedRequest(req);
+    setFulfillQuantity(req.quantity);
+    setSelectedRoundId(giftRounds[0]?.id || '');
+    setFulfillDialogOpen(true);
+  };
+
+  const handleFulfill = async () => {
+    if (!profile?.id || !selectedRequest || !selectedRoundId) return;
+    setFulfilling(true);
+
+    try {
+      // Ensure variety_id exists; if request only has custom name, find or create variety
+      let varietyId = selectedRequest.variety_id;
+      if (!varietyId && selectedRequest.variety_name) {
+        const { data: existing } = await supabase.from('varieties')
+          .select('id').eq('name', selectedRequest.variety_name).maybeSingle();
+        if (existing) {
+          varietyId = existing.id;
+        } else {
+          const { data: created, error: createErr } = await supabase.from('varieties')
+            .insert({ name: selectedRequest.variety_name, created_by: profile.id })
+            .select('id').single();
+          if (createErr || !created) {
+            toast.error('জাত তৈরি করা যায়নি');
+            setFulfilling(false);
+            return;
+          }
+          varietyId = created.id;
+        }
+      }
+
+      if (!varietyId) {
+        toast.error('জাত খুঁজে পাওয়া যায়নি');
+        setFulfilling(false);
+        return;
+      }
+
+      // Create gift record (sender = current user, receiver = requester)
+      const { error: giftErr } = await supabase.from('gifts').insert({
+        sender_id: profile.id,
+        receiver_id: selectedRequest.requester_id,
+        variety_id: varietyId,
+        quantity: fulfillQuantity,
+        gift_round_id: selectedRoundId,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      });
+
+      if (giftErr) {
+        toast.error('গিফট তৈরি করা যায়নি: ' + giftErr.message);
+        setFulfilling(false);
+        return;
+      }
+
+      // Update request status
+      await supabase.from('gift_requests')
+        .update({ status: 'fulfilled', fulfilled_by: profile.id, updated_at: new Date().toISOString() })
+        .eq('id', selectedRequest.id);
+
+      toast.success('ধন্যবাদ! গিফট পাঠানো হয়েছে 🎉');
+      setFulfillDialogOpen(false);
+      setSelectedRequest(null);
+      fetchData();
+    } catch (err) {
+      toast.error('কিছু সমস্যা হয়েছে');
+    } finally {
+      setFulfilling(false);
+    }
   };
 
   const handleClose = async (requestId: string) => {
@@ -281,8 +353,8 @@ const GiftRequests = () => {
                   {/* Actions */}
                   <div className="flex flex-col gap-1 flex-shrink-0">
                     {req.status === 'open' && req.requester_id !== profile?.id && (
-                      <Button size="sm" variant="outline" className="text-xs gap-1 border-accent text-accent h-8" onClick={() => handleFulfill(req.id)}>
-                        <Check className="w-3 h-3" /> দিতে পারি
+                      <Button size="sm" variant="outline" className="text-xs gap-1 border-accent text-accent h-8" onClick={() => openFulfillDialog(req)}>
+                        <Check className="w-3 h-3" /> সেন্ড করি
                       </Button>
                     )}
                     {req.status === 'open' && req.requester_id === profile?.id && (
@@ -302,6 +374,51 @@ const GiftRequests = () => {
           ))}
         </div>
       )}
+
+      {/* Fulfill Dialog */}
+      <Dialog open={fulfillDialogOpen} onOpenChange={setFulfillDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>চারা সেন্ড করুন</DialogTitle>
+          </DialogHeader>
+          {selectedRequest && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-sm"><strong>রিকোয়েস্টকারী:</strong> {selectedRequest.requester?.full_name}</p>
+                <p className="text-sm"><strong>জাত:</strong> {selectedRequest.variety?.name || selectedRequest.variety_name}</p>
+                <p className="text-sm"><strong>চাহিদা:</strong> {selectedRequest.quantity} টি</p>
+                {selectedRequest.note && <p className="text-xs text-muted-foreground">{selectedRequest.note}</p>}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">গিফট রাউন্ড নির্বাচন করুন</label>
+                <Select value={selectedRoundId} onValueChange={setSelectedRoundId}>
+                  <SelectTrigger><SelectValue placeholder="রাউন্ড বেছে নিন" /></SelectTrigger>
+                  <SelectContent>
+                    {giftRounds.map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">পরিমাণ</label>
+                <Input 
+                  type="number" min={1}
+                  value={fulfillQuantity}
+                  onChange={e => setFulfillQuantity(parseInt(e.target.value) || 1)}
+                />
+              </div>
+
+              <Button onClick={handleFulfill} disabled={fulfilling || !selectedRoundId} className="w-full gap-2">
+                {fulfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <HandHeart className="w-4 h-4" />}
+                গিফট সেন্ড করুন
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
