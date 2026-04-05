@@ -154,34 +154,37 @@ const AllMembers = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="নাম, ইমেইল বা ফোন নম্বর দিয়ে খুঁজুন..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Sort */}
-      <div className="flex items-center gap-2">
-        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-        <Button
-          variant={sortOrder === 'newest' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setSortOrder('newest')}
-        >
-          New to Old
-        </Button>
-        <Button
-          variant={sortOrder === 'oldest' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setSortOrder('oldest')}
-        >
-          Old to New
-        </Button>
+      {/* Search & Sort */}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="নাম, ইমেইল বা ফোন নম্বর দিয়ে খুঁজুন..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-sm text-muted-foreground flex-shrink-0">সর্ট:</span>
+          <Button
+            variant={sortOrder === 'newest' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortOrder('newest')}
+            className="text-xs"
+          >
+            নতুন → পুরাতন
+          </Button>
+          <Button
+            variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortOrder('oldest')}
+            className="text-xs"
+          >
+            পুরাতন → নতুন
+          </Button>
+        </div>
       </div>
 
       {/* Members List */}
