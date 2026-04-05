@@ -353,8 +353,8 @@ const GiftRequests = () => {
                   {/* Actions */}
                   <div className="flex flex-col gap-1 flex-shrink-0">
                     {req.status === 'open' && req.requester_id !== profile?.id && (
-                      <Button size="sm" variant="outline" className="text-xs gap-1 border-accent text-accent h-8" onClick={() => handleFulfill(req.id)}>
-                        <Check className="w-3 h-3" /> দিতে পারি
+                      <Button size="sm" variant="outline" className="text-xs gap-1 border-accent text-accent h-8" onClick={() => openFulfillDialog(req)}>
+                        <Check className="w-3 h-3" /> সেন্ড করি
                       </Button>
                     )}
                     {req.status === 'open' && req.requester_id === profile?.id && (
