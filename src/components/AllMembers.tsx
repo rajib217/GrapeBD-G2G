@@ -46,6 +46,7 @@ const AllMembers = () => {
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
