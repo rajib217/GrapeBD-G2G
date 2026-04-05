@@ -86,6 +86,7 @@ const GiftRequests = () => {
 
       setRequests(enriched);
       setVarieties(varRes.data || []);
+      setGiftRounds(roundRes.data || []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
