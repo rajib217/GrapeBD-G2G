@@ -126,15 +126,79 @@ const GiftRequests = () => {
     fetchData();
   };
 
-  const handleFulfill = async (requestId: string) => {
-    if (!profile?.id) return;
-    const { error } = await supabase.from('gift_requests')
-      .update({ status: 'fulfilled', fulfilled_by: profile.id, updated_at: new Date().toISOString() })
-      .eq('id', requestId);
-    
-    if (error) { toast.error('আপডেট করা যায়নি'); return; }
-    toast.success('ধন্যবাদ! রিকোয়েস্ট পূরণ হয়েছে 🎉');
-    fetchData();
+  const openFulfillDialog = (req: GiftRequest) => {
+    if (giftRounds.length === 0) {
+      toast.error('কোনো সক্রিয় গিফট রাউন্ড নেই। অ্যাডমিনকে জানান।');
+      return;
+    }
+    setSelectedRequest(req);
+    setFulfillQuantity(req.quantity);
+    setSelectedRoundId(giftRounds[0]?.id || '');
+    setFulfillDialogOpen(true);
+  };
+
+  const handleFulfill = async () => {
+    if (!profile?.id || !selectedRequest || !selectedRoundId) return;
+    setFulfilling(true);
+
+    try {
+      // Ensure variety_id exists; if request only has custom name, find or create variety
+      let varietyId = selectedRequest.variety_id;
+      if (!varietyId && selectedRequest.variety_name) {
+        const { data: existing } = await supabase.from('varieties')
+          .select('id').eq('name', selectedRequest.variety_name).maybeSingle();
+        if (existing) {
+          varietyId = existing.id;
+        } else {
+          const { data: created, error: createErr } = await supabase.from('varieties')
+            .insert({ name: selectedRequest.variety_name, created_by: profile.id })
+            .select('id').single();
+          if (createErr || !created) {
+            toast.error('জাত তৈরি করা যায়নি');
+            setFulfilling(false);
+            return;
+          }
+          varietyId = created.id;
+        }
+      }
+
+      if (!varietyId) {
+        toast.error('জাত খুঁজে পাওয়া যায়নি');
+        setFulfilling(false);
+        return;
+      }
+
+      // Create gift record (sender = current user, receiver = requester)
+      const { error: giftErr } = await supabase.from('gifts').insert({
+        sender_id: profile.id,
+        receiver_id: selectedRequest.requester_id,
+        variety_id: varietyId,
+        quantity: fulfillQuantity,
+        gift_round_id: selectedRoundId,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      });
+
+      if (giftErr) {
+        toast.error('গিফট তৈরি করা যায়নি: ' + giftErr.message);
+        setFulfilling(false);
+        return;
+      }
+
+      // Update request status
+      await supabase.from('gift_requests')
+        .update({ status: 'fulfilled', fulfilled_by: profile.id, updated_at: new Date().toISOString() })
+        .eq('id', selectedRequest.id);
+
+      toast.success('ধন্যবাদ! গিফট পাঠানো হয়েছে 🎉');
+      setFulfillDialogOpen(false);
+      setSelectedRequest(null);
+      fetchData();
+    } catch (err) {
+      toast.error('কিছু সমস্যা হয়েছে');
+    } finally {
+      setFulfilling(false);
+    }
   };
 
   const handleClose = async (requestId: string) => {
