@@ -51,7 +51,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profileLoading, setProfileLoading] = useState(false);
   const isMountedRef = useRef(true);
   const profileRequestRef = useRef(0);
-  const sessionEventRef = useRef(0);
+  const sessionCheckRef = useRef(0);
+  const activeUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -73,6 +74,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const clearAuthState = () => {
+    profileRequestRef.current += 1;
+    activeUserIdRef.current = null;
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setProfileLoading(false);
+  };
+
+  const applySessionState = (nextSession: Session | null) => {
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    const nextUser = nextSession?.user ?? null;
+    const nextUserId = nextUser?.id ?? null;
+
+    if (activeUserIdRef.current !== nextUserId) {
+      profileRequestRef.current += 1;
+      activeUserIdRef.current = nextUserId;
+      setProfile(null);
+      setProfileLoading(Boolean(nextUserId));
+    }
+
+    setSession(nextSession);
+    setUser(nextUser);
+
+    if (!nextUserId) {
+      setProfileLoading(false);
+    }
+  };
+
   const refreshProfile = async () => {
     if (!user) return;
 
@@ -89,99 +122,122 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setProfileLoading(false);
   };
 
-  const syncProfile = async (nextUser: User | null) => {
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const verifySession = async () => {
+      const requestId = ++sessionCheckRef.current;
+
+      try {
+        const { data: { session: restoredSession } } = await supabase.auth.getSession();
+
+        if (!isMountedRef.current || sessionCheckRef.current !== requestId) {
+          return;
+        }
+
+        if (restoredSession) {
+          applySessionState(restoredSession);
+        } else {
+          clearAuthState();
+        }
+      } catch (error) {
+        console.error('Session restore error:', error);
+
+        if (!isMountedRef.current || sessionCheckRef.current !== requestId) {
+          return;
+        }
+
+        clearAuthState();
+      } finally {
+        if (isMountedRef.current && sessionCheckRef.current === requestId) {
+          setAuthReady(true);
+        }
+      }
+    };
+
+    void verifySession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      if (nextSession) {
+        sessionCheckRef.current += 1;
+        applySessionState(nextSession);
+        setAuthReady(true);
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        sessionCheckRef.current += 1;
+        clearAuthState();
+        setAuthReady(true);
+        return;
+      }
+
+      void verifySession();
+    });
+
+    return () => {
+      isMountedRef.current = false;
+      profileRequestRef.current += 1;
+      sessionCheckRef.current += 1;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authReady) {
+      return;
+    }
+
+    const currentUserId = user?.id ?? null;
     const requestId = ++profileRequestRef.current;
 
-    if (!nextUser) {
+    if (!currentUserId) {
       setProfile(null);
       setProfileLoading(false);
       return;
     }
 
     setProfileLoading(true);
-    const profileData = await fetchProfile(nextUser.id);
 
-    if (!isMountedRef.current || profileRequestRef.current !== requestId) {
-      return;
-    }
-
-    setProfile(profileData);
-    setProfileLoading(false);
-  };
-
-  const syncSessionState = (nextSession: Session | null) => {
-    if (!isMountedRef.current) {
-      return;
-    }
-
-    setSession(nextSession);
-    setUser(nextSession?.user ?? null);
-    void syncProfile(nextSession?.user ?? null);
-  };
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    let initialSessionResolved = false;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (!initialSessionResolved && event === 'INITIAL_SESSION') {
-        return;
-      }
-
-      sessionEventRef.current += 1;
-      syncSessionState(nextSession);
-
-      if (!initialSessionResolved) {
-        initialSessionResolved = true;
-        setAuthReady(true);
-      }
-    });
-
-    const initialSessionVersion = sessionEventRef.current;
-
-    supabase.auth.getSession()
-      .then(({ data: { session: initialSession } }) => {
-        if (!isMountedRef.current || initialSessionResolved) {
+    void fetchProfile(currentUserId)
+      .then((profileData) => {
+        if (
+          !isMountedRef.current ||
+          profileRequestRef.current !== requestId ||
+          activeUserIdRef.current !== currentUserId
+        ) {
           return;
         }
 
-        initialSessionResolved = true;
-
-        if (sessionEventRef.current === initialSessionVersion) {
-          syncSessionState(initialSession);
-        }
-
-        setAuthReady(true);
+        setProfile(profileData);
+        setProfileLoading(false);
       })
       .catch((error) => {
-        console.error('Session restore error:', error);
+        console.error('Profile fetch error:', error);
 
-        if (!isMountedRef.current) {
+        if (
+          !isMountedRef.current ||
+          profileRequestRef.current !== requestId ||
+          activeUserIdRef.current !== currentUserId
+        ) {
           return;
         }
 
-        initialSessionResolved = true;
-        profileRequestRef.current += 1;
-        setSession(null);
-        setUser(null);
         setProfile(null);
         setProfileLoading(false);
-        setAuthReady(true);
       });
-
-    return () => {
-      isMountedRef.current = false;
-      profileRequestRef.current += 1;
-      subscription.unsubscribe();
-    };
-  }, []);
+  }, [authReady, user?.id]);
 
   const signOut = async () => {
     try {
       // Clean up auth state first
       const cleanupAuthState = () => {
         // Clear all localStorage items related to auth
-        const keysToRemove = [];
+        const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
@@ -191,7 +247,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         keysToRemove.forEach(key => localStorage.removeItem(key));
         
         // Also clear sessionStorage if needed
-        const sessionKeysToRemove = [];
+        const sessionKeysToRemove: string[] = [];
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
           if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
@@ -202,22 +258,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       };
 
       // Clear React state immediately
-      profileRequestRef.current += 1;
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      setProfileLoading(false);
+      sessionCheckRef.current += 1;
+      clearAuthState();
       setAuthReady(true);
-      
-      // Clean up storage
-      cleanupAuthState();
-      
+
       // Try to sign out from Supabase (ignore errors)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
         // Ignore sign out errors, just continue
       }
+
+      // Clean up storage
+      cleanupAuthState();
       
       // Force redirect to auth page
       window.location.href = '/auth';

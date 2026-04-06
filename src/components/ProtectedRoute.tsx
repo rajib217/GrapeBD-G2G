@@ -22,10 +22,10 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
     if (!loading) {
       if (!user) {
         console.log('No user found, redirecting to auth');
-        navigate('/auth');
+        navigate('/auth', { replace: true });
       } else if (adminOnly && profile?.role !== 'admin') {
         console.log('User is not admin, redirecting to home');
-        navigate('/');
+        navigate('/', { replace: true });
       }
     }
   }, [user, profile, loading, navigate, adminOnly]);
