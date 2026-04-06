@@ -49,10 +49,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+
   const isMountedRef = useRef(true);
-  const profileRequestRef = useRef(0);
-  const sessionCheckRef = useRef(0);
+  const bootstrappedRef = useRef(false);
   const activeUserIdRef = useRef<string | null>(null);
+  const profileRequestRef = useRef(0);
+  const sessionSyncRef = useRef(0);
+  const nullSessionTimeoutRef = useRef<number | null>(null);
+
+  const clearNullSessionRetry = () => {
+    if (nullSessionTimeoutRef.current !== null) {
+      window.clearTimeout(nullSessionTimeoutRef.current);
+      nullSessionTimeoutRef.current = null;
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -74,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const clearAuthState = () => {
+  const resetAuthState = () => {
     profileRequestRef.current += 1;
     activeUserIdRef.current = null;
     setSession(null);
@@ -83,106 +93,124 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setProfileLoading(false);
   };
 
-  const applySessionState = (nextSession: Session | null) => {
+  const applySession = (nextSession: Session | null) => {
     if (!isMountedRef.current) {
       return;
     }
 
     const nextUser = nextSession?.user ?? null;
     const nextUserId = nextUser?.id ?? null;
+    const previousUserId = activeUserIdRef.current;
 
-    if (activeUserIdRef.current !== nextUserId) {
-      profileRequestRef.current += 1;
-      activeUserIdRef.current = nextUserId;
-      setProfile(null);
-      setProfileLoading(Boolean(nextUserId));
-    }
-
+    activeUserIdRef.current = nextUserId;
     setSession(nextSession);
     setUser(nextUser);
 
     if (!nextUserId) {
+      setProfile(null);
       setProfileLoading(false);
-    }
-  };
-
-  const refreshProfile = async () => {
-    if (!user) return;
-
-    const requestId = ++profileRequestRef.current;
-    setProfileLoading(true);
-
-    const profileData = await fetchProfile(user.id);
-
-    if (!isMountedRef.current || profileRequestRef.current !== requestId) {
       return;
     }
 
-    setProfile(profileData);
-    setProfileLoading(false);
+    if (previousUserId !== nextUserId) {
+      profileRequestRef.current += 1;
+      setProfile(null);
+      setProfileLoading(true);
+    }
+  };
+
+  const syncSessionFromStorage = async () => {
+    const syncId = ++sessionSyncRef.current;
+
+    try {
+      const { data: { session: restoredSession } } = await supabase.auth.getSession();
+
+      if (!isMountedRef.current || sessionSyncRef.current !== syncId) {
+        return;
+      }
+
+      if (restoredSession) {
+        applySession(restoredSession);
+      } else {
+        resetAuthState();
+      }
+    } catch (error) {
+      console.error('Session restore error:', error);
+
+      if (!isMountedRef.current || sessionSyncRef.current !== syncId) {
+        return;
+      }
+
+      resetAuthState();
+    } finally {
+      if (isMountedRef.current && sessionSyncRef.current === syncId) {
+        bootstrappedRef.current = true;
+        setAuthReady(true);
+      }
+    }
   };
 
   useEffect(() => {
     isMountedRef.current = true;
-
-    const verifySession = async () => {
-      const requestId = ++sessionCheckRef.current;
-
-      try {
-        const { data: { session: restoredSession } } = await supabase.auth.getSession();
-
-        if (!isMountedRef.current || sessionCheckRef.current !== requestId) {
-          return;
-        }
-
-        if (restoredSession) {
-          applySessionState(restoredSession);
-        } else {
-          clearAuthState();
-        }
-      } catch (error) {
-        console.error('Session restore error:', error);
-
-        if (!isMountedRef.current || sessionCheckRef.current !== requestId) {
-          return;
-        }
-
-        clearAuthState();
-      } finally {
-        if (isMountedRef.current && sessionCheckRef.current === requestId) {
-          setAuthReady(true);
-        }
-      }
-    };
-
-    void verifySession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!isMountedRef.current) {
         return;
       }
 
+      clearNullSessionRetry();
+
       if (nextSession) {
-        sessionCheckRef.current += 1;
-        applySessionState(nextSession);
+        sessionSyncRef.current += 1;
+        applySession(nextSession);
         setAuthReady(true);
         return;
       }
 
       if (event === 'SIGNED_OUT') {
-        sessionCheckRef.current += 1;
-        clearAuthState();
+        sessionSyncRef.current += 1;
+        resetAuthState();
         setAuthReady(true);
         return;
       }
 
-      void verifySession();
+      if (!bootstrappedRef.current) {
+        return;
+      }
+
+      const scheduledSyncId = ++sessionSyncRef.current;
+      nullSessionTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const { data: { session: restoredSession } } = await supabase.auth.getSession();
+
+          if (!isMountedRef.current || sessionSyncRef.current !== scheduledSyncId) {
+            return;
+          }
+
+          if (restoredSession) {
+            applySession(restoredSession);
+          } else {
+            resetAuthState();
+          }
+        } catch (error) {
+          console.error('Deferred session restore error:', error);
+
+          if (!isMountedRef.current || sessionSyncRef.current !== scheduledSyncId) {
+            return;
+          }
+
+          resetAuthState();
+        }
+      }, 250);
     });
+
+    void syncSessionFromStorage();
 
     return () => {
       isMountedRef.current = false;
       profileRequestRef.current += 1;
-      sessionCheckRef.current += 1;
+      sessionSyncRef.current += 1;
+      clearNullSessionRetry();
       subscription.unsubscribe();
     };
   }, []);
@@ -193,7 +221,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     const currentUserId = user?.id ?? null;
-    const requestId = ++profileRequestRef.current;
 
     if (!currentUserId) {
       setProfile(null);
@@ -201,6 +228,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     }
 
+    const requestId = ++profileRequestRef.current;
     setProfileLoading(true);
 
     void fetchProfile(currentUserId)
@@ -232,11 +260,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
   }, [authReady, user?.id]);
 
+  const refreshProfile = async () => {
+    const currentUserId = activeUserIdRef.current;
+    if (!currentUserId) return;
+
+    const requestId = ++profileRequestRef.current;
+    setProfileLoading(true);
+
+    const profileData = await fetchProfile(currentUserId);
+
+    if (
+      !isMountedRef.current ||
+      profileRequestRef.current !== requestId ||
+      activeUserIdRef.current !== currentUserId
+    ) {
+      return;
+    }
+
+    setProfile(profileData);
+    setProfileLoading(false);
+  };
+
   const signOut = async () => {
     try {
-      // Clean up auth state first
       const cleanupAuthState = () => {
-        // Clear all localStorage items related to auth
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -244,9 +291,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             keysToRemove.push(key);
           }
         }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        
-        // Also clear sessionStorage if needed
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+
         const sessionKeysToRemove: string[] = [];
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
@@ -254,39 +300,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             sessionKeysToRemove.push(key);
           }
         }
-        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+        sessionKeysToRemove.forEach((key) => sessionStorage.removeItem(key));
       };
 
-      // Clear React state immediately
-      sessionCheckRef.current += 1;
-      clearAuthState();
+      sessionSyncRef.current += 1;
+      clearNullSessionRetry();
+      resetAuthState();
       setAuthReady(true);
 
-      // Try to sign out from Supabase (ignore errors)
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Ignore sign out errors, just continue
+        console.error('Supabase sign out error:', err);
       }
 
-      // Clean up storage
       cleanupAuthState();
-      
-      // Force redirect to auth page
       window.location.href = '/auth';
     } catch (error) {
-      // Even if everything fails, still redirect
       window.location.href = '/auth';
     }
   };
-
-  const loading = !authReady || profileLoading;
 
   const value = {
     user,
     session,
     profile,
-    loading,
+    loading: !authReady || profileLoading,
     signOut,
     refreshProfile
   };
