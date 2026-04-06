@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 const grapeLogoImage = "/images/grapebd-logo.png";
 
@@ -16,6 +17,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -31,16 +33,11 @@ const Auth = () => {
     confirmPassword: ""
   });
 
-  // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+    if (!authLoading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +57,7 @@ const Auth = () => {
           title: "সফলভাবে লগইন হয়েছে",
           description: "আপনি সফলভাবে লগইন করেছেন।",
         });
-        navigate("/dashboard");
+          navigate("/", { replace: true });
       }
     } catch (error: any) {
       setError(error.message || "লগইনে সমস্যা হয়েছে");

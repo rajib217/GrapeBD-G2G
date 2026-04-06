@@ -33,13 +33,13 @@ const AdminDashboard = () => {
     }
   };
   const handleHomeClick = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
   const handleTabChange = (tab: string) => {
     if (tab === 'home') {
       navigate('/');
     } else if (tab === 'dashboard') {
-      navigate('/dashboard');
+      navigate('/');
     } else {
       setActiveTab(tab);
     }
