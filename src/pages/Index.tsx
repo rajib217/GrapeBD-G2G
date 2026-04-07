@@ -14,6 +14,7 @@ import MyGifts from '@/components/MyGifts';
 import AllMembers from '@/components/AllMembers';
 import ProfileEdit from '@/components/ProfileEdit';
 import SocialFeed from '@/components/SocialFeed';
+import GiftRequests from '@/components/GiftRequests';
 import MobileNav from '@/components/MobileNav';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useNavigate } from 'react-router-dom';
@@ -197,7 +198,14 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="home">
-            <SocialFeed />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <SocialFeed />
+              </div>
+              <div className="lg:col-span-1">
+                <GiftRequests compact />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="stock">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,8 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { HandHeart, Plus, Check, X, Loader2, Search } from 'lucide-react';
+import { HandHeart, Plus, Check, X, Loader2, Search, MessageCircle, Send, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+interface RequestNote {
+  id: string;
+  request_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: { full_name: string; profile_image: string | null };
+}
 
 interface GiftRequest {
   id: string;
@@ -26,6 +35,7 @@ interface GiftRequest {
   requester?: { full_name: string; profile_image: string | null };
   variety?: { name: string } | null;
   fulfiller?: { full_name: string } | null;
+  notes?: RequestNote[];
 }
 
 interface Variety {
@@ -33,7 +43,11 @@ interface Variety {
   name: string;
 }
 
-const GiftRequests = () => {
+interface GiftRequestsProps {
+  compact?: boolean;
+}
+
+const GiftRequests = ({ compact = false }: GiftRequestsProps) => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<GiftRequest[]>([]);
@@ -47,6 +61,9 @@ const GiftRequests = () => {
   const [selectedRoundId, setSelectedRoundId] = useState('');
   const [fulfillQuantity, setFulfillQuantity] = useState(1);
   const [fulfilling, setFulfilling] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
+  const [submittingNote, setSubmittingNote] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     variety_id: '',
     custom_name: '',
@@ -75,6 +92,32 @@ const GiftRequests = () => {
         profileMap = new Map((profiles || []).map(p => [p.id, p]));
       }
 
+      // Fetch notes for all requests
+      const reqIds = reqs.map(r => r.id);
+      let notesMap = new Map<string, RequestNote[]>();
+      if (reqIds.length > 0) {
+        const { data: allNotes } = await supabase
+          .from('gift_request_notes')
+          .select('*')
+          .in('request_id', reqIds)
+          .order('created_at', { ascending: true });
+        
+        if (allNotes) {
+          const noteUserIds = [...new Set(allNotes.map(n => n.user_id))];
+          const missingUserIds = noteUserIds.filter(id => !profileMap.has(id));
+          if (missingUserIds.length > 0) {
+            const { data: moreProfiles } = await supabase.from('profiles').select('id, full_name, profile_image').in('id', missingUserIds);
+            (moreProfiles || []).forEach(p => profileMap.set(p.id, p));
+          }
+
+          allNotes.forEach(n => {
+            const enrichedNote = { ...n, user: profileMap.get(n.user_id) };
+            if (!notesMap.has(n.request_id)) notesMap.set(n.request_id, []);
+            notesMap.get(n.request_id)!.push(enrichedNote);
+          });
+        }
+      }
+
       const varMap = new Map((varRes.data || []).map(v => [v.id, v]));
 
       const enriched = reqs.map(r => ({
@@ -82,6 +125,7 @@ const GiftRequests = () => {
         requester: profileMap.get(r.requester_id),
         variety: r.variety_id ? varMap.get(r.variety_id) : null,
         fulfiller: r.fulfilled_by ? profileMap.get(r.fulfilled_by) : null,
+        notes: notesMap.get(r.id) || [],
       }));
 
       setRequests(enriched);
@@ -126,6 +170,44 @@ const GiftRequests = () => {
     fetchData();
   };
 
+  const handleAddNote = async (requestId: string) => {
+    const content = noteInputs[requestId]?.trim();
+    if (!content || !profile?.id) return;
+
+    setSubmittingNote(requestId);
+    const { error } = await supabase.from('gift_request_notes').insert({
+      request_id: requestId,
+      user_id: profile.id,
+      content,
+    });
+
+    if (error) {
+      toast.error('নোট যোগ করা যায়নি');
+    } else {
+      setNoteInputs(prev => ({ ...prev, [requestId]: '' }));
+      fetchData();
+    }
+    setSubmittingNote(null);
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    const { error } = await supabase.from('gift_request_notes').delete().eq('id', noteId);
+    if (error) {
+      toast.error('নোট ডিলিট করা যায়নি');
+    } else {
+      fetchData();
+    }
+  };
+
+  const toggleNotes = (requestId: string) => {
+    setExpandedNotes(prev => {
+      const next = new Set(prev);
+      if (next.has(requestId)) next.delete(requestId);
+      else next.add(requestId);
+      return next;
+    });
+  };
+
   const openFulfillDialog = (req: GiftRequest) => {
     if (giftRounds.length === 0) {
       toast.error('কোনো সক্রিয় গিফট রাউন্ড নেই। অ্যাডমিনকে জানান।');
@@ -142,7 +224,6 @@ const GiftRequests = () => {
     setFulfilling(true);
 
     try {
-      // Ensure variety_id exists; if request only has custom name, find or create variety
       let varietyId = selectedRequest.variety_id;
       if (!varietyId && selectedRequest.variety_name) {
         const { data: existing } = await supabase.from('varieties')
@@ -168,7 +249,6 @@ const GiftRequests = () => {
         return;
       }
 
-      // Create gift record (sender = current user, receiver = requester)
       const { error: giftErr } = await supabase.from('gifts').insert({
         sender_id: profile.id,
         receiver_id: selectedRequest.requester_id,
@@ -185,7 +265,6 @@ const GiftRequests = () => {
         return;
       }
 
-      // Update request status
       await supabase.from('gift_requests')
         .update({ status: 'fulfilled', fulfilled_by: profile.id, updated_at: new Date().toISOString() })
         .eq('id', selectedRequest.id);
@@ -225,6 +304,8 @@ const GiftRequests = () => {
            requester.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const displayRequests = compact ? filteredRequests.filter(r => r.status === 'open').slice(0, 5) : filteredRequests;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -236,8 +317,8 @@ const GiftRequests = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <HandHeart className="w-6 h-6 text-primary" />
+        <h2 className={`${compact ? 'text-lg' : 'text-xl'} font-bold text-foreground flex items-center gap-2`}>
+          <HandHeart className="w-5 h-5 text-primary" />
           চারা রিকোয়েস্ট
         </h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -296,30 +377,34 @@ const GiftRequests = () => {
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="রিকোয়েস্ট খুঁজুন..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      {!compact && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="রিকোয়েস্ট খুঁজুন..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
 
       {/* Summary */}
-      <div className="flex gap-2 flex-wrap">
-        <Badge variant="outline" className="gap-1">🟢 খোলা: {requests.filter(r => r.status === 'open').length}</Badge>
-        <Badge variant="outline" className="gap-1">✅ পূরণ: {requests.filter(r => r.status === 'fulfilled').length}</Badge>
-        <Badge variant="outline" className="gap-1">⛔ বন্ধ: {requests.filter(r => r.status === 'closed').length}</Badge>
-      </div>
+      {!compact && (
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant="outline" className="gap-1">🟢 খোলা: {requests.filter(r => r.status === 'open').length}</Badge>
+          <Badge variant="outline" className="gap-1">✅ পূরণ: {requests.filter(r => r.status === 'fulfilled').length}</Badge>
+          <Badge variant="outline" className="gap-1">⛔ বন্ধ: {requests.filter(r => r.status === 'closed').length}</Badge>
+        </div>
+      )}
 
       {/* List */}
-      {filteredRequests.length === 0 ? (
+      {displayRequests.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">কোনো রিকোয়েস্ট পাওয়া যায়নি</p>
       ) : (
         <div className="space-y-3">
-          {filteredRequests.map(req => (
-            <Card key={req.id} className={`border shadow-elegant transition-all ${
+          {displayRequests.map(req => (
+            <Card key={req.id} className={`border shadow-sm transition-all ${
               req.status === 'fulfilled' ? 'border-accent/30 bg-accent/5' : 
               req.status === 'closed' ? 'opacity-60' : ''
             }`}>
@@ -346,9 +431,18 @@ const GiftRequests = () => {
                     {req.fulfiller && (
                       <p className="text-xs text-accent mt-1">পূরণকারী: {req.fulfiller.full_name}</p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {new Date(req.created_at).toLocaleDateString('bn-BD')}
-                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(req.created_at).toLocaleDateString('bn-BD')}
+                      </p>
+                      <button
+                        onClick={() => toggleNotes(req.id)}
+                        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        {(req.notes?.length || 0) > 0 ? `${req.notes!.length} নোট` : 'নোট'}
+                      </button>
+                    </div>
                   </div>
                   {/* Actions */}
                   <div className="flex flex-col gap-1 flex-shrink-0">
@@ -369,6 +463,58 @@ const GiftRequests = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Notes Section */}
+                {expandedNotes.has(req.id) && (
+                  <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+                    {req.notes && req.notes.length > 0 && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {req.notes.map(note => (
+                          <div key={note.id} className="flex items-start gap-2 bg-muted/30 rounded-md p-2">
+                            <Avatar className="h-6 w-6 flex-shrink-0">
+                              <AvatarImage src={note.user?.profile_image || ''} />
+                              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                                {note.user?.full_name?.charAt(0) || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[11px] font-medium text-foreground">{note.user?.full_name}</span>
+                                <span className="text-[9px] text-muted-foreground">
+                                  {new Date(note.created_at).toLocaleDateString('bn-BD')}
+                                </span>
+                              </div>
+                              <p className="text-xs text-foreground/80 mt-0.5">{note.content}</p>
+                            </div>
+                            {note.user_id === profile?.id && (
+                              <button onClick={() => handleDeleteNote(note.id)} className="text-muted-foreground hover:text-destructive transition-colors p-0.5">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Add note input */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={noteInputs[req.id] || ''}
+                        onChange={e => setNoteInputs(prev => ({ ...prev, [req.id]: e.target.value }))}
+                        placeholder="নোট লিখুন..."
+                        className="text-xs h-8"
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddNote(req.id); }}
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 px-2"
+                        disabled={!noteInputs[req.id]?.trim() || submittingNote === req.id}
+                        onClick={() => handleAddNote(req.id)}
+                      >
+                        {submittingNote === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
