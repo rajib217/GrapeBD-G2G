@@ -83,7 +83,12 @@ const UserDashboard = () => {
         case 'home':
           return <SocialFeed />;
         case 'analytics':
-          return <DashboardAnalytics />;
+          return (
+            <div className="space-y-6">
+              <DashboardAnalytics />
+              <GiftRequests compact />
+            </div>
+          );
         case 'leaderboard':
           return <Leaderboard />;
         case 'gift-requests':
