@@ -65,6 +65,7 @@ const UserProfile = () => {
   const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<ReceivedGiftVariety[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [selectedVarietyId, setSelectedVarietyId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const formatPostDate = (dateString: string) => {
