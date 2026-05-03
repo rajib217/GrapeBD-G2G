@@ -9,6 +9,7 @@ import { ArrowLeft, Mail, Phone, MapPin, MessageCircle, MoreHorizontal } from 'l
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import MessageModal from '@/components/MessageModal';
+import VarietyDetailsModal from '@/components/VarietyDetailsModal';
 
 interface UserProfile {
   id: string;
@@ -64,6 +65,7 @@ const UserProfile = () => {
   const [receivedGiftVarieties, setReceivedGiftVarieties] = useState<ReceivedGiftVariety[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [selectedVarietyId, setSelectedVarietyId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const formatPostDate = (dateString: string) => {
@@ -445,7 +447,11 @@ const UserProfile = () => {
                     <h3 className="font-semibold mb-3">ব্যক্তিগত জাত সমূহ</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {userVarieties.map((userVariety) => (
-                        <div key={userVariety.id} className="border rounded-lg p-3">
+                        <button
+                          key={userVariety.id}
+                          onClick={() => setSelectedVarietyId(userVariety.variety_id)}
+                          className="border rounded-lg p-3 text-left hover:border-primary hover:bg-muted/50 transition-colors"
+                        >
                           <div className="flex items-center gap-3">
                             {userVariety.varieties?.thumbnail_image && (
                               <img 
@@ -461,7 +467,7 @@ const UserProfile = () => {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -473,7 +479,11 @@ const UserProfile = () => {
                     <h3 className="font-semibold mb-3">G2G থেকে প্রাপ্ত জাত</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {receivedGiftVarieties.map((giftVariety) => (
-                        <div key={giftVariety.variety_id} className="border rounded-lg p-3">
+                        <button
+                          key={giftVariety.variety_id}
+                          onClick={() => setSelectedVarietyId(giftVariety.variety_id)}
+                          className="border rounded-lg p-3 text-left hover:border-primary hover:bg-muted/50 transition-colors"
+                        >
                           <div className="flex items-center gap-3">
                             {giftVariety.variety_thumbnail && (
                               <img 
@@ -496,7 +506,7 @@ const UserProfile = () => {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -518,6 +528,11 @@ const UserProfile = () => {
           }}
         />
       )}
+
+      <VarietyDetailsModal
+        varietyId={selectedVarietyId}
+        onClose={() => setSelectedVarietyId(null)}
+      />
     </div>
   );
 };
