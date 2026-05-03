@@ -9,6 +9,7 @@ import { ArrowLeft, Mail, Phone, MapPin, MessageCircle, MoreHorizontal } from 'l
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import MessageModal from '@/components/MessageModal';
+import VarietyDetailsModal from '@/components/VarietyDetailsModal';
 
 interface UserProfile {
   id: string;
