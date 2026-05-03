@@ -528,6 +528,11 @@ const UserProfile = () => {
           }}
         />
       )}
+
+      <VarietyDetailsModal
+        varietyId={selectedVarietyId}
+        onClose={() => setSelectedVarietyId(null)}
+      />
     </div>
   );
 };
