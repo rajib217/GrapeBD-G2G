@@ -40,28 +40,36 @@ const VarietyDetailsModal = ({ varietyId, onClose }: Props) => {
 
     const load = async () => {
       const [vRes, uvRes, usRes] = await Promise.all([
-        supabase.from('varieties').select('id,name,description,thumbnail_image,details_url').eq('id', varietyId).single(),
-        supabase.from('user_varieties').select('user_id, profiles:user_id(id, full_name, profile_image)').eq('variety_id', varietyId),
-        supabase.from('user_stocks').select('user_id, quantity, profiles:user_id(id, full_name, profile_image)').eq('variety_id', varietyId).gt('quantity', 0),
+        supabase.from('varieties').select('id,name,description,thumbnail_image,details_url').eq('id', varietyId).maybeSingle(),
+        supabase.from('user_varieties').select('user_id').eq('variety_id', varietyId),
+        supabase.from('user_stocks').select('user_id, quantity').eq('variety_id', varietyId).gt('quantity', 0),
       ]);
 
       if (vRes.data) setVariety(vRes.data as VarietyDetails);
 
+      const userIds = new Set<string>();
+      (uvRes.data || []).forEach((r: any) => userIds.add(r.user_id));
+      (usRes.data || []).forEach((r: any) => userIds.add(r.user_id));
+
+      let profilesMap = new Map<string, any>();
+      if (userIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_image')
+          .in('id', Array.from(userIds));
+        (profiles || []).forEach((p) => profilesMap.set(p.id, p));
+      }
+
       const map = new Map<string, OwnerProfile>();
       (uvRes.data || []).forEach((row: any) => {
-        if (row.profiles) {
-          map.set(row.profiles.id, { ...row.profiles, source: 'personal' });
-        }
+        const p = profilesMap.get(row.user_id);
+        if (p) map.set(p.id, { ...p, source: 'personal' });
       });
       (usRes.data || []).forEach((row: any) => {
-        if (row.profiles) {
-          const existing = map.get(row.profiles.id);
-          map.set(row.profiles.id, {
-            ...row.profiles,
-            quantity: row.quantity,
-            source: existing ? existing.source : 'stock',
-          });
-        }
+        const p = profilesMap.get(row.user_id);
+        if (!p) return;
+        const existing = map.get(p.id);
+        map.set(p.id, { ...p, quantity: row.quantity, source: existing?.source || 'stock' });
       });
       setOwners(Array.from(map.values()));
       setLoading(false);
