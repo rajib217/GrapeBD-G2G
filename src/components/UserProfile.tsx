@@ -510,12 +510,7 @@ const UserProfile = () => {
                       ))}
                     </div>
                   </div>
-      )}
-
-      <VarietyDetailsModal
-        varietyId={selectedVarietyId}
-        onClose={() => setSelectedVarietyId(null)}
-      />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
