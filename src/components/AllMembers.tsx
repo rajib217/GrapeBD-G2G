@@ -26,6 +26,12 @@ interface Profile {
   unread_messages_count?: number;
   own_varieties?: string[];
   gift_varieties?: string[];
+  g2g_rounds_participated?: string[] | null;
+}
+
+interface AllMembersProps {
+  initialRoundFilter?: string;
+  onRoundFilterChange?: (round: string) => void;
 }
 
 // Rainbow border animation for admin avatars
