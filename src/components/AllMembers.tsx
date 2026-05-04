@@ -47,12 +47,14 @@ const style = document.createElement('style');
 style.textContent = rainbowKeyframes;
 document.head.appendChild(style);
 
-const AllMembers = () => {
+const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembersProps = {}) => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [roundFilter, setRoundFilter] = useState<string>(initialRoundFilter);
+  const [availableRounds, setAvailableRounds] = useState<string[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -61,7 +63,23 @@ const AllMembers = () => {
 
   useEffect(() => {
     fetchMembers();
+    fetchRounds();
   }, []);
+
+  useEffect(() => {
+    setRoundFilter(initialRoundFilter);
+  }, [initialRoundFilter]);
+
+  const fetchRounds = async () => {
+    const { data } = await supabase.from('gift_rounds').select('title').order('created_at', { ascending: false });
+    setAvailableRounds((data || []).map((r: any) => r.title));
+  };
+
+  const updateRoundFilter = (value: string) => {
+    setRoundFilter(value);
+    onRoundFilterChange?.(value);
+  };
+
 
   const fetchMembers = async () => {
     try {
