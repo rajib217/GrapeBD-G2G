@@ -222,7 +222,7 @@ const UserDashboard = () => {
               <div className="md:hidden ml-1">
                 <MobileNav 
                   activeTab={activeTab} 
-                  onTabChange={setActiveTab}
+                  onTabChange={handleTabChange}
                   isAdminView={isAdminView}
                   onAdminViewToggle={setIsAdminView}
                 />
