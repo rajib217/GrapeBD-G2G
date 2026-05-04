@@ -212,6 +212,24 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
             পুরাতন → নতুন
           </Button>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-muted-foreground flex-shrink-0">G2G রাউন্ড:</span>
+          <select
+            value={roundFilter}
+            onChange={(e) => updateRoundFilter(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+          >
+            <option value="">সব রাউন্ড</option>
+            {availableRounds.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          {roundFilter && (
+            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => updateRoundFilter('')}>
+              ক্লিয়ার
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Members List */}
