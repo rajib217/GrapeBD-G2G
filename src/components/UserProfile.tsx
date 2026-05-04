@@ -307,7 +307,12 @@ const UserProfile = () => {
                       <p className="text-sm font-medium mb-2">G2G রাউন্ড</p>
                       <div className="flex flex-wrap gap-1">
                         {profile.g2g_rounds_participated.map((round, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs cursor-pointer hover:bg-muted"
+                            onClick={() => navigate(`/?g2g_round=${encodeURIComponent(round)}`)}
+                          >
                             {round}
                           </Badge>
                         ))}
