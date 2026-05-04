@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { LogOut, Sprout, Users, Gift, MessageCircle, Bell, Plus, UserCheck, Settings, User, History, Home } from 'lucide-react';
