@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPosts } from './admin/AdminPosts';
 import AdminComments from './admin/AdminComments';
 import { Button } from '@/components/ui/button';
