@@ -129,7 +129,7 @@ const UserDashboard = () => {
         case 'send':
           return <SendGift />;
         case 'all-members':
-          return <AllMembers />;
+          return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={setMembersRoundFilter} />;
         case 'gift-history':
           return <GiftHistory />;
         case 'fcm-debug':
