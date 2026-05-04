@@ -33,13 +33,33 @@ import MobileNav from './MobileNav';
 import MobileBottomNav from './MobileBottomNav';
 
 const UserDashboard = () => {
-  const [activeTab, setActiveTab] = useState('home');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialRound = searchParams.get('g2g_round') || '';
+  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'home');
+  const [membersRoundFilter, setMembersRoundFilter] = useState<string>(initialRound);
   const [isAdminView, setIsAdminView] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   
   // Initialize notifications
   useNotifications();
+
+  useEffect(() => {
+    const r = searchParams.get('g2g_round') || '';
+    if (r) {
+      setMembersRoundFilter(r);
+      setActiveTab('all-members');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab !== 'all-members' && searchParams.get('g2g_round')) {
+      searchParams.delete('g2g_round');
+      setSearchParams(searchParams, { replace: true });
+      setMembersRoundFilter('');
+    }
+  };
 
   const handleSignOut = async () => {
     try {
