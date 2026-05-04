@@ -144,11 +144,14 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
   };
 
   const filteredMembers = members
-    .filter(member =>
-      member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.phone?.includes(searchTerm)
-    )
+    .filter(member => {
+      const matchesText =
+        member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.phone?.includes(searchTerm);
+      const matchesRound = !roundFilter || (member.g2g_rounds_participated || []).includes(roundFilter);
+      return matchesText && matchesRound;
+    })
     .sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
