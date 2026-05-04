@@ -250,7 +250,7 @@ const UserDashboard = () => {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         isAdminView={isAdminView}
         onAdminViewToggle={setIsAdminView}
       />
