@@ -254,7 +254,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="all-members">
-            <AllMembers />
+            <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={setMembersRoundFilter} />
           </TabsContent>
 
           <TabsContent value="profile">
