@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown } from 'lucide-react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import MessageModal from './MessageModal';
@@ -47,13 +48,27 @@ const style = document.createElement('style');
 style.textContent = rainbowKeyframes;
 document.head.appendChild(style);
 
+const normalizeRound = (round?: string | null) => (round || '').trim().toLowerCase();
+
+const uniqueRounds = (rounds: (string | null | undefined)[]) => {
+  const seen = new Set<string>();
+  return rounds
+    .map((round) => (round || '').trim())
+    .filter((round) => {
+      const key = normalizeRound(round);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
 const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembersProps = {}) => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [roundFilter, setRoundFilter] = useState<string>(initialRoundFilter);
+  const [roundFilter, setRoundFilter] = useState<string>(initialRoundFilter.trim());
   const [availableRounds, setAvailableRounds] = useState<string[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,17 +82,19 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
   }, []);
 
   useEffect(() => {
-    setRoundFilter(initialRoundFilter);
+    setRoundFilter(initialRoundFilter.trim());
   }, [initialRoundFilter]);
 
   const fetchRounds = async () => {
     const { data } = await supabase.from('gift_rounds').select('title').order('created_at', { ascending: false });
-    setAvailableRounds((data || []).map((r: any) => r.title));
+    const roundTitles = (data || []).map((r: any) => r.title);
+    setAvailableRounds((currentRounds) => uniqueRounds([...currentRounds, ...roundTitles]));
   };
 
   const updateRoundFilter = (value: string) => {
-    setRoundFilter(value);
-    onRoundFilterChange?.(value);
+    const nextValue = value.trim();
+    setRoundFilter(nextValue);
+    onRoundFilterChange?.(nextValue);
   };
 
 
@@ -121,6 +138,8 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
       );
 
       setMembers(membersWithDetails);
+      const memberRounds = membersWithDetails.flatMap((member) => member.g2g_rounds_participated || []);
+      setAvailableRounds((currentRounds) => uniqueRounds([...currentRounds, ...memberRounds]));
     } catch (error) {
       console.error('Error fetching members:', error);
       toast({
@@ -145,13 +164,16 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
 
   const filteredMembers = members
     .filter(member => {
-      const matchesText =
-        member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.phone?.includes(searchTerm);
-      const normalizedFilter = roundFilter.trim().toLowerCase();
-      const matchesRound = !normalizedFilter || (member.g2g_rounds_participated || [])
-        .some((r) => (r || '').trim().toLowerCase() === normalizedFilter);
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+      const memberRounds = member.g2g_rounds_participated || [];
+      const matchesText = !normalizedSearch ||
+        member.full_name.toLowerCase().includes(normalizedSearch) ||
+        member.email?.toLowerCase().includes(normalizedSearch) ||
+        member.phone?.includes(searchTerm.trim()) ||
+        memberRounds.some((round) => normalizeRound(round).includes(normalizedSearch));
+      const normalizedFilter = normalizeRound(roundFilter);
+      const matchesRound = !normalizedFilter || memberRounds
+        .some((round) => normalizeRound(round) === normalizedFilter);
       return matchesText && matchesRound;
     })
     .sort((a, b) => {
@@ -215,23 +237,30 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
           </Button>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <span className="text-sm text-muted-foreground flex-shrink-0">G2G রাউন্ড:</span>
-          <select
-            value={roundFilter}
-            onChange={(e) => updateRoundFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-          >
-            <option value="">সব রাউন্ড</option>
-            {availableRounds.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <Select value={roundFilter || 'all'} onValueChange={(value) => updateRoundFilter(value === 'all' ? '' : value)}>
+            <SelectTrigger className="h-8 w-full max-w-[240px] text-xs sm:w-[240px]">
+              <SelectValue placeholder="সব রাউন্ড" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">সব রাউন্ড</SelectItem>
+              {availableRounds.map((round) => (
+                <SelectItem key={round} value={round}>{round}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {roundFilter && (
             <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => updateRoundFilter('')}>
               ক্লিয়ার
             </Button>
           )}
         </div>
+        {roundFilter && (
+          <p className="text-sm text-muted-foreground">
+            {roundFilter} রাউন্ডে {filteredMembers.length} জন সদস্য পাওয়া গেছে
+          </p>
+        )}
       </div>
 
       {/* Members List */}

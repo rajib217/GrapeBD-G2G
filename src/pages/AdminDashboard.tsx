@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +19,22 @@ import NotificationDebug from '@/components/NotificationDebug';
 import FCMDebugPanel from '@/components/FCMDebugPanel';
 import MobileNav from '@/components/MobileNav';
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('users');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialRound = searchParams.get('g2g_round') || '';
+  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'users');
+  const [membersRoundFilter, setMembersRoundFilter] = useState<string>(initialRound);
   const {
     profile,
     signOut
   } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    const round = searchParams.get('g2g_round') || '';
+    if (round) {
+      setMembersRoundFilter(round);
+      setActiveTab('all-members');
+    }
+  }, [searchParams]);
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -42,7 +52,23 @@ const AdminDashboard = () => {
       navigate('/');
     } else {
       setActiveTab(tab);
+      if (tab !== 'all-members' && searchParams.get('g2g_round')) {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('g2g_round');
+        setSearchParams(nextParams, { replace: true });
+        setMembersRoundFilter('');
+      }
     }
+  };
+  const handleMembersRoundFilterChange = (round: string) => {
+    setMembersRoundFilter(round);
+    const nextParams = new URLSearchParams(searchParams);
+    if (round) {
+      nextParams.set('g2g_round', round);
+    } else {
+      nextParams.delete('g2g_round');
+    }
+    setSearchParams(nextParams, { replace: true });
   };
   return <div className="min-h-screen bg-gradient-subtle">
       {/* Mobile Header */}
@@ -93,7 +119,7 @@ const AdminDashboard = () => {
 
         {/* Admin Tabs */}
         <AdminStats />
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop Tabs */}
           <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-11 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
             <TabsTrigger value="users" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
@@ -175,7 +201,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="all-members">
-            <AllMembers />
+            <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />
           </TabsContent>
 
           <TabsContent value="notification-debug">
