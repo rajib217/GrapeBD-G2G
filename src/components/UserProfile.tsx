@@ -311,7 +311,7 @@ const UserProfile = () => {
                             key={index}
                             variant="outline"
                             className="text-xs cursor-pointer hover:bg-muted"
-                            onClick={() => navigate(`/?g2g_round=${encodeURIComponent(round)}`)}
+                            onClick={() => navigate(`/?g2g_round=${encodeURIComponent(round.trim())}`)}
                           >
                             {round}
                           </Badge>
@@ -442,7 +442,7 @@ const UserProfile = () => {
                           key={index}
                           variant="outline"
                           className="cursor-pointer hover:bg-muted"
-                          onClick={() => navigate(`/?g2g_round=${encodeURIComponent(round)}`)}
+                          onClick={() => navigate(`/?g2g_round=${encodeURIComponent(round.trim())}`)}
                         >
                           {round}
                         </Badge>
