@@ -149,7 +149,9 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
         member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.phone?.includes(searchTerm);
-      const matchesRound = !roundFilter || (member.g2g_rounds_participated || []).includes(roundFilter);
+      const normalizedFilter = roundFilter.trim().toLowerCase();
+      const matchesRound = !normalizedFilter || (member.g2g_rounds_participated || [])
+        .some((r) => (r || '').trim().toLowerCase() === normalizedFilter);
       return matchesText && matchesRound;
     })
     .sort((a, b) => {
