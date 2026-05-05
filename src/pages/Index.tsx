@@ -40,13 +40,25 @@ const Index = () => {
   console.info('[Index] handleTabChange:', tab);
     setActiveTab(tab);
     if (tab !== 'all-members' && searchParams.get('g2g_round')) {
-      searchParams.delete('g2g_round');
-      setSearchParams(searchParams, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('g2g_round');
+      setSearchParams(nextParams, { replace: true });
       setMembersRoundFilter('');
     }
     if (tab === 'home') {
       navigate('/');
     }
+  };
+
+  const handleMembersRoundFilterChange = (round: string) => {
+    setMembersRoundFilter(round);
+    const nextParams = new URLSearchParams(searchParams);
+    if (round) {
+      nextParams.set('g2g_round', round);
+    } else {
+      nextParams.delete('g2g_round');
+    }
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleSignOut = async () => {
@@ -254,7 +266,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="all-members">
-            <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={setMembersRoundFilter} />
+            <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />
           </TabsContent>
 
           <TabsContent value="profile">
