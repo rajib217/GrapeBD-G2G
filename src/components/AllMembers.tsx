@@ -68,7 +68,7 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [roundFilter, setRoundFilter] = useState<string>(initialRoundFilter);
+  const [roundFilter, setRoundFilter] = useState<string>(initialRoundFilter.trim());
   const [availableRounds, setAvailableRounds] = useState<string[]>([]);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -82,7 +82,7 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
   }, []);
 
   useEffect(() => {
-    setRoundFilter(initialRoundFilter);
+    setRoundFilter(initialRoundFilter.trim());
   }, [initialRoundFilter]);
 
   const fetchRounds = async () => {
@@ -91,8 +91,9 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
   };
 
   const updateRoundFilter = (value: string) => {
-    setRoundFilter(value);
-    onRoundFilterChange?.(value);
+    const nextValue = value.trim();
+    setRoundFilter(nextValue);
+    onRoundFilterChange?.(nextValue);
   };
 
 
