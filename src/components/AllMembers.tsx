@@ -87,7 +87,8 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
 
   const fetchRounds = async () => {
     const { data } = await supabase.from('gift_rounds').select('title').order('created_at', { ascending: false });
-    setAvailableRounds(uniqueRounds((data || []).map((r: any) => r.title)));
+    const roundTitles = (data || []).map((r: any) => r.title);
+    setAvailableRounds((currentRounds) => uniqueRounds([...currentRounds, ...roundTitles]));
   };
 
   const updateRoundFilter = (value: string) => {
