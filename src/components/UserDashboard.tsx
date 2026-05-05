@@ -184,35 +184,35 @@ const UserDashboard = () => {
               <Archive className="w-5 h-5 mr-3" />
               চারাগাছের স্টক
             </Button>
-            <Button variant={activeTab === 'send' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('send')} className="justify-start">
+            <Button variant={activeTab === 'send' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('send')} className="justify-start">
               <Send className="w-5 h-5 mr-3" />
               উপহার পাঠান
             </Button>
-            <Button variant={activeTab === 'gift-requests' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('gift-requests')} className="justify-start">
+            <Button variant={activeTab === 'gift-requests' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('gift-requests')} className="justify-start">
               <HandHeart className="w-5 h-5 mr-3" />
               চারা রিকোয়েস্ট
             </Button>
-            <Button variant={activeTab === 'all-members' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('all-members')} className="justify-start">
+            <Button variant={activeTab === 'all-members' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('all-members')} className="justify-start">
               <Users className="w-5 h-5 mr-3" />
               সকল সদস্য
             </Button>
-            <Button variant={activeTab === 'leaderboard' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('leaderboard')} className="justify-start">
+            <Button variant={activeTab === 'leaderboard' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('leaderboard')} className="justify-start">
               <Trophy className="w-5 h-5 mr-3" />
               লিডারবোর্ড
             </Button>
-            <Button variant={activeTab === 'gift-history' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('gift-history')} className="justify-start">
+            <Button variant={activeTab === 'gift-history' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('gift-history')} className="justify-start">
               <History className="w-5 h-5 mr-3" />
               উপহারের ইতিহাস
             </Button>
-            <Button variant={activeTab === 'notices' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('notices')} className="justify-start">
+            <Button variant={activeTab === 'notices' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('notices')} className="justify-start">
               <Bell className="w-5 h-5 mr-3" />
               নোটিশ
             </Button>
-            <Button variant={activeTab === 'messages' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('messages')} className="justify-start">
+            <Button variant={activeTab === 'messages' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('messages')} className="justify-start">
               <MessageSquare className="w-5 h-5 mr-3" />
               মেসেজ
             </Button>
-            <Button variant={activeTab === 'profile' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('profile')} className="justify-start">
+            <Button variant={activeTab === 'profile' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('profile')} className="justify-start">
               <User className="w-5 h-5 mr-3" />
               প্রোফাইল
             </Button>
