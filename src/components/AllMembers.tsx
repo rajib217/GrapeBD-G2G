@@ -235,23 +235,30 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
           </Button>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <span className="text-sm text-muted-foreground flex-shrink-0">G2G রাউন্ড:</span>
-          <select
-            value={roundFilter}
-            onChange={(e) => updateRoundFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-          >
-            <option value="">সব রাউন্ড</option>
-            {availableRounds.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+          <Select value={roundFilter || 'all'} onValueChange={(value) => updateRoundFilter(value === 'all' ? '' : value)}>
+            <SelectTrigger className="h-8 w-full max-w-[240px] text-xs sm:w-[240px]">
+              <SelectValue placeholder="সব রাউন্ড" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">সব রাউন্ড</SelectItem>
+              {availableRounds.map((round) => (
+                <SelectItem key={round} value={round}>{round}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {roundFilter && (
             <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => updateRoundFilter('')}>
               ক্লিয়ার
             </Button>
           )}
         </div>
+        {roundFilter && (
+          <p className="text-sm text-muted-foreground">
+            {roundFilter} রাউন্ডে {filteredMembers.length} জন সদস্য পাওয়া গেছে
+          </p>
+        )}
       </div>
 
       {/* Members List */}
