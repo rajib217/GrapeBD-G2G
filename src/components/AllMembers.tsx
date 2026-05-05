@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown } from 'lucide-react';
+import { Search, User, Phone, Mail, MapPin, Calendar, Eye, MessageSquare, PhoneCall, ArrowUpDown, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import MessageModal from './MessageModal';
@@ -47,6 +48,20 @@ const style = document.createElement('style');
 style.textContent = rainbowKeyframes;
 document.head.appendChild(style);
 
+const normalizeRound = (round?: string | null) => (round || '').trim().toLowerCase();
+
+const uniqueRounds = (rounds: (string | null | undefined)[]) => {
+  const seen = new Set<string>();
+  return rounds
+    .map((round) => (round || '').trim())
+    .filter((round) => {
+      const key = normalizeRound(round);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
 const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembersProps = {}) => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<Profile[]>([]);
@@ -72,7 +87,7 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
 
   const fetchRounds = async () => {
     const { data } = await supabase.from('gift_rounds').select('title').order('created_at', { ascending: false });
-    setAvailableRounds((data || []).map((r: any) => r.title));
+    setAvailableRounds(uniqueRounds((data || []).map((r: any) => r.title)));
   };
 
   const updateRoundFilter = (value: string) => {
@@ -121,6 +136,8 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
       );
 
       setMembers(membersWithDetails);
+      const memberRounds = membersWithDetails.flatMap((member) => member.g2g_rounds_participated || []);
+      setAvailableRounds((currentRounds) => uniqueRounds([...currentRounds, ...memberRounds]));
     } catch (error) {
       console.error('Error fetching members:', error);
       toast({
@@ -145,13 +162,16 @@ const AllMembers = ({ initialRoundFilter = '', onRoundFilterChange }: AllMembers
 
   const filteredMembers = members
     .filter(member => {
-      const matchesText =
-        member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.phone?.includes(searchTerm);
-      const normalizedFilter = roundFilter.trim().toLowerCase();
-      const matchesRound = !normalizedFilter || (member.g2g_rounds_participated || [])
-        .some((r) => (r || '').trim().toLowerCase() === normalizedFilter);
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+      const memberRounds = member.g2g_rounds_participated || [];
+      const matchesText = !normalizedSearch ||
+        member.full_name.toLowerCase().includes(normalizedSearch) ||
+        member.email?.toLowerCase().includes(normalizedSearch) ||
+        member.phone?.includes(searchTerm.trim()) ||
+        memberRounds.some((round) => normalizeRound(round).includes(normalizedSearch));
+      const normalizedFilter = normalizeRound(roundFilter);
+      const matchesRound = !normalizedFilter || memberRounds
+        .some((round) => normalizeRound(round) === normalizedFilter);
       return matchesText && matchesRound;
     })
     .sort((a, b) => {
