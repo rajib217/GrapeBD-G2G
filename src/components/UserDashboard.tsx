@@ -55,10 +55,22 @@ const UserDashboard = () => {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     if (tab !== 'all-members' && searchParams.get('g2g_round')) {
-      searchParams.delete('g2g_round');
-      setSearchParams(searchParams, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('g2g_round');
+      setSearchParams(nextParams, { replace: true });
       setMembersRoundFilter('');
     }
+  };
+
+  const handleMembersRoundFilterChange = (round: string) => {
+    setMembersRoundFilter(round);
+    const nextParams = new URLSearchParams(searchParams);
+    if (round) {
+      nextParams.set('g2g_round', round);
+    } else {
+      nextParams.delete('g2g_round');
+    }
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleSignOut = async () => {
@@ -90,7 +102,7 @@ const UserDashboard = () => {
         case 'messages':
           return <Messages />;
         case 'all-members':
-          return <AllMembers />;
+          return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />;
         case 'notification-debug':
           return <NotificationDebug />;
         case 'fcm-debug':
@@ -129,7 +141,7 @@ const UserDashboard = () => {
         case 'send':
           return <SendGift />;
         case 'all-members':
-          return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={setMembersRoundFilter} />;
+          return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />;
         case 'gift-history':
           return <GiftHistory />;
         case 'fcm-debug':
@@ -152,23 +164,23 @@ const UserDashboard = () => {
             </div>
           </div>
           <div className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto">
-            <Button variant={activeTab === 'home' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('home')} className="justify-start">
+            <Button variant={activeTab === 'home' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('home')} className="justify-start">
               <Home className="w-5 h-5 mr-3" />
               ফিড
             </Button>
-            <Button variant={activeTab === 'analytics' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('analytics')} className="justify-start">
+            <Button variant={activeTab === 'analytics' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('analytics')} className="justify-start">
               <BarChart3 className="w-5 h-5 mr-3" />
               ড্যাশবোর্ড
             </Button>
-            <Button variant={activeTab === 'my-gifts' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('my-gifts')} className="justify-start">
+            <Button variant={activeTab === 'my-gifts' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('my-gifts')} className="justify-start">
               <Gift className="w-5 h-5 mr-3" />
               আমার উপহার
             </Button>
-            <Button variant={activeTab === 'add' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('add')} className="justify-start">
+            <Button variant={activeTab === 'add' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('add')} className="justify-start">
               <PlusSquare className="w-5 h-5 mr-3" />
               চারাগাছ যোগ করুন
             </Button>
-            <Button variant={activeTab === 'stock' ? 'secondary' : 'ghost'} onClick={() => setActiveTab('stock')} className="justify-start">
+            <Button variant={activeTab === 'stock' ? 'secondary' : 'ghost'} onClick={() => handleTabChange('stock')} className="justify-start">
               <Archive className="w-5 h-5 mr-3" />
               চারাগাছের স্টক
             </Button>
