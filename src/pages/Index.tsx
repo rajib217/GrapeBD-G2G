@@ -37,7 +37,6 @@ const Index = () => {
   }, [searchParams]);
 
   const handleTabChange = (tab: string) => {
-  console.info('[Index] handleTabChange:', tab);
     setActiveTab(tab);
     if (tab !== 'all-members' && searchParams.get('g2g_round')) {
       const nextParams = new URLSearchParams(searchParams);
