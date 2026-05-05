@@ -78,7 +78,6 @@ const MobileBottomNav = ({ activeTab, onTabChange, isAdminView = false, onAdminV
   const navItems = isAdminView ? adminNavItems : normalNavItems;
 
   const handleTabClick = useCallback((tabId: string) => {
-  console.info('[MobileBottomNav] handleTabClick:', tabId);
     onTabChange(tabId);
   }, [onTabChange]);
 
