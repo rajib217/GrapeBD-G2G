@@ -73,7 +73,6 @@ const MobileNav = ({
   }, [profile?.role, onAdminViewToggle, isAdminView, onTabChange]);
 
   const handleTabClick = useCallback((tab: string) => {
-  console.info('[MobileNav] handleTabClick:', tab);
     onTabChange(tab);
     setOpen(false);
   }, [onTabChange]);
