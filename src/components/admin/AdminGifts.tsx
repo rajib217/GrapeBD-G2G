@@ -174,6 +174,7 @@ const AdminGifts = () => {
       const { data, error } = await supabase
         .from('user_stocks')
         .select(`
+          id,
           user_id,
           variety_id,
           quantity,
