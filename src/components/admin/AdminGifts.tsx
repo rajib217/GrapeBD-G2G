@@ -483,6 +483,14 @@ const AdminGifts = () => {
                   >
                     <Eye className="h-3 w-3" />
                   </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteGift(gift)}
+                    title="গিফট ডিলেট করুন"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             </CardHeader>
