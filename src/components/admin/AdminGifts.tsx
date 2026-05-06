@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Check, X, Eye, MessageSquare, Plus, Send } from 'lucide-react';
+import { Search, Check, X, Eye, MessageSquare, Plus, Send, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -305,6 +305,61 @@ const AdminGifts = () => {
     }
   };
 
+  const handleDeleteGift = async (gift: Gift) => {
+    if (!confirm(`আপনি কি নিশ্চিত? এই গিফট ডিলেট হবে এবং ${gift.quantity}টি ${gift.variety_name} চারা ${gift.sender_name}-এর স্টকে ফেরত যাবে।`)) {
+      return;
+    }
+    try {
+      // Refund sender's stock
+      const { data: existingStock, error: fetchErr } = await supabase
+        .from('user_stocks')
+        .select('id, quantity')
+        .eq('user_id', gift.sender_id)
+        .eq('variety_id', gift.variety_id)
+        .maybeSingle();
+      if (fetchErr) throw fetchErr;
+
+      if (existingStock) {
+        const { error: updErr } = await supabase
+          .from('user_stocks')
+          .update({ quantity: existingStock.quantity + gift.quantity })
+          .eq('id', existingStock.id);
+        if (updErr) throw updErr;
+      } else {
+        const { error: insErr } = await supabase
+          .from('user_stocks')
+          .insert({ user_id: gift.sender_id, variety_id: gift.variety_id, quantity: gift.quantity });
+        if (insErr) throw insErr;
+      }
+
+      // If already received, also deduct from receiver's stock
+      if (gift.status === 'received') {
+        const { data: rStock } = await supabase
+          .from('user_stocks')
+          .select('id, quantity')
+          .eq('user_id', gift.receiver_id)
+          .eq('variety_id', gift.variety_id)
+          .maybeSingle();
+        if (rStock) {
+          await supabase
+            .from('user_stocks')
+            .update({ quantity: Math.max(0, rStock.quantity - gift.quantity) })
+            .eq('id', rStock.id);
+        }
+      }
+
+      const { error: delErr } = await supabase.from('gifts').delete().eq('id', gift.id);
+      if (delErr) throw delErr;
+
+      toast({ title: 'সফল', description: 'গিফট ডিলেট করা হয়েছে এবং স্টক ফেরত দেওয়া হয়েছে' });
+      fetchGifts();
+      setIsDetailOpen(false);
+    } catch (error) {
+      console.error('Error deleting gift:', error);
+      toast({ title: 'ত্রুটি', description: 'গিফট ডিলেট করতে সমস্যা হয়েছে', variant: 'destructive' });
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     const labels = {
       pending: 'পেন্ডিং',
@@ -427,6 +482,14 @@ const AdminGifts = () => {
                     onClick={() => openGiftDetail(gift)}
                   >
                     <Eye className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteGift(gift)}
+                    title="গিফট ডিলেট করুন"
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
