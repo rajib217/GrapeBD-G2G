@@ -49,6 +49,7 @@ interface GiftRound {
 }
 
 interface UserStock {
+  id: string;
   user_id: string;
   variety_id: string;
   quantity: number;
