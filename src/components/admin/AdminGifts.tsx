@@ -49,6 +49,7 @@ interface GiftRound {
 }
 
 interface UserStock {
+  id: string;
   user_id: string;
   variety_id: string;
   quantity: number;
@@ -173,6 +174,7 @@ const AdminGifts = () => {
       const { data, error } = await supabase
         .from('user_stocks')
         .select(`
+          id,
           user_id,
           variety_id,
           quantity,
@@ -229,10 +231,18 @@ const AdminGifts = () => {
         });
 
       if (error) throw error;
-      
+
+      // Decrement sender's stock
+      const { error: stockError } = await supabase
+        .from('user_stocks')
+        .update({ quantity: senderStock.quantity - createForm.quantity })
+        .eq('id', senderStock.id);
+
+      if (stockError) throw stockError;
+
       toast({
         title: "সফল",
-        description: "গিফট তৈরি করা হয়েছে",
+        description: "গিফট তৈরি করা হয়েছে এবং প্রেরকের স্টক আপডেট হয়েছে",
       });
       
       setIsCreateOpen(false);
