@@ -258,3 +258,49 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
+@layer components {
+  .card-professional {
+    @apply bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .btn-grape {
+    @apply inline-flex items-center justify-center gap-2 bg-gradient-to-r from-grape-600 to-grape-700 text-white font-semibold px-5 py-3 rounded-xl hover:from-grape-700 hover:to-grape-800 active:scale-95 transition-all duration-150 shadow-lg shadow-grape-500/25 min-h-[44px] text-sm sm:text-base;
+  }
+
+  .btn-vine {
+    @apply inline-flex items-center justify-center gap-2 bg-gradient-to-r from-vine-500 to-vine-600 text-white font-semibold px-5 py-3 rounded-xl hover:from-vine-600 hover:to-vine-700 active:scale-95 transition-all duration-150 shadow-lg shadow-vine-500/25 min-h-[44px] text-sm sm:text-base;
+  }
+
+  .section-title {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight;
+  }
+
+  .section-subtitle {
+    @apply text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl;
+  }
+
+  .badge-grape {
+    @apply inline-flex items-center gap-1.5 bg-grape-100 text-grape-700 dark:bg-grape-900/40 dark:text-grape-300 px-3 py-1 rounded-full text-xs sm:text-sm font-medium;
+  }
+
+  .input-professional {
+    @apply w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-muted-foreground text-sm sm:text-base min-h-[44px] transition-colors duration-150;
+  }
+
+  .grid-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  .grid-cards-2 {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6;
+  }
+
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20;
+  }
+
+  .skeleton {
+    @apply bg-gradient-to-r from-muted via-muted/60 to-muted bg-[length:200%_100%] animate-shimmer rounded-lg;
+  }
+}
