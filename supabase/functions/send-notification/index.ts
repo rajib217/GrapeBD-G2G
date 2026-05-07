@@ -153,6 +153,21 @@ serve(async (req) => {
       }
     }
 
+    // Save to in-app notifications history (regardless of FCM token availability)
+    try {
+      await supabaseClient.from('notifications').insert({
+        user_id: targetUserId,
+        title,
+        body,
+        type: data?.type ?? null,
+        link: data?.click_action ?? null,
+        data: data ?? null,
+      })
+      console.log('Saved notification to history table')
+    } catch (histErr) {
+      console.error('Failed to save notification history:', histErr)
+    }
+
     if (!tokens || tokens.length === 0) {
       console.log('No FCM tokens found for user')
       return new Response(
