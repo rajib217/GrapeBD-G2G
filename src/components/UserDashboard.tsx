@@ -30,6 +30,7 @@ import NotificationDebug from './NotificationDebug';
 import FCMDebugPanel from './FCMDebugPanel';
 
 import MobileNav from './MobileNav';
+import NotificationBell from './NotificationBell';
 import MobileBottomNav from './MobileBottomNav';
 
 const UserDashboard = () => {
