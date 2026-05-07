@@ -209,10 +209,7 @@ const NotificationBell = () => {
                         </p>
                       )}
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(n.created_at), {
-                          addSuffix: true,
-                          locale: bn,
-                        })}
+                        {timeAgoBn(new Date(n.created_at))}
                       </p>
                     </div>
                     <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
