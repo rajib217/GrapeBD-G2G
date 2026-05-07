@@ -86,6 +86,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+          <NotificationBootstrap />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route 
