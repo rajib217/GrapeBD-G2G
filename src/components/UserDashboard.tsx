@@ -243,6 +243,7 @@ const UserDashboard = () => {
             <div className="flex items-center space-x-2 md:space-x-4">
               <p className="font-medium hidden md:block text-foreground">{profile?.full_name}</p>
               
+              <NotificationBell />
               <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
