@@ -12,27 +12,47 @@ import NotFound from "./pages/NotFound";
 import UserProfile from "./components/UserProfile";
 import Messages from "./components/Messages";
 import { useEffect } from "react";
-import { requestNotificationPermission, hasRejectedNotifications } from "@/services/notification";
+import { requestNotificationPermission, hasRejectedNotifications, setupPushNotifications } from "@/services/notification";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const NotificationBootstrap = () => {
+  const { user } = useAuth();
+
   useEffect(() => {
-    const isGranted = localStorage.getItem('notificationGranted') === 'true';
-    
-    if (!hasRejectedNotifications() && !isGranted) {
-      const askPermission = async () => {
-        const shouldAsk = window.confirm('নোটিফিকেশন চালু করতে চান? মেসেজ ও গিফট সংক্রান্ত আপডেট পেতে নোটিফিকেশন দরকার।');
-        if (shouldAsk) {
-          await requestNotificationPermission();
-        } else {
-          localStorage.setItem('notificationRejected', 'true');
+    if (!user?.id) return;
+
+    const init = async () => {
+      try {
+        // If permission not yet decided, ask user
+        if ('Notification' in window && Notification.permission === 'default' && !hasRejectedNotifications()) {
+          const shouldAsk = window.confirm('নোটিফিকেশন চালু করতে চান? মেসেজ ও গিফট সংক্রান্ত আপডেট পেতে নোটিফিকেশন দরকার।');
+          if (shouldAsk) {
+            await requestNotificationPermission();
+          } else {
+            localStorage.setItem('notificationRejected', 'true');
+            return;
+          }
         }
-      };
-      askPermission();
-    }
-  }, []);
+
+        // If granted, generate FCM token and save to backend
+        if ('Notification' in window && Notification.permission === 'granted') {
+          await setupPushNotifications(user.id);
+        }
+      } catch (err) {
+        console.error('[NotificationBootstrap] Error:', err);
+      }
+    };
+
+    init();
+  }, [user?.id]);
+
+  return null;
+};
+
+const App = () => {
 
   // Listen for FCM foreground messages and show toast
   useEffect(() => {
