@@ -11,8 +11,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import { bn } from 'date-fns/locale/bn';
+function timeAgoBn(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return 'এইমাত্র';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} মিনিট আগে`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ঘণ্টা আগে`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} দিন আগে`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} মাস আগে`;
+  return `${Math.floor(months / 12)} বছর আগে`;
+}
 
 interface NotificationItem {
   id: string;
