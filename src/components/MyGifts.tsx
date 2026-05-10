@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { Gift, Package, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Gift, Package, Clock, CheckCircle, XCircle, Skull } from 'lucide-react';
+import ReportSaplingDeathDialog from './ReportSaplingDeathDialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,12 +16,16 @@ interface UserGift {
   variety_id: string;
   gift_round_id: string;
   quantity: number;
-  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
+  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled' | 'died';
   admin_notes?: string;
   created_at: string;
   approved_at?: string;
   sent_at?: string;
   received_at?: string;
+  died_at?: string | null;
+  death_reason?: string | null;
+  death_note?: string | null;
+  death_image?: string | null;
   sender_name?: string;
   variety_name?: string;
   variety_thumbnail?: string;
@@ -30,6 +35,7 @@ interface UserGift {
 const MyGifts = () => {
   const [receivedGifts, setReceivedGifts] = useState<UserGift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deathDialogGift, setDeathDialogGift] = useState<UserGift | null>(null);
   const { profile } = useAuth();
   const { toast } = useToast();
 
@@ -112,7 +118,8 @@ const MyGifts = () => {
       approved: 'অনুমোদিত',
       sent: 'পাঠানো হয়েছে',
       received: 'প্রাপ্ত',
-      cancelled: 'বাতিল'
+      cancelled: 'বাতিল',
+      died: 'মারা গেছে'
     };
     return labels[status as keyof typeof labels] || status;
   };
@@ -123,7 +130,8 @@ const MyGifts = () => {
       approved: 'default',
       sent: 'secondary',
       received: 'default',
-      cancelled: 'destructive'
+      cancelled: 'destructive',
+      died: 'destructive'
     };
     return variants[status as keyof typeof variants] || 'outline';
   };
@@ -139,6 +147,8 @@ const MyGifts = () => {
         return <Package className="h-4 w-4" />;
       case 'cancelled':
         return <XCircle className="h-4 w-4" />;
+      case 'died':
+        return <Skull className="h-4 w-4" />;
       default:
         return <Gift className="h-4 w-4" />;
     }
@@ -222,6 +232,38 @@ const MyGifts = () => {
                   </div>
                 )}
 
+                {gift.status === 'received' && (
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                      onClick={() => setDeathDialogGift(gift)}
+                    >
+                      <Skull className="h-4 w-4 mr-2" />
+                      চারা মারা গেছে রিপোর্ট করুন
+                    </Button>
+                  </div>
+                )}
+
+                {gift.status === 'died' && (
+                  <div className="bg-destructive/10 border border-destructive/30 p-3 rounded-lg space-y-2">
+                    <div className="flex items-center gap-2 text-destructive font-medium text-sm">
+                      <Skull className="h-4 w-4" />
+                      চারা মারা গেছে {gift.died_at && `— ${new Date(gift.died_at).toLocaleDateString('bn-BD')}`}
+                    </div>
+                    {gift.death_reason && (
+                      <p className="text-sm"><span className="font-medium">কারণ:</span> {gift.death_reason}</p>
+                    )}
+                    {gift.death_note && (
+                      <p className="text-sm text-muted-foreground">{gift.death_note}</p>
+                    )}
+                    {gift.death_image && (
+                      <img src={gift.death_image} alt="death proof" className="rounded-md max-h-48 object-cover" />
+                    )}
+                  </div>
+                )}
+
                 {/* Timeline */}
                 <div className="border-l-2 border-gray-200 pl-4 space-y-2">
                   <div className="flex items-center space-x-2 text-sm">
@@ -299,6 +341,14 @@ const MyGifts = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ReportSaplingDeathDialog
+        open={!!deathDialogGift}
+        onOpenChange={(v) => !v && setDeathDialogGift(null)}
+        giftId={deathDialogGift?.id || ''}
+        varietyName={deathDialogGift?.variety_name}
+        onReported={fetchMyGifts}
+      />
     </div>
   );
 };

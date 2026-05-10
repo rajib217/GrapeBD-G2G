@@ -18,7 +18,7 @@ interface Gift {
   variety_id: string;
   gift_round_id: string;
   quantity: number;
-  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
+  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled' | 'died';
   admin_notes?: string;
   created_at: string;
   approved_at?: string;
@@ -366,7 +366,8 @@ const AdminGifts = () => {
       approved: 'অনুমোদিত',
       sent: 'পাঠানো',
       received: 'প্রাপ্ত',
-      cancelled: 'বাতিল'
+      cancelled: 'বাতিল',
+      died: 'মারা গেছে'
     };
     return labels[status as keyof typeof labels] || status;
   };
@@ -377,7 +378,8 @@ const AdminGifts = () => {
       approved: 'default',
       sent: 'secondary',
       received: 'default',
-      cancelled: 'destructive'
+      cancelled: 'destructive',
+      died: 'destructive'
     };
     return variants[status as keyof typeof variants] || 'outline';
   };

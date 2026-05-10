@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, ThumbsUp, Truck, PackageCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, ThumbsUp, Truck, PackageCheck, XCircle, Skull } from 'lucide-react';
 
 interface GiftTimelineProps {
   status: string;
@@ -6,6 +6,7 @@ interface GiftTimelineProps {
   approvedAt?: string | null;
   sentAt?: string | null;
   receivedAt?: string | null;
+  diedAt?: string | null;
 }
 
 const steps = [
@@ -16,7 +17,7 @@ const steps = [
 ];
 
 const statusOrder: Record<string, number> = {
-  pending: 0, approved: 1, sent: 2, received: 3, cancelled: -1
+  pending: 0, approved: 1, sent: 2, received: 3, cancelled: -1, died: 3
 };
 
 const formatDate = (d?: string | null) => {
@@ -24,12 +25,23 @@ const formatDate = (d?: string | null) => {
   return new Date(d).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' });
 };
 
-const GiftTimeline = ({ status, createdAt, approvedAt, sentAt, receivedAt }: GiftTimelineProps) => {
+const GiftTimeline = ({ status, createdAt, approvedAt, sentAt, receivedAt, diedAt }: GiftTimelineProps) => {
   if (status === 'cancelled') {
     return (
       <div className="flex items-center gap-2 text-destructive text-sm py-2">
         <XCircle className="w-4 h-4" />
         <span className="font-medium">বাতিল হয়েছে</span>
+      </div>
+    );
+  }
+
+  if (status === 'died') {
+    return (
+      <div className="flex items-center gap-2 text-destructive text-sm py-2">
+        <Skull className="w-4 h-4" />
+        <span className="font-medium">
+          চারা মারা গেছে{diedAt ? ` — ${formatDate(diedAt)}` : ''}
+        </span>
       </div>
     );
   }

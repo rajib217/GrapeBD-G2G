@@ -267,6 +267,10 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           created_at: string
+          death_image: string | null
+          death_note: string | null
+          death_reason: string | null
+          died_at: string | null
           gift_round_id: string
           id: string
           quantity: number
@@ -283,6 +287,10 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           created_at?: string
+          death_image?: string | null
+          death_note?: string | null
+          death_reason?: string | null
+          died_at?: string | null
           gift_round_id: string
           id?: string
           quantity?: number
@@ -299,6 +307,10 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           created_at?: string
+          death_image?: string | null
+          death_note?: string | null
+          death_reason?: string | null
+          died_at?: string | null
           gift_round_id?: string
           id?: string
           quantity?: number
@@ -811,7 +823,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member"
-      gift_status: "pending" | "approved" | "sent" | "received" | "cancelled"
+      gift_status:
+        | "pending"
+        | "approved"
+        | "sent"
+        | "received"
+        | "cancelled"
+        | "died"
       member_status: "active" | "suspended" | "pending"
     }
     CompositeTypes: {
@@ -941,7 +959,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member"],
-      gift_status: ["pending", "approved", "sent", "received", "cancelled"],
+      gift_status: [
+        "pending",
+        "approved",
+        "sent",
+        "received",
+        "cancelled",
+        "died",
+      ],
       member_status: ["active", "suspended", "pending"],
     },
   },
