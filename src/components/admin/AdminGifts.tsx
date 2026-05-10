@@ -378,7 +378,8 @@ const AdminGifts = () => {
       approved: 'default',
       sent: 'secondary',
       received: 'default',
-      cancelled: 'destructive'
+      cancelled: 'destructive',
+      died: 'destructive'
     };
     return variants[status as keyof typeof variants] || 'outline';
   };
