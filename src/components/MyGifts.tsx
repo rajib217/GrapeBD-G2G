@@ -232,6 +232,38 @@ const MyGifts = () => {
                   </div>
                 )}
 
+                {gift.status === 'received' && (
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                      onClick={() => setDeathDialogGift(gift)}
+                    >
+                      <Skull className="h-4 w-4 mr-2" />
+                      চারা মারা গেছে রিপোর্ট করুন
+                    </Button>
+                  </div>
+                )}
+
+                {gift.status === 'died' && (
+                  <div className="bg-destructive/10 border border-destructive/30 p-3 rounded-lg space-y-2">
+                    <div className="flex items-center gap-2 text-destructive font-medium text-sm">
+                      <Skull className="h-4 w-4" />
+                      চারা মারা গেছে {gift.died_at && `— ${new Date(gift.died_at).toLocaleDateString('bn-BD')}`}
+                    </div>
+                    {gift.death_reason && (
+                      <p className="text-sm"><span className="font-medium">কারণ:</span> {gift.death_reason}</p>
+                    )}
+                    {gift.death_note && (
+                      <p className="text-sm text-muted-foreground">{gift.death_note}</p>
+                    )}
+                    {gift.death_image && (
+                      <img src={gift.death_image} alt="death proof" className="rounded-md max-h-48 object-cover" />
+                    )}
+                  </div>
+                )}
+
                 {/* Timeline */}
                 <div className="border-l-2 border-gray-200 pl-4 space-y-2">
                   <div className="flex items-center space-x-2 text-sm">
