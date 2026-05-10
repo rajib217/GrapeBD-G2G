@@ -118,7 +118,8 @@ const MyGifts = () => {
       approved: 'অনুমোদিত',
       sent: 'পাঠানো হয়েছে',
       received: 'প্রাপ্ত',
-      cancelled: 'বাতিল'
+      cancelled: 'বাতিল',
+      died: 'মারা গেছে'
     };
     return labels[status as keyof typeof labels] || status;
   };
@@ -129,7 +130,8 @@ const MyGifts = () => {
       approved: 'default',
       sent: 'secondary',
       received: 'default',
-      cancelled: 'destructive'
+      cancelled: 'destructive',
+      died: 'destructive'
     };
     return variants[status as keyof typeof variants] || 'outline';
   };
