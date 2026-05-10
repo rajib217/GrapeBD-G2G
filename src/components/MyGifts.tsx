@@ -22,6 +22,10 @@ interface UserGift {
   approved_at?: string;
   sent_at?: string;
   received_at?: string;
+  died_at?: string | null;
+  death_reason?: string | null;
+  death_note?: string | null;
+  death_image?: string | null;
   sender_name?: string;
   variety_name?: string;
   variety_thumbnail?: string;
