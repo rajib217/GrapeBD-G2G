@@ -366,7 +366,8 @@ const AdminGifts = () => {
       approved: 'অনুমোদিত',
       sent: 'পাঠানো',
       received: 'প্রাপ্ত',
-      cancelled: 'বাতিল'
+      cancelled: 'বাতিল',
+      died: 'মারা গেছে'
     };
     return labels[status as keyof typeof labels] || status;
   };
