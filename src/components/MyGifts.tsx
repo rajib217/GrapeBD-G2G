@@ -35,6 +35,7 @@ interface UserGift {
 const MyGifts = () => {
   const [receivedGifts, setReceivedGifts] = useState<UserGift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deathDialogGift, setDeathDialogGift] = useState<UserGift | null>(null);
   const { profile } = useAuth();
   const { toast } = useToast();
 
