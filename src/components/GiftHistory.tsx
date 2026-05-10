@@ -14,7 +14,7 @@ import GiftTimeline from './GiftTimeline';
 interface SentGift {
   id: string;
   quantity: number;
-  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
+  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled' | 'died';
   created_at: string;
   approved_at: string | null;
   sent_at: string | null;
@@ -36,7 +36,7 @@ interface SentGift {
 interface ReceivedGift {
   id: string;
   quantity: number;
-  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
+  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled' | 'died';
   created_at: string;
   approved_at: string | null;
   sent_at: string | null;

@@ -15,7 +15,7 @@ interface UserGift {
   variety_id: string;
   gift_round_id: string;
   quantity: number;
-  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled';
+  status: 'pending' | 'approved' | 'sent' | 'received' | 'cancelled' | 'died';
   admin_notes?: string;
   created_at: string;
   approved_at?: string;
