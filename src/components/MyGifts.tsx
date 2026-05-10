@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { Gift, Package, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Gift, Package, Clock, CheckCircle, XCircle, Skull } from 'lucide-react';
+import ReportSaplingDeathDialog from './ReportSaplingDeathDialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
