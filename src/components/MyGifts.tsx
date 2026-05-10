@@ -341,6 +341,14 @@ const MyGifts = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ReportSaplingDeathDialog
+        open={!!deathDialogGift}
+        onOpenChange={(v) => !v && setDeathDialogGift(null)}
+        giftId={deathDialogGift?.id || ''}
+        varietyName={deathDialogGift?.variety_name}
+        onReported={fetchMyGifts}
+      />
     </div>
   );
 };
