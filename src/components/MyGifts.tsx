@@ -147,6 +147,8 @@ const MyGifts = () => {
         return <Package className="h-4 w-4" />;
       case 'cancelled':
         return <XCircle className="h-4 w-4" />;
+      case 'died':
+        return <Skull className="h-4 w-4" />;
       default:
         return <Gift className="h-4 w-4" />;
     }
