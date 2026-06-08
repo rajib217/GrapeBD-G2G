@@ -457,7 +457,7 @@ const AdminGiftRounds = () => {
       {/* Gift Rounds Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRounds.map((round) => (
-          <Card key={round.id} className={!round.is_active ? 'opacity-60' : ''}>
+          <Card key={round.id} className={`${!round.is_active ? 'opacity-60' : ''} cursor-pointer hover:shadow-lg transition-shadow`} onClick={() => setMembersRound(round)}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
