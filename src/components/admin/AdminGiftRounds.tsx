@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Play, Pause, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Play, Pause, X, Users } from 'lucide-react';
+import RoundMembersDialog from './RoundMembersDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
