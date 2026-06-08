@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Play, Pause, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Play, Pause, X, Users } from 'lucide-react';
+import RoundMembersDialog from './RoundMembersDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ const AdminGiftRounds = () => {
   const [selectedVarieties, setSelectedVarieties] = useState<GiftRoundVariety[]>([]);
   const [selectedVarietyId, setSelectedVarietyId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState('');
+  const [membersRound, setMembersRound] = useState<GiftRound | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -455,7 +457,7 @@ const AdminGiftRounds = () => {
       {/* Gift Rounds Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRounds.map((round) => (
-          <Card key={round.id} className={!round.is_active ? 'opacity-60' : ''}>
+          <Card key={round.id} className={`${!round.is_active ? 'opacity-60' : ''} cursor-pointer hover:shadow-lg transition-shadow`} onClick={() => setMembersRound(round)}>
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -495,7 +497,15 @@ const AdminGiftRounds = () => {
                 </div>
               )}
               
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setMembersRound(round)}
+                >
+                  <Users className="h-3 w-3 mr-1" />
+                  সদস্য দেখুন
+                </Button>
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
@@ -530,6 +540,13 @@ const AdminGiftRounds = () => {
           <p className="text-muted-foreground">কোনো গিফট রাউন্ড পাওয়া যায়নি</p>
         </div>
       )}
+
+      <RoundMembersDialog
+        roundId={membersRound?.id || null}
+        roundTitle={membersRound?.title || ''}
+        open={!!membersRound}
+        onOpenChange={(o) => !o && setMembersRound(null)}
+      />
     </div>
   );
 };
