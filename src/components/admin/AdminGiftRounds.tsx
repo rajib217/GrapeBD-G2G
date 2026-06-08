@@ -54,6 +54,7 @@ const AdminGiftRounds = () => {
   const [selectedVarieties, setSelectedVarieties] = useState<GiftRoundVariety[]>([]);
   const [selectedVarietyId, setSelectedVarietyId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState('');
+  const [membersRound, setMembersRound] = useState<GiftRound | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
