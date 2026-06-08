@@ -245,10 +245,10 @@ const UserDashboard = () => {
               <p className="font-medium hidden md:block text-foreground">{profile?.full_name}</p>
               
               <NotificationBell />
-              <Button variant="outline" size="icon" onClick={() => navigate('/profile')}>
+              <Button variant="outline" size="icon" className="hidden md:inline-flex" onClick={() => navigate('/profile')}>
                 <Settings className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" onClick={handleSignOut}>
+              <Button variant="outline" size="icon" className="hidden md:inline-flex" onClick={handleSignOut}>
                 <LogOut className="w-5 h-5" />
               </Button>
             </div>
