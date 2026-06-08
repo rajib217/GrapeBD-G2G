@@ -497,7 +497,15 @@ const AdminGiftRounds = () => {
                 </div>
               )}
               
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setMembersRound(round)}
+                >
+                  <Users className="h-3 w-3 mr-1" />
+                  সদস্য দেখুন
+                </Button>
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
