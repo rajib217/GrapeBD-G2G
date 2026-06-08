@@ -540,6 +540,13 @@ const AdminGiftRounds = () => {
           <p className="text-muted-foreground">কোনো গিফট রাউন্ড পাওয়া যায়নি</p>
         </div>
       )}
+
+      <RoundMembersDialog
+        roundId={membersRound?.id || null}
+        roundTitle={membersRound?.title || ''}
+        open={!!membersRound}
+        onOpenChange={(o) => !o && setMembersRound(null)}
+      />
     </div>
   );
 };
