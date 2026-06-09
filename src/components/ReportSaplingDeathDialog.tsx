@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skull, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { compressImage } from '@/utils/imageCompression';
+import { compressPostImage } from '@/utils/imageCompression';
 
 interface Props {
   open: boolean;
