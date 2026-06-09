@@ -21,7 +21,7 @@ interface Row {
   death_note: string | null;
   death_image: string | null;
   received_at: string | null;
-  receiver: { id: string; full_name: string | null; profile_picture: string | null } | null;
+  receiver: { id: string; full_name: string | null; profile_image: string | null } | null;
   sender: { id: string; full_name: string | null } | null;
   variety: { id: string; name: string; thumbnail_image: string | null } | null;
 }
@@ -62,7 +62,7 @@ const RoundMembersDialog = ({ roundId, roundTitle, open, onOpenChange }: Props) 
         .from('gifts')
         .select(`
           id, status, quantity, died_at, death_reason, death_note, death_image, received_at,
-          receiver:profiles!gifts_receiver_id_fkey(id, full_name, profile_picture),
+          receiver:profiles!gifts_receiver_id_fkey(id, full_name, profile_image),
           sender:profiles!gifts_sender_id_fkey(id, full_name),
           variety:varieties(id, name, thumbnail_image)
         `)
@@ -95,7 +95,7 @@ const RoundMembersDialog = ({ roundId, roundTitle, open, onOpenChange }: Props) 
             {rows.map((r) => (
               <div key={r.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={r.receiver?.profile_picture || undefined} />
+                  <AvatarImage src={r.receiver?.profile_image || undefined} />
                   <AvatarFallback>{r.receiver?.full_name?.[0] || '?'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
