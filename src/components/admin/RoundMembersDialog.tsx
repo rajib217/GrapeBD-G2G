@@ -95,7 +95,7 @@ const RoundMembersDialog = ({ roundId, roundTitle, open, onOpenChange }: Props) 
             {rows.map((r) => (
               <div key={r.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={r.receiver?.profile_picture || undefined} />
+                  <AvatarImage src={r.receiver?.profile_image || undefined} />
                   <AvatarFallback>{r.receiver?.full_name?.[0] || '?'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
