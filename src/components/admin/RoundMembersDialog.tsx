@@ -21,7 +21,7 @@ interface Row {
   death_note: string | null;
   death_image: string | null;
   received_at: string | null;
-  receiver: { id: string; full_name: string | null; profile_picture: string | null } | null;
+  receiver: { id: string; full_name: string | null; profile_image: string | null } | null;
   sender: { id: string; full_name: string | null } | null;
   variety: { id: string; name: string; thumbnail_image: string | null } | null;
 }
