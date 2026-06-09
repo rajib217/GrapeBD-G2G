@@ -62,7 +62,7 @@ const RoundMembersDialog = ({ roundId, roundTitle, open, onOpenChange }: Props) 
         .from('gifts')
         .select(`
           id, status, quantity, died_at, death_reason, death_note, death_image, received_at,
-          receiver:profiles!gifts_receiver_id_fkey(id, full_name, profile_picture),
+          receiver:profiles!gifts_receiver_id_fkey(id, full_name, profile_image),
           sender:profiles!gifts_sender_id_fkey(id, full_name),
           variety:varieties(id, name, thumbnail_image)
         `)
