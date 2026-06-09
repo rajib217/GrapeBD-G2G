@@ -49,8 +49,10 @@ const ReportSaplingDeathDialog = ({ open, onOpenChange, giftId, varietyName, onR
       let imageUrl: string | null = null;
 
       if (imageFile) {
-        const compressed = await compressImage(imageFile);
-        const path = `gift-deaths/${giftId}-${Date.now()}.jpg`;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('লগইন প্রয়োজন');
+        const compressed = await compressPostImage(imageFile);
+        const path = `${user.id}/gift-deaths/${giftId}-${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage
           .from('post-images')
           .upload(path, compressed, { contentType: 'image/jpeg', upsert: true });
