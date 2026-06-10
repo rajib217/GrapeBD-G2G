@@ -21,7 +21,7 @@ import MobileNav from '@/components/MobileNav';
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRound = searchParams.get('g2g_round') || '';
-  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'users');
+  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'overview');
   const [membersRoundFilter, setMembersRoundFilter] = useState<string>(initialRound);
   const {
     profile,
