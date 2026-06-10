@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield, MessageSquare, LayoutDashboard } from 'lucide-react';
+import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminOverview from '@/components/admin/AdminOverview';
 import AdminUsers from '@/components/admin/AdminUsers';
@@ -15,8 +15,6 @@ import { AdminPosts } from '@/components/admin/AdminPosts';
 import AdminComments from '@/components/admin/AdminComments';
 import Messages from '@/components/Messages';
 import AllMembers from '@/components/AllMembers';
-import NotificationDebug from '@/components/NotificationDebug';
-import FCMDebugPanel from '@/components/FCMDebugPanel';
 import MobileNav from '@/components/MobileNav';
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -120,7 +118,7 @@ const AdminDashboard = () => {
         {/* Admin Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-12 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
+          <TabsList className="hidden md:grid w-full grid-cols-5 lg:grid-cols-10 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
             <TabsTrigger value="overview" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <LayoutDashboard className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">ড্যাশবোর্ড</span>
@@ -160,14 +158,6 @@ const AdminDashboard = () => {
             <TabsTrigger value="all-members" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <UserCheck className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">সকল মেম্বার</span>
-            </TabsTrigger>
-            <TabsTrigger value="notification-debug" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
-              <Bell className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">নোটিফিকেশন ডিবাগ</span>
-            </TabsTrigger>
-            <TabsTrigger value="fcm-debug" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
-              <Shield className="h-4 w-4" />
-              <span className="text-xs md:text-sm font-medium">FCM ডিবাগ</span>
             </TabsTrigger>
           </TabsList>
 
@@ -211,13 +201,6 @@ const AdminDashboard = () => {
             <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />
           </TabsContent>
 
-          <TabsContent value="notification-debug">
-            <NotificationDebug />
-          </TabsContent>
-
-          <TabsContent value="fcm-debug">
-            <FCMDebugPanel />
-          </TabsContent>
         </Tabs>
       </div>
     </div>;
