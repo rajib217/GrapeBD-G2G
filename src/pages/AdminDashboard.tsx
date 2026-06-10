@@ -171,6 +171,10 @@ const AdminDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="overview">
+            <AdminOverview />
+          </TabsContent>
+
           <TabsContent value="users">
             <AdminUsers />
           </TabsContent>
