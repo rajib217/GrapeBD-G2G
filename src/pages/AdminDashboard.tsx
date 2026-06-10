@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield, MessageSquare } from 'lucide-react';
+import { LogOut, Users, Gift, Leaf, Clock, Bell, MessageCircle, Home, UserCheck, Shield, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AdminStats from '@/components/admin/AdminStats';
+import AdminOverview from '@/components/admin/AdminOverview';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminGifts from '@/components/admin/AdminGifts';
 import AdminVarieties from '@/components/admin/AdminVarieties';
@@ -21,7 +21,7 @@ import MobileNav from '@/components/MobileNav';
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRound = searchParams.get('g2g_round') || '';
-  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'users');
+  const [activeTab, setActiveTab] = useState(initialRound ? 'all-members' : 'overview');
   const [membersRoundFilter, setMembersRoundFilter] = useState<string>(initialRound);
   const {
     profile,
@@ -118,10 +118,13 @@ const AdminDashboard = () => {
         </div>
 
         {/* Admin Tabs */}
-        <AdminStats />
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop Tabs */}
-          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-11 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
+          <TabsList className="hidden md:grid w-full grid-cols-4 lg:grid-cols-12 mb-8 h-auto gap-2 bg-card shadow-elegant p-2 rounded-xl">
+            <TabsTrigger value="overview" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="text-xs md:text-sm font-medium">ড্যাশবোর্ড</span>
+            </TabsTrigger>
             <TabsTrigger value="users" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 p-3 rounded-lg transition-all data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-muted">
               <Users className="h-4 w-4" />
               <span className="text-xs md:text-sm font-medium">ইউজার</span>
@@ -167,6 +170,10 @@ const AdminDashboard = () => {
               <span className="text-xs md:text-sm font-medium">FCM ডিবাগ</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview">
+            <AdminOverview />
+          </TabsContent>
 
           <TabsContent value="users">
             <AdminUsers />
