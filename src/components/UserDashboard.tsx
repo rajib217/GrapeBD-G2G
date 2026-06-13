@@ -26,8 +26,6 @@ import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
 import AdminGiftRounds from './admin/AdminGiftRounds';
 import AdminNotices from './admin/AdminNotices';
-import NotificationDebug from './NotificationDebug';
-import FCMDebugPanel from './FCMDebugPanel';
 
 import MobileNav from './MobileNav';
 import NotificationBell from './NotificationBell';
@@ -104,10 +102,6 @@ const UserDashboard = () => {
           return <Messages />;
         case 'all-members':
           return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />;
-        case 'notification-debug':
-          return <NotificationDebug />;
-        case 'fcm-debug':
-          return <FCMDebugPanel />;
         default:
           return <AdminUsers />;
       }
@@ -145,8 +139,6 @@ const UserDashboard = () => {
           return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />;
         case 'gift-history':
           return <GiftHistory />;
-        case 'fcm-debug':
-          return <FCMDebugPanel />;
         default:
           return <SocialFeed />;
       }

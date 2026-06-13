@@ -24,7 +24,8 @@ import {
   UserCheck,
   BarChart3,
   Trophy,
-  HandHeart
+  HandHeart,
+  LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -94,6 +95,7 @@ const MobileNav = ({
   ];
 
   const adminMenuItems: MenuItem[] = [
+    { id: 'overview', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
     { id: 'users', label: 'ব্যবহারকারীগণ', icon: Users },
     { id: 'gifts', label: 'উপহার পরিচালনা', icon: Gift },
     { id: 'varieties', label: 'জাত পরিচালনা', icon: Leaf },
