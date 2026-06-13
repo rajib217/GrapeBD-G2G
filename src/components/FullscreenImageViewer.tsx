@@ -53,7 +53,7 @@ const FullscreenImageViewer = ({ src, alt, isOpen, onClose }: FullscreenImageVie
         <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 h-10 w-10" onClick={() => setRotation(r => r + 90)}>
           <RotateCw className="w-5 h-5" />
         </Button>
-        <Button size="icon" variant="ghost" className="text-white hover:bg-white/20 h-10 w-10" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="text-white hover:bg-white/30 h-10 w-10 rounded-full bg-white/20" onClick={onClose}>
           <X className="w-5 h-5" />
         </Button>
       </div>
