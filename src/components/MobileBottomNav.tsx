@@ -6,9 +6,8 @@ import {
   Home,
   Users,
   Leaf,
-  Clock,
   Bell,
-  UserCheck
+  LayoutDashboard
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,11 +67,11 @@ const MobileBottomNav = ({ activeTab, onTabChange, isAdminView = false, onAdminV
   ];
 
   const adminNavItems: NavItem[] = [
+    { id: 'overview', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
     { id: 'users', label: 'ইউজার', icon: Users },
     { id: 'gifts', label: 'গিফট', icon: Gift },
     { id: 'varieties', label: 'জাত', icon: Leaf },
     { id: 'notices', label: 'নোটিশ', icon: Bell },
-    { id: 'messages', label: 'ম্যাসেজ', icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
   ];
 
   const navItems = isAdminView ? adminNavItems : normalNavItems;
