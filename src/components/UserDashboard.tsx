@@ -26,6 +26,7 @@ import AdminGifts from './admin/AdminGifts';
 import AdminVarieties from './admin/AdminVarieties';
 import AdminGiftRounds from './admin/AdminGiftRounds';
 import AdminNotices from './admin/AdminNotices';
+import AdminOverview from './admin/AdminOverview';
 
 import MobileNav from './MobileNav';
 import NotificationBell from './NotificationBell';
@@ -84,6 +85,8 @@ const UserDashboard = () => {
     if (isAdminView) {
       // Admin view content
       switch (activeTab) {
+        case 'overview':
+          return <AdminOverview />;
         case 'users':
           return <AdminUsers />;
         case 'gifts':
@@ -103,7 +106,7 @@ const UserDashboard = () => {
         case 'all-members':
           return <AllMembers initialRoundFilter={membersRoundFilter} onRoundFilterChange={handleMembersRoundFilterChange} />;
         default:
-          return <AdminUsers />;
+          return <AdminOverview />;
       }
     } else {
       // Normal user view content

@@ -65,7 +65,7 @@ const MobileNav = ({
     if (profile?.role === 'admin' && onAdminViewToggle) {
       onAdminViewToggle(!isAdminView);
       if (!isAdminView) {
-        onTabChange('users');
+        onTabChange('overview');
       } else {
         onTabChange('home');
       }
