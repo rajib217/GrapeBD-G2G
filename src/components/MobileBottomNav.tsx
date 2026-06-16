@@ -6,7 +6,6 @@ import {
   Home,
   Users,
   Leaf,
-  Clock,
   Bell,
   LayoutDashboard
 } from 'lucide-react';
